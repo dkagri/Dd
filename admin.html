@@ -33,6 +33,7 @@
 </style>
 </head>
 
+<body class="bg-[#f8fafc]">
 <div id="modalBack" class="modal-back" onclick="if(event.target===this) closeModal(false)"><div class="modal-card">
 <div id="modalIcon" class="text-3xl">ℹ️</div><h3 id="modalTitle" class="font-bold text-[18px] mt-2">Title</h3><p id="modalMsg" class="text-sm text-slate-500 mt-1"></p>
 <div id="modalInputWrap" class="hidden mt-3"><input id="modalInput" placeholder=""></div>
@@ -40,7 +41,7 @@
 <div class="flex gap-2 mt-5"><button id="modalCancel" onclick="closeModal(false)" class="btn btn-ghost flex-1">Cancel</button><button id="modalOk" onclick="closeModal(true)" class="btn btn-primary flex-1">OK</button></div>
 </div></div>
 <div id="toast" class="toast"></div>
-<body class="bg-[#f8fafc]">
+
 <!-- SIDEBAR OVERLAY -->
 <div id="sidebarOverlay" onclick="closeSidebar()" class="fixed inset-0 bg-black/50 z-[35] hidden lg:hidden"></div>
 <button id="sidebarCloseFab" onclick="closeSidebar()" class="hidden lg:hidden fixed top-3 right-3 z-[60] w-11 h-11 rounded-full bg-white shadow-xl text-xl font-bold" aria-label="Close Menu">✕</button>
@@ -375,6 +376,10 @@
 </div>
 
 </div></div>
+
+<!-- HIERARCHY DATA MUST BE DEFINED BEFORE MAIN SCRIPT -->
+<script id="hier-data" type="application/json">[{"id":"sub1","name":"ADA Kundasale","divisions":[{"name":"Dambagahapitiya","offices":["Dambagahapitiya - Pradhana Karyalaya"]},{"name":"Kalunthenna","offices":["Kalunthenna - Pradhana Karyalaya"]},{"name":"Nugethenna","offices":["Nugethenna - Pradhana Karyalaya"]},{"name":"Morayaya","offices":["Morayaya - Pradhana Karyalaya"]},{"name":"Ulpathagama","offices":["Ulpathagama - Pradhana Karyalaya"]},{"name":"Namadagala","offices":["Namadagala - Pradhana Karyalaya"]},{"name":"Theldeniya","offices":["Theldeniya1 - Pradhana Karyalaya","Theldeniya2 - Pradhana Karyalaya"]},{"name":"Udispaththuwa","offices":["Udispaththuwa - Pradhana Karyalaya"]},{"name":"Wendaruwa","offices":["Wendaruwa - Pradhana Karyalaya"]},{"name":"Digana","offices":["Digana - Pradhana Karyalaya"]},{"name":"Gunnepana","offices":["Gunnepana - Pradhana Karyalaya"]},{"name":"Manikhinna","offices":["Manikhinna - Pradhana Karyalaya"]},{"name":"Wavinna","offices":["Wavinna - Pradhana Karyalaya"]},{"name":"Medamahanuwara","offices":["Medamahanuwara - Pradhana Karyalaya"]}]},{"id":"sub2","name":"ADA Kandy","divisions":[{"name":"Waththegama","offices":["Waththegama - Pradhana Karyalaya"]},{"name":"Huluganga","offices":["Huluganga - Pradhana Karyalaya"]},{"name":"Bowala","offices":["Bowala - Pradhana Karyalaya"]},{"name":"Ketawalaleula","offices":["Ketawalaleula - Pradhana Karyalaya"]},{"name":"Galaha","offices":["Galaha - Pradhana Karyalaya"]},{"name":"Marassana","offices":["Marassana - Pradhana Karyalaya"]},{"name":"Thalathuoya","offices":["Thalathuoya - Pradhana Karyalaya"]}]},{"id":"sub3","name":"ADA Udunuwara / Yatinuwara","divisions":[{"name":"Edaduwawe","offices":["Edaduwawe - Pradhana Karyalaya"]},{"name":"Giragama","offices":["Giragama - Pradhana Karyalaya"]},{"name":"Manikdiwella","offices":["Manikdiwella - Pradhana Karyalaya"]},{"name":"Alapalawala","offices":["Alapalawala - Pradhana Karyalaya"]},{"name":"Ambanwala","offices":["Ambanwala - Pradhana Karyalaya"]},{"name":"Imbuldeniya","offices":["Imbuldeniya - Pradhana Karyalaya"]},{"name":"Pethiyagoda","offices":["Pethiyagoda - Pradhana Karyalaya"]},{"name":"Thalawathura","offices":["Thalawathura - Pradhana Karyalaya"]},{"name":"Medapitiya","offices":["Medapitiya - Pradhana Karyalaya"]},{"name":"Mulgama","offices":["Mulgama - Pradhana Karyalaya"]},{"name":"Delpitiya","offices":["Delpitiya - Pradhana Karyalaya"]},{"name":"Gampola","offices":["Gampola - Pradhana Karyalaya"]},{"name":"Kuruduwaththa","offices":["Kuruduwaththa - Pradhana Karyalaya"]},{"name":"Rambukpitiya","offices":["Rambukpitiya - Pradhana Karyalaya"]}]},{"id":"sub4","name":"ADA Harispattuwa","divisions":[{"name":"Aludeniya","offices":["Aludeniya - Pradhana Karyalaya"]},{"name":"Galagedara","offices":["Galagedara - Pradhana Karyalaya"]},{"name":"Welivita","offices":["Welivita - Pradhana Karyalaya"]},{"name":"Ankumbura","offices":["Ankumbura - Pradhana Karyalaya"]},{"name":"Batugoda","offices":["Batugoda - Pradhana Karyalaya"]},{"name":"Wawala","offices":["Wawala - Pradhana Karyalaya"]},{"name":"Alawathugoda","offices":["Alawathugoda - Pradhana Karyalaya"]},{"name":"Medawala","offices":["Medawala - Pradhana Karyalaya"]},{"name":"Yatiwawala","offices":["Yatiwawala - Pradhana Karyalaya"]},{"name":"Hatharaliyadda","offices":["Hatharaliyadda - Pradhana Karyalaya"]}]}]</script>
+
 <script>
 const SUPABASE_URL='https://fqjbnwcavcxloaqwyret.supabase.co';
 const SUPABASE_KEY='sb_publishable_O5ECn-2JZ_Fn6MTASNZsjQ_UBIPqnMA';
@@ -410,7 +415,7 @@ window.addEventListener('pageshow', function(event) {
 });
 
 var __modalResolve=null;
-function showToast(msg,ok){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(ok===false?'err':ok===true?'ok':'');setTimeout(function(){t.className='toast';},2600);}
+function showToast(msg,ok){var t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.className='toast show '+(ok===false?'err':ok===true?'ok':'');setTimeout(function(){t.className='toast';},2600);}
 function openModal(opt){return new Promise(function(res){__modalResolve=res;document.getElementById('modalIcon').textContent=opt.icon||'ℹ️';document.getElementById('modalTitle').textContent=opt.title||'';document.getElementById('modalMsg').textContent=opt.msg||'';var iw=document.getElementById('modalInputWrap');var sw=document.getElementById('modalSelectWrap');iw.classList.add('hidden');sw.classList.add('hidden');if(opt.input){iw.classList.remove('hidden');document.getElementById('modalInput').value=opt.value||'';}if(opt.selectOptions){sw.classList.remove('hidden');document.getElementById('modalSelect').innerHTML=opt.selectOptions.map(o=>'<option value="'+o.v+'">'+o.l+'</option>').join('');}document.getElementById('modalCancel').style.display=opt.hideCancel?'none':'';document.getElementById('modalOk').textContent=opt.okText||'OK';document.getElementById('modalBack').classList.add('show');});}
 function closeModal(ok){document.getElementById('modalBack').classList.remove('show');if(__modalResolve){var r=__modalResolve;__modalResolve=null;r({ok:ok,value:document.getElementById('modalInput').value});}}
 function profAlert(msg,title){return openModal({title:title||'තොරතුරු',msg:msg,icon:'✅',hideCancel:true,okText:'OK'});}
@@ -418,11 +423,16 @@ function profConfirm(msg,title){return openModal({title:title||'විශ්ව�
 function profPrompt(msg,defVal){return openModal({title:'නම',msg:msg,icon:'✏️',input:true,value:defVal||''}).then(r=>r.ok?r.value:null);}
 
 var role=localStorage.getItem('role')||'main_admin'; var mySub=localStorage.getItem('user_subOfficeId')||'ALL';
-document.getElementById('roleLabel').textContent=role==='main_admin'?'Main Admin':'Sub Admin';
-document.getElementById('userLabel').textContent=localStorage.getItem('user')||'';
-document.getElementById('scopeLabel').textContent=role==='main_admin'?'45 අංශ — සියල්ල':'Scope: '+(localStorage.getItem('user_subOfficeName')||mySub);
+var roleEl=document.getElementById('roleLabel'); if(roleEl) roleEl.textContent=role==='main_admin'?'Main Admin':'Sub Admin';
+var userEl=document.getElementById('userLabel'); if(userEl) userEl.textContent=localStorage.getItem('user')||'';
+var scopeEl=document.getElementById('scopeLabel'); if(scopeEl) scopeEl.textContent=role==='main_admin'?'45 අංශ — සියල්ල':'Scope: '+(localStorage.getItem('user_subOfficeName')||mySub);
 
-var hierarchy=JSON.parse(document.getElementById('hier-data').textContent);
+var hierarchy=[];
+try{
+  var hierEl=document.getElementById('hier-data');
+  if(hierEl && hierEl.textContent) hierarchy=JSON.parse(hierEl.textContent);
+}catch(e){ console.error('Hierarchy parse error:', e); }
+
 var nodes=[], questions=[], users=[], responses=[], targetRecords=[], plItems=[];
 var curMain=null, curL1=null, curL2=null, curL3=null, curSub=null, curItem=null, curStep=1, selHierSub='sub1', selHierDiv=null, editingId=null;
 
@@ -432,7 +442,8 @@ function closeSidebar(){var sb=document.getElementById('sidebar');if(window.inne
 function goNav(p){
   closeSidebar();
   document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));
-  document.getElementById('page-'+p).classList.remove('hidden');
+  var pg=document.getElementById('page-'+p);
+  if(pg) pg.classList.remove('hidden');
   document.querySelectorAll('.nav-btn').forEach(b=>b.className='nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10');
   var btn=document.querySelector('[data-nav="'+p+'"]'); if(btn)btn.className='nav-btn w-full text-left px-4 py-3 rounded-xl bg-white text-slate-900 font-semibold';
   document.getElementById('pageTitle').textContent={'dashboard':'Dashboard','targets':'Target Setup','builder':'ප්‍රශ්න සකස් කිරීම','pricelist':'Item Price List','data':'දත්ත','users':'පරිශීලකයින්','hierarchy':'කාර්යාල'}[p]||'Dashboard';
@@ -460,17 +471,22 @@ function downloadChart(canvasId, filename) {
 }
 
 function renderDashboard(){
-  var ext=nodes.filter(n=>n.main_type==='extension').length; 
-  var dev=nodes.filter(n=>n.main_type==='development').length;
+  nodes = Array.isArray(nodes) ? nodes : [];
+  questions = Array.isArray(questions) ? questions : [];
+  responses = Array.isArray(responses) ? responses : [];
+  targetRecords = Array.isArray(targetRecords) ? targetRecords : [];
+
+  var ext=nodes.filter(n=>n && n.main_type==='extension').length; 
+  var dev=nodes.filter(n=>n && n.main_type==='development').length;
   document.getElementById('kExt').textContent=ext; 
   document.getElementById('kDev').textContent=dev; 
   document.getElementById('kQ').textContent=questions.length; 
   document.getElementById('kR').textContent=responses.length;
   
-  var extCount = responses.filter(r=>r.main_type==='extension').length;
-  var devCount = responses.filter(r=>r.main_type==='development').length;
-  var extT = targetRecords.filter(t=>t.main_type==='extension').reduce((acc,cur)=>acc+(Number(cur.target_value)||0),0);
-  var devT = targetRecords.filter(t=>t.main_type==='development').reduce((acc,cur)=>acc+(Number(cur.target_value)||0),0);
+  var extCount = responses.filter(r=>r && r.main_type==='extension').length;
+  var devCount = responses.filter(r=>r && r.main_type==='development').length;
+  var extT = targetRecords.filter(t=>t && t.main_type==='extension').reduce((acc,cur)=>acc+(Number(cur.target_value)||0),0);
+  var devT = targetRecords.filter(t=>t && t.main_type==='development').reduce((acc,cur)=>acc+(Number(cur.target_value)||0),0);
   
   document.getElementById('extProgVal').textContent = extCount.toLocaleString();
   document.getElementById('extTargetVal').textContent = extT.toLocaleString();
@@ -480,16 +496,16 @@ function renderDashboard(){
   document.getElementById('devTargetVal').textContent = devT.toLocaleString();
   document.getElementById('devProgBar').style.width = (devT>0?Math.min(100,Math.round((devCount/devT)*100)):0)+'%';
 
-  var pub=nodes.filter(n=>n.is_published && n.level===1);
-  var byMain={extension:[],development:[]}; pub.forEach(n=>byMain[n.main_type].push(n));
+  var pub=nodes.filter(n=>n && n.is_published && n.level===1);
+  var byMain={extension:[],development:[]}; pub.forEach(n=>{ if(byMain[n.main_type]) byMain[n.main_type].push(n); });
   var html='';
   [['extension','🌾 Extension'],['development','🏗️ Development']].forEach(pair=>{
-    var list=byMain[pair[0]]; 
+    var list=byMain[pair[0]]||[]; 
     var inner=list.map(n=>'<div class="text-[13px] py-1 border-b flex justify-between"><span>'+n.title+'</span><span class="badge badge-green">Published</span></div>').join('')||'<div class="text-xs text-slate-400">Published නැත</div>';
     html+='<div class="rounded-xl border p-4 bg-white"><div class="font-semibold text-sm">'+pair[1]+'</div><div class="mt-2">'+inner+'</div></div>';
   });
   document.getElementById('publishedBox').innerHTML=html;
-  document.getElementById('recentBox').innerHTML=responses.slice(0,8).map(r=>'<div class="flex justify-between gap-3 rounded-xl border p-3 text-[13px]"><div><b>'+(r.node_path||'')+'</b><div class="text-xs text-slate-500">'+(r.division||'')+' • '+(r.office||'')+'</div></div><div class="text-xs text-slate-400">'+new Date(r.created_at).toLocaleDateString()+'</div></div>').join('')||'<div class="text-xs text-slate-400">පිළිතුරු නැත</div>';
+  document.getElementById('recentBox').innerHTML=responses.slice(0,8).map(r=>'<div class="flex justify-between gap-3 rounded-xl border p-3 text-[13px]"><div><b>'+(r.node_path||'')+'</b><div class="text-xs text-slate-500">'+(r.division||'')+' • '+(r.office||'')+'</div></div><div class="text-xs text-slate-400">'+(r.created_at?new Date(r.created_at).toLocaleDateString():'')+'</div></div>').join('')||'<div class="text-xs text-slate-400">පිළිතුරු නැත</div>';
 }
 
 /* ================= Target Setup Wizard ================= */
@@ -517,7 +533,8 @@ function tGoto(s){
   tUpdateCrumb();
 }
 function tChildrenOf(pid, level){
-  return nodes.filter(n=>n.main_type===tMain&&n.level===level&&(pid?n.parent_id===pid:!n.parent_id)).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  nodes = Array.isArray(nodes) ? nodes : [];
+  return nodes.filter(n=>n && n.main_type===tMain&&n.level===level&&(pid?n.parent_id===pid:!n.parent_id)).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
 }
 function tNodeCardHtml(n, isSel, level){
   return '<div class="node-card '+(isSel?'sel':'')+' '+(!n.is_published?'off':'')+'" onclick="tSelectNode('+level+',\''+n.id+'\')">' +
@@ -580,14 +597,17 @@ async function tTogglePub(id, level){
   tRenderLevel(level);
 }
 async function tMoveNode(id, dir, level){
-  var siblings=tChildrenOf(nodes.find(x=>x.id===id).parent_id, level);
+  var cur=nodes.find(x=>x.id===id); if(!cur)return;
+  var siblings=tChildrenOf(cur.parent_id, level);
   var idx=siblings.findIndex(x=>x.id===id), nIdx=idx+dir;
   if(nIdx<0||nIdx>=siblings.length)return;
   let temp=siblings[idx]; siblings[idx]=siblings[nIdx]; siblings[nIdx]=temp;
   for(let i=0;i<siblings.length;i++){
     let orig=nodes.find(x=>x.id===siblings[i].id);
-    orig.sort_order=i+1;
-    if(sb) await sb.from('nodes').update({sort_order:orig.sort_order}).eq('id',orig.id);
+    if(orig){
+      orig.sort_order=i+1;
+      if(sb) await sb.from('nodes').update({sort_order:orig.sort_order}).eq('id',orig.id);
+    }
   }
   tRenderLevel(level);
 }
@@ -625,8 +645,8 @@ function renderTargetUnitsTable(){
     if(role==='sub_admin'&&h.id!==mySub)return;
     if(adId!=='ALL'&&h.id!==adId)return;
 
-    h.divisions.forEach(d=>{
-      d.offices.forEach(off=>{
+    (h.divisions||[]).forEach(d=>{
+      (d.offices||[]).forEach(off=>{
         var cleanOff = off.replace(/\s*\(unit\)/gi, '');
         var recId=[tMain,ctx.l1,ctx.l2,ctx.l3,ctx.l4,h.id,d.name,cleanOff].join('|');
         var existing=targetRecords.find(r=>r.id===recId);
@@ -685,12 +705,15 @@ function updateCrumb(){
 function gotoStep(s){
   if(curMain==='extension'&&s===5)s=6;
   curStep=s; document.querySelectorAll('.wizard-step').forEach(x=>x.classList.remove('active'));
-  document.getElementById('w'+s).classList.add('active');
+  var ws=document.getElementById('w'+s); if(ws) ws.classList.add('active');
   if(s===2)renderL1(); if(s===3)renderL2(); if(s===4)renderL4(); if(s===5)renderItem(); if(s===6)renderQuestions();
   updateCrumb();
 }
 function pickMain(m){curMain=m;curL1=null;curL2=null;curL3=null;gotoStep(2);}
-function childrenOf(pid,level){return nodes.filter(n=>n.main_type===curMain&&n.level===level&&(pid?n.parent_id===pid:!n.parent_id)).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));}
+function childrenOf(pid,level){
+  nodes = Array.isArray(nodes) ? nodes : [];
+  return nodes.filter(n=>n && n.main_type===curMain&&n.level===level&&(pid?n.parent_id===pid:!n.parent_id)).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+}
 
 function builderSelectCard(n,sel,clickFn){
   return '<div class="node-card '+(sel?'sel':'')+'" onclick="'+clickFn+'(\''+n.id+'\')"><div class="flex justify-between"><div class="font-bold">'+n.title+'</div><span class="text-indigo-600 text-sm">'+(sel?'✓':'තෝරන්න →')+'</span></div></div>';
@@ -718,7 +741,7 @@ function renderL4(){
 function pickL3(id){curL3=id;renderL4();}
 function pickSub(id){curSub=id;renderL4();}
 function renderItem(){
-  let list=curL3?nodes.filter(n=>n.main_type==='development'&&n.level===4&&n.parent_id===curL3):[];
+  let list=curL3?nodes.filter(n=>n && n.main_type==='development'&&n.level===4&&n.parent_id===curL3):[];
   document.getElementById('itemList').innerHTML=list.map(n=>builderSelectCard(n,curItem===n.id,'pickItem')).join('')||'<div class="text-xs text-slate-400">Items නැත</div>';
 }
 function pickItem(id){curItem=id;renderItem();}
@@ -735,23 +758,25 @@ function resetQ(){document.getElementById('qForm').reset();document.getElementBy
 
 function renderQuestions(){
   var lid=leafId(); if(!lid)return;
-  var qs=questions.filter(q=>q.node_id===lid).sort((a,b)=>a.order_index-b.order_index);
+  questions = Array.isArray(questions) ? questions : [];
+  var qs=questions.filter(q=>q && q.node_id===lid).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
   document.getElementById('qCount').textContent=qs.length;
   document.getElementById('qList').innerHTML=qs.map((q,i)=>'<div class="rounded-xl border p-3 bg-white flex justify-between"><div><b>'+(i+1)+'. '+q.question_text+'</b><div class="text-xs text-slate-400">'+q.question_type+'</div></div><div class="flex gap-1"><button onclick="moveQ(\''+q.id+'\',-1)" class="btn btn-ghost px-2 py-1 text-xs">↑</button><button onclick="moveQ(\''+q.id+'\',1)" class="btn btn-ghost px-2 py-1 text-xs">↓</button><button onclick="editQ(\''+q.id+'\')" class="btn btn-ghost px-2 py-1 text-xs">Edit</button><button onclick="delQ(\''+q.id+'\')" class="text-red-500 text-xs px-2">Delete</button></div></div>').join('')||'<div class="text-xs text-slate-400">ප්‍රශ්න නැත</div>';
 }
 async function moveQ(id, dir){
-  var lid=leafId(); var qs=questions.filter(q=>q.node_id===lid).sort((a,b)=>a.order_index-b.order_index);
+  var lid=leafId(); var qs=questions.filter(q=>q && q.node_id===lid).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
   let idx=qs.findIndex(q=>q.id===id), nIdx=idx+dir; if(nIdx<0||nIdx>=qs.length)return;
   let t=qs[idx]; qs[idx]=qs[nIdx]; qs[nIdx]=t;
-  for(let i=0;i<qs.length;i++){ let q=questions.find(x=>x.id===qs[i].id); q.order_index=i+1; if(sb) await sb.from('questions').update({order_index:q.order_index}).eq('id',q.id); }
+  for(let i=0;i<qs.length;i++){ let q=questions.find(x=>x.id===qs[i].id); if(q){ q.order_index=i+1; if(sb) await sb.from('questions').update({order_index:q.order_index}).eq('id',q.id); } }
   renderQuestions();
 }
 document.getElementById('qForm').addEventListener('submit', async function(e){
   e.preventDefault();
   var lid=leafId(); if(!lid)return;
   var id=document.getElementById('qId').value;
-  var payload={id:id||'q'+Date.now(),node_id:lid,question_text:document.getElementById('qText').value.trim(),question_type:document.getElementById('qType').value,options:curOptions.slice(),is_required:document.getElementById('qReq').value==='1',order_index:id?questions.find(q=>q.id===id).order_index:questions.filter(q=>q.node_id===lid).length+1};
-  if(id){let idx=questions.findIndex(q=>q.id===id);questions[idx]=payload;}else questions.push(payload);
+  var existingQ = id ? questions.find(q=>q.id===id) : null;
+  var payload={id:id||'q'+Date.now(),node_id:lid,question_text:document.getElementById('qText').value.trim(),question_type:document.getElementById('qType').value,options:curOptions.slice(),is_required:document.getElementById('qReq').value==='1',order_index:existingQ?existingQ.order_index:questions.filter(q=>q.node_id===lid).length+1};
+  if(id){let idx=questions.findIndex(q=>q.id===id);if(idx>-1)questions[idx]=payload;}else questions.push(payload);
   if(sb) await sb.from('questions').upsert(payload);
   resetQ(); renderQuestions(); showToast('Save විය ✓',true);
 });
@@ -764,23 +789,23 @@ async function finishWizard(){ renderDashboard(); goNav('dashboard'); }
 /* ================= Item Price List ================= */
 var plChartInst=null;
 function initPriceList(){
-  let devYears=nodes.filter(n=>n.main_type==='development'&&n.level===1);
+  let devYears=(nodes||[]).filter(n=>n && n.main_type==='development'&&n.level===1);
   document.getElementById('plYear').innerHTML=devYears.map(y=>'<option value="'+y.id+'">'+y.title+'</option>').join('')||'<option value="">Year</option>';
   onPlYearChange();
 }
 function onPlYearChange(){
   let yId=document.getElementById('plYear').value;
-  document.getElementById('plProgram').innerHTML=nodes.filter(n=>n.main_type==='development'&&n.level===2&&n.parent_id===yId).map(p=>'<option value="'+p.id+'">'+p.title+'</option>').join('');
+  document.getElementById('plProgram').innerHTML=(nodes||[]).filter(n=>n && n.main_type==='development'&&n.level===2&&n.parent_id===yId).map(p=>'<option value="'+p.id+'">'+p.title+'</option>').join('');
   onPlProgChange();
 }
 function onPlProgChange(){
   let pId=document.getElementById('plProgram').value;
-  document.getElementById('plSubProgram').innerHTML=nodes.filter(n=>n.main_type==='development'&&n.level===3&&n.parent_id===pId).map(s=>'<option value="'+s.id+'">'+s.title+'</option>').join('');
+  document.getElementById('plSubProgram').innerHTML=(nodes||[]).filter(n=>n && n.main_type==='development'&&n.level===3&&n.parent_id===pId).map(s=>'<option value="'+s.id+'">'+s.title+'</option>').join('');
   onPlSubProgChange();
 }
 function onPlSubProgChange(){
   let spId=document.getElementById('plSubProgram').value;
-  let items=nodes.filter(n=>n.main_type==='development'&&n.level===4&&n.parent_id===spId);
+  let items=(nodes||[]).filter(n=>n && n.main_type==='development'&&n.level===4&&n.parent_id===spId);
   document.getElementById('plItemSelect').innerHTML=items.map(it=>'<option value="'+it.title+'">'+it.title+'</option>').join('')+'<option value="__CUSTOM__">+ වෙනත්...</option>';
   onPlItemSelectChange(); renderPlTableAndChart();
 }
@@ -807,8 +832,8 @@ document.getElementById('plForm').addEventListener('submit', async function(e){
   let unitPrice=parseFloat(document.getElementById('plUnitPrice').value)||0;
   let sub=document.getElementById('plSubsidy').value;
   let f=sub==='75%'?0.75:sub==='50%'?0.50:sub==='25%'?0.25:0;
-  let rec={id:editId||('pl_'+Date.now()),year:yTitle,program:pTitle,sub_program:spTitle,item_name:itemName,subsidy:sub,unit_price:unitPrice,farmer_price:parseFloat((unitPrice*f).toFixed(2)),gov_price:parseFloat((unitPrice-(unit*f)).toFixed(2))};
-  if(editId){let idx=plItems.findIndex(x=>x.id===editId);plItems[idx]=rec;}else plItems.push(rec);
+  let rec={id:editId||('pl_'+Date.now()),year:yTitle,program:pTitle,sub_program:spTitle,item_name:itemName,subsidy:sub,unit_price:unitPrice,farmer_price:parseFloat((unitPrice*f).toFixed(2)),gov_price:parseFloat((unitPrice-(unitPrice*f)).toFixed(2))};
+  if(editId){let idx=plItems.findIndex(x=>x.id===editId);if(idx>-1)plItems[idx]=rec;}else plItems.push(rec);
   if(sb) await sb.from('item_prices').upsert(rec,{onConflict:'id'});
   resetPlForm(); renderPlTableAndChart(); showToast('Save විය ✓',true);
 });
@@ -819,6 +844,7 @@ async function delPlItem(id){
   renderPlTableAndChart();
 }
 function renderPlTableAndChart(){
+  plItems = Array.isArray(plItems) ? plItems : [];
   document.getElementById('plTableBody').innerHTML=plItems.map(x=>'<tr><td class="text-xs"><b>'+x.year+'</b><br>'+x.program+'</td><td class="text-xs"><b>'+x.item_name+'</b></td><td class="text-xs">'+x.subsidy+'</td><td class="text-xs">Rs.'+x.unit_price+'</td><td class="text-xs font-bold text-emerald-600">Rs.'+x.gov_price+'</td><td class="text-xs font-bold text-indigo-600">Rs.'+x.farmer_price+'</td><td><button onclick="delPlItem(\''+x.id+'\')" class="text-red-500 text-xs">Del</button></td></tr>').join('')||'<tr><td colspan="7" class="text-center text-xs text-slate-400">දත්ත නැත</td></tr>';
   let ctx=document.getElementById('plChartCanvas');
   if(!ctx||typeof Chart==='undefined')return;
@@ -854,16 +880,18 @@ function fillDataFilters(){
   document.getElementById('fSub').innerHTML='<option value="">සියලු Sub Office</option>'+hierarchy.map(h=>'<option value="'+h.id+'">'+h.name+'</option>').join('');
 }
 function renderData(){
+  responses = Array.isArray(responses) ? responses : [];
   document.getElementById('dataScopeNote').textContent='සියලු දත්ත: '+responses.length;
-  document.getElementById('dataTbody').innerHTML=responses.slice(0,100).map(r=>'<tr><td class="text-xs"><b>'+(r.node_path||'')+'</b></td><td class="text-xs">'+r.division+'<br>'+r.office+'</td><td class="text-xs">'+JSON.stringify(r.answers).substring(0,100)+'</td><td class="text-xs">'+new Date(r.created_at).toLocaleDateString()+'</td><td><button onclick="delData(\''+r.id+'\')" class="text-red-500 text-xs">Del</button></td></tr>').join('')||'<tr><td colspan="5" class="text-center text-xs text-slate-400">දත්ත නැත</td></tr>';
+  document.getElementById('dataTbody').innerHTML=responses.slice(0,100).map(r=>'<tr><td class="text-xs"><b>'+(r.node_path||'')+'</b></td><td class="text-xs">'+(r.division||'')+'<br>'+(r.office||'')+'</td><td class="text-xs">'+JSON.stringify(r.answers||{}).substring(0,100)+'</td><td class="text-xs">'+(r.created_at?new Date(r.created_at).toLocaleDateString():'')+'</td><td><button onclick="delData(\''+r.id+'\')" class="text-red-500 text-xs">Del</button></td></tr>').join('')||'<tr><td colspan="5" class="text-center text-xs text-slate-400">දත්ත නැත</td></tr>';
 }
 async function delData(id){responses=responses.filter(x=>x.id!==id);if(sb)await sb.from('responses').delete().eq('id',id);renderData();}
 function downloadCSV(){
-  let csv='Path,Division,Office,Answers\n'+responses.map(r=>'"'+r.node_path+'","'+r.division+'","'+r.office+'","'+JSON.stringify(r.answers).replace(/"/g,'""')+'"').join('\n');
+  let csv='Path,Division,Office,Answers\n'+responses.map(r=>'"'+(r.node_path||'')+'","'+(r.division||'')+'","'+(r.office||'')+'","'+JSON.stringify(r.answers||{}).replace(/"/g,'""')+'"').join('\n');
   let blob=new Blob([csv],{type:'text/csv'}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='data.csv'; a.click();
 }
 function renderUsers(){
-  document.getElementById('userList').innerHTML=users.map(u=>'<div class="rounded-xl border p-3 flex justify-between bg-white"><div><b>'+u.name+'</b><div class="text-xs text-slate-500">'+u.username+' | '+u.role+'</div></div><button onclick="delUser(\''+u.id+'\')" class="text-red-500 text-xs">Del</button></div>').join('')||'<div class="text-xs text-slate-400">Users නැත</div>';
+  users = Array.isArray(users) ? users : [];
+  document.getElementById('userList').innerHTML=users.map(u=>'<div class="rounded-xl border p-3 flex justify-between bg-white"><div><b>'+(u.name||'')+'</b><div class="text-xs text-slate-500">'+(u.username||'')+' | '+(u.role||'')+'</div></div><button onclick="delUser(\''+u.id+'\')" class="text-red-500 text-xs">Del</button></div>').join('')||'<div class="text-xs text-slate-400">Users නැත</div>';
 }
 document.getElementById('userForm').addEventListener('submit',async function(e){
   e.preventDefault();
@@ -875,13 +903,13 @@ document.getElementById('userForm').addEventListener('submit',async function(e){
 async function delUser(id){users=users.filter(x=>x.id!==id);renderUsers();}
 function onUSub(){let h=hierarchy.find(x=>x.id===document.getElementById('uSub').value);document.getElementById('uDiv').innerHTML=h?h.divisions.map(d=>'<option>'+d.name+'</option>').join(''):'';onUDiv();}
 function onUDiv(){let divs=getOffices(document.getElementById('uDiv').value);document.getElementById('uOffice').innerHTML=divs.map(o=>'<option>'+o+'</option>').join('');}
-function getOffices(div){for(let h of hierarchy)for(let d of h.divisions)if(d.name===div)return d.offices;return [];}
+function getOffices(div){for(let h of hierarchy)for(let d of (h.divisions||[]))if(d.name===div)return d.offices||[];return [];}
 
 function renderHierarchy(){
   document.getElementById('hierList').innerHTML=hierarchy.map(h=>'<button onclick="selH(\''+h.id+'\')" class="w-full text-left rounded-xl border p-4 '+(selHierSub===h.id?'bg-indigo-600 text-white':'bg-white')+'"><div class="font-bold">'+h.name+'</div></button>').join('');
   let h2=hierarchy.find(x=>x.id===selHierSub);
   document.getElementById('hierTitle').textContent=h2?h2.name:'';
-  document.getElementById('hierDivs').innerHTML=h2?h2.divisions.map(d=>'<div onclick="selDiv(\''+d.name+'\')" class="cursor-pointer border p-3 rounded-xl '+(selHierDiv===d.name?'bg-indigo-50':'')+'">'+d.name+'</div>').join(''):'';
+  document.getElementById('hierDivs').innerHTML=h2?(h2.divisions||[]).map(d=>'<div onclick="selDiv(\''+d.name+'\')" class="cursor-pointer border p-3 rounded-xl '+(selHierDiv===d.name?'bg-indigo-50':'')+'">'+d.name+'</div>').join(''):'';
   document.getElementById('officeList').innerHTML=selHierDiv?getOffices(selHierDiv).map(o=>'<div class="border p-2 rounded text-sm">'+o+'</div>').join(''):'';
 }
 function selH(id){selHierSub=id;selHierDiv=null;renderHierarchy();}
@@ -891,12 +919,12 @@ function selDiv(d){selHierDiv=d;renderHierarchy();}
 async function sbSync(){
   if(!sb){document.getElementById('sbStatus').textContent='Offline';return;}
   try{
-    let n=await sb.from('nodes').select('*').order('sort_order'); if(n.data) nodes=n.data;
-    let q=await sb.from('questions').select('*').order('order_index'); if(q.data) questions=q.data;
-    let r=await sb.from('responses').select('*').order('created_at',{ascending:false}); if(r.data) responses=r.data;
-    let t=await sb.from('targets').select('*'); if(t.data) targetRecords=t.data;
-    let p=await sb.from('item_prices').select('*'); if(p.data) plItems=p.data;
-    let u=await sb.from('profiles').select('*'); if(u.data) users=u.data;
+    let n=await sb.from('nodes').select('*').order('sort_order'); if(Array.isArray(n.data)) nodes=n.data;
+    let q=await sb.from('questions').select('*').order('order_index'); if(Array.isArray(q.data)) questions=q.data;
+    let r=await sb.from('responses').select('*').order('created_at',{ascending:false}); if(Array.isArray(r.data)) responses=r.data;
+    let t=await sb.from('targets').select('*'); if(Array.isArray(t.data)) targetRecords=t.data;
+    let p=await sb.from('item_prices').select('*'); if(Array.isArray(p.data)) plItems=p.data;
+    let u=await sb.from('profiles').select('*'); if(Array.isArray(u.data)) users=u.data;
     document.getElementById('sbStatus').textContent='Supabase: Connected ✓';
   }catch(e){document.getElementById('sbStatus').textContent='Error';}
   renderDashboard(); renderData();
@@ -905,5 +933,4 @@ async function sbSync(){
 fillDataFilters(); document.getElementById('uSub').innerHTML=hierarchy.map(h=>'<option value="'+h.id+'">'+h.name+'</option>').join(''); onUSub();
 renderDashboard(); gotoStep(1); sbSync();
 </script>
-<script id="hier-data" type="application/json">[{"id":"sub1","name":"ADA Kundasale","divisions":[{"name":"Dambagahapitiya","offices":["Dambagahapitiya - Pradhana Karyalaya"]},{"name":"Kalunthenna","offices":["Kalunthenna - Pradhana Karyalaya"]},{"name":"Nugethenna","offices":["Nugethenna - Pradhana Karyalaya"]},{"name":"Morayaya","offices":["Morayaya - Pradhana Karyalaya"]},{"name":"Ulpathagama","offices":["Ulpathagama - Pradhana Karyalaya"]},{"name":"Namadagala","offices":["Namadagala - Pradhana Karyalaya"]},{"name":"Theldeniya","offices":["Theldeniya1 - Pradhana Karyalaya","Theldeniya2 - Pradhana Karyalaya"]},{"name":"Udispaththuwa","offices":["Udispaththuwa - Pradhana Karyalaya"]},{"name":"Wendaruwa","offices":["Wendaruwa - Pradhana Karyalaya"]},{"name":"Digana","offices":["Digana - Pradhana Karyalaya"]},{"name":"Gunnepana","offices":["Gunnepana - Pradhana Karyalaya"]},{"name":"Manikhinna","offices":["Manikhinna - Pradhana Karyalaya"]},{"name":"Wavinna","offices":["Wavinna - Pradhana Karyalaya"]},{"name":"Medamahanuwara","offices":["Medamahanuwara - Pradhana Karyalaya"]}]},{"id":"sub2","name":"ADA Kandy","divisions":[{"name":"Waththegama","offices":["Waththegama - Pradhana Karyalaya"]},{"name":"Huluganga","offices":["Huluganga - Pradhana Karyalaya"]},{"name":"Bowala","offices":["Bowala - Pradhana Karyalaya"]},{"name":"Ketawalaleula","offices":["Ketawalaleula - Pradhana Karyalaya"]},{"name":"Galaha","offices":["Galaha - Pradhana Karyalaya"]},{"name":"Marassana","offices":["Marassana - Pradhana Karyalaya"]},{"name":"Thalathuoya","offices":["Thalathuoya - Pradhana Karyalaya"]}]},{"id":"sub3","name":"ADA Udunuwara / Yatinuwara","divisions":[{"name":"Edaduwawe","offices":["Edaduwawe - Pradhana Karyalaya"]},{"name":"Giragama","offices":["Giragama - Pradhana Karyalaya"]},{"name":"Manikdiwella","offices":["Manikdiwella - Pradhana Karyalaya"]},{"name":"Alapalawala","offices":["Alapalawala - Pradhana Karyalaya"]},{"name":"Ambanwala","offices":["Ambanwala - Pradhana Karyalaya"]},{"name":"Imbuldeniya","offices":["Imbuldeniya - Pradhana Karyalaya"]},{"name":"Pethiyagoda","offices":["Pethiyagoda - Pradhana Karyalaya"]},{"name":"Thalawathura","offices":["Thalawathura - Pradhana Karyalaya"]},{"name":"Medapitiya","offices":["Medapitiya - Pradhana Karyalaya"]},{"name":"Mulgama","offices":["Mulgama - Pradhana Karyalaya"]},{"name":"Delpitiya","offices":["Delpitiya - Pradhana Karyalaya"]},{"name":"Gampola","offices":["Gampola - Pradhana Karyalaya"]},{"name":"Kuruduwaththa","offices":["Kuruduwaththa - Pradhana Karyalaya"]},{"name":"Rambukpitiya","offices":["Rambukpitiya - Pradhana Karyalaya"]}]},{"id":"sub4","name":"ADA Harispattuwa","divisions":[{"name":"Aludeniya","off_ices":["Aludeniya - Pradhana Karyalaya"],"offices":["Aludeniya - Pradhana Karyalaya"]},{"name":"Galagedara","offices":["Galagedara - Pradhana Karyalaya"]},{"name":"Welivita","offices":["Welivita - Pradhana Karyalaya"]},{"name":"Ankumbura","offices":["Ankumbura - Pradhana Karyalaya"]},{"name":"Batugoda","offices":["Batugoda - Pradhana Karyalaya"]},{"name":"Wawala","offices":["Wawala - Pradhana Karyalaya"]},{"name":"Alawathugoda","offices":["Alawathugoda - Pradhana Karyalaya"]},{"name":"Medawala","offices":["Medawala - Pradhana Karyalaya"]},{"name":"Yatiwawala","offices":["Yatiwawala - Pradhana Karyalaya"]},{"name":"Hatharaliyadda","offices":["Hatharaliyadda - Pradhana Karyalaya"]}]}]</script>
 </body></html>
