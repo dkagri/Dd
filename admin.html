@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="si"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Admin Dashboard | FieldWork OS</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="styles.css">
+<style>
+.wizard-step{display:none}.wizard-step.active{display:block}
+.step-dot{width:32px;height:32px;border-radius:999px;display:grid;place-items:center;font-weight:700;font-size:13px;background:#e2e8f0;color:#64748b}
+.step-dot.done{background:#059669;color:#fff}.step-dot.now{background:#4f46e5;color:#fff}
+.node-card{border:2px solid #e2e8f0;border-radius:16px;padding:14px;background:#fff;cursor:pointer;transition:.15s}
+.node-card.sel{border-color:#4f46e5;background:#eef2ff}
+.node-card.off{opacity:.6}
+.switch{width:44px;height:24px;border-radius:999px;background:#cbd5e1;position:relative;cursor:pointer;flex-shrink:0}
+.switch:after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:999px;background:#fff;transition:.15s}
+.switch.on{background:#059669}.switch.on:after{left:23px}
+.q-preview{border:1px dashed #94a3b8;border-radius:14px;padding:14px;background:#f8fafc}
+</style><script>window.addEventListener('error',function(e){var d=document.getElementById('jsError');if(!d){d=document.createElement('div');d.id='jsError';d.style.cssText='background:#fef2f2;color:#b91c1c;padding:12px;margin:12px;border-radius:12px;font-size:13px';document.body.prepend(d);}d.textContent='JS Error: '+(e.message||'unknown')+' — Screenshot එකක් යවන්න';});</script>
+<style>
+.modal-back{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(2px);z-index:100;display:none;align-items:flex-end;justify-content:center;padding:12px}
+.modal-back.show{display:flex}
+.modal-card{background:#fff;border-radius:22px 22px 16px 16px;width:100%;max-width:460px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:slideUp .22s ease}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(80px);background:#0f172a;color:#fff;padding:12px 18px;border-radius:999px;font-size:13px;font-weight:600;z-index:120;transition:.25s;max-width:92vw;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.ok{background:#059669}.toast.err{background:#dc2626}
+@media(min-width:640px){.modal-back{align-items:center;padding:20px}.modal-card{border-radius:20px}}
+</style>
+</head>
+
+<div id="modalBack" class="modal-back" onclick="if(event.target===this) closeModal(false)"><div class="modal-card">
+<div id="modalIcon" class="text-3xl">ℹ️</div><h3 id="modalTitle" class="font-bold text-[18px] mt-2">Title</h3><p id="modalMsg" class="text-sm text-slate-500 mt-1"></p>
+<div id="modalInputWrap" class="hidden mt-3"><input id="modalInput" placeholder=""></div>
+<div id="modalSelectWrap" class="hidden mt-3"><select id="modalSelect"></select></div>
+<div class="flex gap-2 mt-5"><button id="modalCancel" onclick="closeModal(false)" class="btn btn-ghost flex-1">Cancel</button><button id="modalOk" onclick="closeModal(true)" class="btn btn-primary flex-1">OK</button></div>
+</div></div>
+<div id="toast" class="toast"></div>
+<body class="bg-[#f8fafc]">
+<!-- SIDEBAR OVERLAY -->
+<div id="sidebarOverlay" onclick="closeSidebar()" class="fixed inset-0 bg-black/50 z-[35] hidden lg:hidden"></div>
+<button id="sidebarCloseFab" onclick="closeSidebar()" class="hidden lg:hidden fixed top-3 right-3 z-[60] w-11 h-11 rounded-full bg-white shadow-xl text-xl font-bold" aria-label="Close Menu">✕</button>
+<!-- SIDEBAR -->
+<aside id="sidebar" class="sidebar p-5 flex flex-col">
+<div class="flex items-center gap-3"><div class="w-11 h-11 rounded-xl bg-white text-slate-900 grid place-items-center font-bold text-lg shrink-0">A</div><div class="min-w-0 flex-1"><div class="font-bold leading-tight">FieldWork OS</div><div class="text-[11px] text-slate-400">DD Kandy • Admin Dashboard</div></div><button onclick="closeSidebar()" aria-label="Close Menu" class="lg:hidden shrink-0 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white text-[20px] font-bold grid place-items-center leading-none">✕</button></div>
+<nav class="mt-7 space-y-1 text-[14px]">
+<button data-nav="dashboard" onclick="goNav('dashboard')" class="nav-btn w-full text-left px-4 py-3 rounded-xl bg-white text-slate-900 font-semibold">🏠 Dashboard</button>
+<button data-nav="targets" onclick="goNav('targets')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">🎯 Target Setup<br><span class="text-[11px] font-normal opacity-80">Extension & Development Targets</span></button>
+<button data-nav="builder" onclick="goNav('builder')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">🧩 ප්‍රශ්න සකස් කිරීම<br><span class="text-[11px] font-normal opacity-80">Form Builder</span></button>
+<button data-nav="pricelist" onclick="goNav('pricelist')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">💰 Item Price List<br><span class="text-[11px] font-normal opacity-80">Year / Program / Item / Price</span></button>
+<button data-nav="data" onclick="goNav('data')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">📊 දත්ත (Data)<br><span class="text-[11px] font-normal opacity-80">Edit / Delete / Filter</span></button>
+<button data-nav="users" onclick="goNav('users')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">👥 පරිශීලකයින් (Users)</button>
+<button data-nav="hierarchy" onclick="goNav('hierarchy')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">🏛️ කාර්යාල</button>
+</nav>
+<div class="lg:hidden mt-2"><button onclick="closeSidebar()" class="w-full rounded-xl bg-white/10 py-2 text-xs font-semibold">← Back to Page</button></div>
+<div class="mt-auto rounded-2xl bg-white/10 p-4"><div class="text-sm font-semibold" id="roleLabel">Admin</div><div class="text-xs text-slate-300" id="userLabel"></div><div class="text-[11px] text-emerald-300 mt-1" id="scopeLabel"></div>
+<button onclick="logout()" class="mt-3 w-full rounded-xl bg-red-500 py-2 text-sm font-semibold">Logout</button></div>
+</aside>
+
+<div class="main">
+<div class="topbar"><div class="flex items-center gap-3"><button onclick="openSidebar()" class="lg:hidden btn btn-ghost px-3">☰ Menu</button><h1 class="font-bold text-[17px] md:text-[19px]" id="pageTitle">Dashboard</h1><span class="text-[10px] px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold whitespace-nowrap">DD Kandy</span></div><div class="flex items-center gap-2"><span id="sbStatus" class="text-[11px] px-2 py-1 rounded bg-slate-100">Supabase...</span><button onclick="goNav('targets')" class="btn btn-primary px-4 py-2 text-xs">🎯 Target Setup</button></div></div>
+
+<div class="p-4 md:p-6 max-w-[1100px] mx-auto space-y-5">
+
+<!-- ============ DASHBOARD ============ -->
+<div id="page-dashboard" class="page">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div onclick="window.location.href='extension.html'" class="cursor-pointer rounded-3xl p-6 text-white shadow-lg transition-transform hover:-translate-y-1 relative overflow-hidden" style="background:linear-gradient(135deg,#2563eb,#1d4ed8)">
+    <div class="flex justify-between items-start">
+      <div>
+        <div class="text-xs font-bold uppercase tracking-wider text-blue-100">EXTENSION PROGRESS</div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span class="text-4xl font-extrabold" id="extProgVal">0</span>
+          <span class="text-lg font-medium text-blue-200">/ <span id="extTargetVal">0</span></span>
+        </div>
+        <p class="text-xs text-blue-100 mt-1">සම්පූර්ණ වූ Extension ප්‍රමාණය (විස්තර සඳහා Click කරන්න →)</p>
+      </div>
+      <div class="flex flex-col items-end gap-2"><div class="w-11 h-11 rounded-2xl bg-white/15 grid place-items-center text-xl">🌾</div></div>
+    </div>
+    <div class="mt-5 w-full bg-blue-950/40 rounded-full h-3 overflow-hidden">
+      <div id="extProgBar" class="bg-white h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+    </div>
+  </div>
+
+  <div onclick="window.location.href='development.html'" class="cursor-pointer rounded-3xl p-6 text-white shadow-lg transition-transform hover:-translate-y-1 relative overflow-hidden" style="background:linear-gradient(135deg,#059669,#047857)">
+    <div class="flex justify-between items-start">
+      <div>
+        <div class="text-xs font-bold uppercase tracking-wider text-emerald-100">DEVELOPMENT PROGRESS</div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span class="text-4xl font-extrabold" id="devProgVal">0</span>
+          <span class="text-lg font-medium text-emerald-200">/ <span id="devTargetVal">0</span></span>
+        </div>
+        <p class="text-xs text-emerald-100 mt-1">සම්පූර්ණ වූ Development ප්‍රමාණය (විස්තර සඳහා Click කරන්න →)</p>
+      </div>
+      <div class="flex flex-col items-end gap-2"><div class="w-11 h-11 rounded-2xl bg-white/15 grid place-items-center text-xl">🏗️</div></div>
+    </div>
+    <div class="mt-5 w-full bg-emerald-950/40 rounded-full h-3 overflow-hidden">
+      <div id="devProgBar" class="bg-white h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-5">
+<div class="card !p-4"><div class="text-xs text-slate-500">Extension අංශ</div><div class="text-2xl font-bold mt-1 text-indigo-600" id="kExt">0</div></div>
+<div class="card !p-4"><div class="text-xs text-slate-500">Development අංශ</div><div class="text-2xl font-bold mt-1 text-emerald-600" id="kDev">0</div></div>
+<div class="card !p-4"><div class="text-xs text-slate-500">මුළු ප්‍රශ්න</div><div class="text-2xl font-bold mt-1" id="kQ">0</div></div>
+<div class="card !p-4"><div class="text-xs text-slate-500">මුළු පිළිතුරු</div><div class="text-2xl font-bold mt-1" id="kR">0</div></div>
+</div>
+
+<div class="grid md:grid-cols-3 gap-4 mt-5">
+  <div class="card !p-4 flex flex-col justify-between gap-3 border-2 border-indigo-100">
+    <div><h3 class="font-bold text-indigo-900">🎯 Target Setup</h3><p class="text-xs text-slate-500 mt-1">Season/Year, Program, Sub Program, Item සහ 45 AI Offices Target සැකසීම</p></div>
+    <button onclick="goNav('targets')" class="btn btn-primary w-full py-2.5 text-xs">Target සකසන්න →</button>
+  </div>
+  <div class="card !p-4 flex flex-col justify-between gap-3">
+    <div><h3 class="font-bold">🧩 ප්‍රශ්න සකස් කිරීම</h3><p class="text-xs text-slate-500 mt-1">Target සැකසූ අංශ සඳහා Unit ප්‍රශ්න සෑදීම</p></div>
+    <button onclick="goNav('builder')" class="btn btn-ghost w-full py-2.5 text-xs">ප්‍රශ්න සකසන්න →</button>
+  </div>
+  <div class="card !p-4 flex flex-col justify-between gap-3">
+    <div><h3 class="font-bold">💰 Item Price List</h3><p class="text-xs text-slate-500 mt-1">Development Items සඳහා Subsidy, Price සහ Chart</p></div>
+    <button onclick="goNav('pricelist')" class="btn btn-success w-full py-2.5 text-xs">Price List විවෘත කරන්න →</button>
+  </div>
+</div>
+
+<div class="card mt-5"><h3 class="font-bold">දැන් Unit එකේ පෙන්වන්නේ — <span class="text-emerald-600">Published Only</span></h3><div id="publishedBox" class="grid md:grid-cols-2 gap-3 mt-4"></div></div>
+<div class="card mt-5"><h3 class="font-bold">නවතම පිළිතුරු (Latest 8)</h3><div id="recentBox" class="mt-3 space-y-2"></div><button onclick="goNav('data')" class="btn btn-ghost mt-3 text-xs">සියලු දත්ත බලන්න →</button></div>
+</div>
+
+<!-- ============ TARGET SETUP ============ -->
+<div id="page-targets" class="page hidden space-y-5">
+  <div class="card !py-3 flex flex-wrap items-center gap-2 text-[13px]">
+    <span class="font-bold">🎯 Target Setup:</span>
+    <span id="tCrumb" class="text-indigo-700 font-semibold">Extension / Development තෝරන්න</span>
+    <button onclick="resetTargetWizard()" class="ml-auto btn btn-ghost px-3 py-1.5 text-xs">↺ මුල සිට</button>
+  </div>
+
+  <div id="tw1" class="card">
+    <h2 class="font-bold text-[19px]">Step 1 — අංශය තෝරන්න (Extension / Development)</h2>
+    <p class="text-sm text-slate-500 mt-1">මෙහි සකසන ව්‍යුහය (Structure) ස්වයංක්‍රීයව ප්‍රශ්න සකස් කිරීමේ (Form Builder) සහ Price List හි දිස්වේ.</p>
+    <div class="grid md:grid-cols-2 gap-4 mt-5">
+      <button onclick="tPickMain('extension')" class="text-left rounded-2xl border-2 border-indigo-200 hover:border-indigo-600 p-5 bg-white transition">
+        <div class="text-3xl">🌾</div>
+        <div class="font-bold text-lg mt-2">Extension Target Setup</div>
+        <div class="text-sm text-slate-500 mt-1">Order: Season → Main Program → Sub Program → 45 AI Offices Target</div>
+        <div class="mt-3 text-indigo-600 font-semibold text-sm">තෝරන්න →</div>
+      </button>
+      <button onclick="tPickMain('development')" class="text-left rounded-2xl border-2 border-emerald-200 hover:border-emerald-600 p-5 bg-white transition">
+        <div class="text-3xl">🏗️</div>
+        <div class="font-bold text-lg mt-2">Development Target Setup</div>
+        <div class="text-sm text-slate-500 mt-1">Order: Year → Program → Sub Program → Item → 45 AI Offices Target</div>
+        <div class="mt-3 text-emerald-600 font-semibold text-sm">තෝරන්න →</div>
+      </button>
+    </div>
+  </div>
+
+  <div id="tw2" class="card hidden">
+    <h2 class="font-bold text-[19px]" id="tw2Title">Step 2 — Season / Year</h2>
+    <div class="flex gap-2 mt-4">
+      <input id="tNewL1" placeholder="උදා: 2026/27 Maha හෝ 2026">
+      <button onclick="tAddNode(1)" class="btn btn-primary px-4 shrink-0">+ Add</button>
+    </div>
+    <div id="tL1List" class="mt-4 space-y-2"></div>
+    <div class="flex gap-2 mt-5">
+      <button onclick="tGoto(1)" class="btn btn-ghost">← Back</button>
+      <button onclick="tGoto(3)" id="tw2Next" class="btn btn-primary ml-auto" disabled>Next →</button>
+    </div>
+  </div>
+
+  <div id="tw3" class="card hidden">
+    <h2 class="font-bold text-[19px]" id="tw3Title">Step 3 — Program</h2>
+    <p class="text-xs text-slate-500 mt-1" id="tw3Desc"></p>
+    <div class="flex gap-2 mt-4">
+      <input id="tNewL2" placeholder="උදා: Paddy Cultivation හෝ PSDG / KNUCKLES">
+      <button onclick="tAddNode(2)" class="btn btn-primary px-4 shrink-0">+ Add</button>
+    </div>
+    <div id="tL2List" class="mt-4 space-y-2"></div>
+    <div class="flex gap-2 mt-5">
+      <button onclick="tGoto(2)" class="btn btn-ghost">← Back</button>
+      <button onclick="tGoto(4)" id="tw3Next" class="btn btn-primary ml-auto" disabled>Next →</button>
+    </div>
+  </div>
+
+  <div id="tw4" class="card hidden">
+    <h2 class="font-bold text-[19px]" id="tw4Title">Step 4 — Sub Program</h2>
+    <p class="text-xs text-slate-500 mt-1" id="tw4Desc"></p>
+    <div class="flex gap-2 mt-4">
+      <input id="tNewL3" placeholder="Sub Program නම ඇතුළත් කරන්න">
+      <button onclick="tAddNode(3)" class="btn btn-primary px-4 shrink-0">+ Add</button>
+    </div>
+    <div id="tL3List" class="mt-4 space-y-2"></div>
+    <div class="flex gap-2 mt-5">
+      <button onclick="tGoto(3)" class="btn btn-ghost">← Back</button>
+      <button onclick="tAfterL3()" id="tw4Next" class="btn btn-primary ml-auto">Next →</button>
+    </div>
+  </div>
+
+  <div id="tw5" class="card hidden">
+    <h2 class="font-bold text-[19px]">Step 5 — Item තෝරන්න / එකතු කරන්න (Development)</h2>
+    <div class="flex gap-2 mt-4">
+      <input id="tNewL4" placeholder="උදා: Paddy Seed / Urea / Water Pump">
+      <button onclick="tAddNode(4)" class="btn btn-primary px-4 shrink-0">+ Add Item</button>
+    </div>
+    <div id="tL4List" class="mt-4 space-y-2"></div>
+    <div class="flex gap-2 mt-5">
+      <button onclick="tGoto(4)" class="btn btn-ghost">← Back</button>
+      <button onclick="tGoto(6)" id="tw5Next" class="btn btn-primary ml-auto">Next: AI Office Targets →</button>
+    </div>
+  </div>
+
+  <!-- Step 6: AI Offices Target Update (Filtered ONLY by AD Office) -->
+  <div id="tw6" class="card hidden">
+    <div class="flex flex-wrap justify-between items-center gap-3">
+      <div>
+        <h2 class="font-bold text-[19px]">🏛️ AI Office Target Update</h2>
+        <p class="text-xs text-slate-500 mt-1">AD Office (Sub Office) அடிப்படையில் AI Office இலக்குகளை உள்ளிடவும்.</p>
+      </div>
+      <div class="bg-indigo-50 border border-indigo-200 px-4 py-2 rounded-xl text-right">
+        <div class="text-[11px] text-indigo-600 font-semibold">මුළු Target එකතුව (Total)</div>
+        <div class="text-xl font-extrabold text-indigo-900" id="tTotalSum">0</div>
+      </div>
+    </div>
+
+    <!-- Filter: AD Office only -->
+    <div class="mt-4 bg-slate-50 p-3 rounded-2xl border">
+      <label class="text-xs font-semibold text-slate-600">AD Office (Sub Office) තෝරන්න:</label>
+      <select id="tFilterAdOffice" onchange="renderTargetUnitsTable()" class="mt-1 bg-white"></select>
+    </div>
+
+    <!-- AI Offices Target Table (Without AD Division column and without (unit) text) -->
+    <div class="table-wrap mt-4">
+      <table>
+        <thead>
+          <tr>
+            <th>AD Office</th>
+            <th>AI Office</th>
+            <th class="w-40">Target Value</th>
+          </tr>
+        </thead>
+        <tbody id="tUnitsTbody"></tbody>
+      </table>
+    </div>
+
+    <div class="flex flex-wrap gap-2 mt-5">
+      <button onclick="tBackFromUnits()" class="btn btn-ghost">← Back</button>
+      <button onclick="saveAllTargets()" class="btn btn-success ml-auto px-6">💾 Save Targets (Supabase)</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ BUILDER ============ -->
+<div id="page-builder" class="page hidden">
+<div class="card !py-3 flex flex-wrap items-center gap-2 text-[13px]"><span class="font-bold">ඔබ සිටින්නේ:</span><span id="crumb" class="text-indigo-700 font-semibold">Extension / Development තෝරන්න</span><button onclick="resetWizard()" class="ml-auto btn btn-ghost px-3 py-1.5 text-xs">↺ මුල සිට</button></div>
+
+<div class="flex items-center gap-2 md:gap-3 text-[11px] md:text-xs font-semibold overflow-x-auto pb-1">
+<div class="flex items-center gap-2"><span class="step-dot now" id="dot1">1</span><span>අංශය</span></div><span class="text-slate-300">→</span>
+<div class="flex items-center gap-2"><span class="step-dot" id="dot2">2</span><span id="lbl2">Season / Year</span></div><span class="text-slate-300">→</span>
+<div class="flex items-center gap-2"><span class="step-dot" id="dot3">3</span><span id="lbl3">Program</span></div><span class="text-slate-300">→</span>
+<div class="flex items-center gap-2" id="step4Wrap"><span class="step-dot" id="dot4">4</span><span id="lbl4">Sub Program</span></div><span class="text-slate-300" id="arrow4">→</span>
+<div class="flex items-center gap-2" id="step5Wrap"><span class="step-dot" id="dot5">5</span><span id="lbl5">Item</span></div><span class="text-slate-300" id="arrow5">→</span>
+<div class="flex items-center gap-2" id="step6Wrap"><span class="step-dot" id="dot6">6</span><span>ප්‍රශ්න</span></div>
+</div>
+
+<div id="w1" class="wizard-step active">
+<div class="card"><h2 class="font-bold text-[19px]">Step 1 — Extension / Development තෝරන්න</h2>
+<div class="grid md:grid-cols-2 gap-4 mt-5">
+<button onclick="pickMain('extension')" class="text-left rounded-2xl border-2 border-indigo-200 hover:border-indigo-600 p-5 bg-white"><div class="text-3xl">🌾</div><div class="font-bold text-lg mt-2">Extension — කෘෂිකර්ම දිගුව</div><div class="mt-3 text-indigo-600 font-semibold text-sm">තෝරන්න →</div></button>
+<button onclick="pickMain('development')" class="text-left rounded-2xl border-2 border-emerald-200 hover:border-emerald-600 p-5 bg-white"><div class="text-3xl">🏗️</div><div class="font-bold text-lg mt-2">Development — සංවර්ධන</div><div class="mt-3 text-emerald-600 font-semibold text-sm">තෝරන්න →</div></button>
+</div></div>
+</div>
+
+<div id="w2" class="wizard-step">
+<div class="card"><div class="flex justify-between items-center"><h2 class="font-bold text-[19px]" id="w2Title">Step 2</h2><button onclick="goNav('targets')" class="btn btn-ghost text-xs">+ Target Setup වෙත</button></div>
+<div id="l1List" class="mt-4 space-y-2"></div>
+<div class="flex gap-2 mt-5"><button onclick="gotoStep(1)" class="btn btn-ghost">← Back</button><button onclick="gotoStep(3)" id="w2Next" class="btn btn-primary ml-auto" disabled>Next →</button></div></div>
+</div>
+
+<div id="w3" class="wizard-step">
+<div class="card"><h2 class="font-bold text-[19px]" id="w3Title">Step 3</h2><p class="text-xs text-slate-500 mt-1" id="w3Desc"></p>
+<div id="l2List" class="mt-4 space-y-2"></div>
+<div class="flex gap-2 mt-5"><button onclick="gotoStep(2)" class="btn btn-ghost">← Back</button><button onclick="w3Next()" id="w3Next" class="btn btn-primary ml-auto" disabled>Next →</button></div></div>
+</div>
+
+<div id="w4" class="wizard-step">
+<div class="card"><h2 class="font-bold text-[19px]" id="w4Title">Step 4</h2><p class="text-xs text-slate-500 mt-1" id="w4Desc"></p>
+<div id="l3List" class="mt-4 space-y-2"></div>
+<div class="flex gap-2 mt-5"><button onclick="gotoStep(3)" class="btn btn-ghost">← Back</button><button onclick="w4Next()" id="w4Next" class="btn btn-primary ml-auto" disabled>Next →</button></div></div>
+</div>
+
+<div id="w5" class="wizard-step">
+<div class="card"><h2 class="font-bold text-[19px]">Step 5 — Item තෝරන්න</h2>
+<div id="itemList" class="mt-4 space-y-2"></div>
+<div class="flex gap-2 mt-5"><button onclick="gotoStep(4)" class="btn btn-ghost">← Back</button><button onclick="gotoStep(6)" class="btn btn-primary ml-auto">Next: ප්‍රශ්න →</button></div></div>
+</div>
+
+<div id="w6" class="wizard-step">
+<div class="card"><h2 class="font-bold text-[19px]">Step 6 — Unit ප්‍රශ්න සාදන්න</h2>
+<div class="flex flex-wrap gap-2 mt-3"><button onclick="loadDevTemplate()" class="btn btn-success text-xs px-3 py-2">Development Template</button><button onclick="loadExtTemplate()" class="btn btn-ghost text-xs px-3 py-2">Extension Template</button></div>
+<div class="grid lg:grid-cols-[400px_1fr] gap-5 mt-4">
+<form id="qForm" class="space-y-3 border rounded-2xl p-4 h-fit bg-slate-50"><input type="hidden" id="qId">
+<div><label>ප්‍රශ්නය — Question *</label><textarea id="qText" rows="2" required class="mt-1"></textarea></div>
+<div class="grid grid-cols-2 gap-3"><div><label>පිළිතුරු වර්ගය</label><select id="qType" onchange="onQType()" class="mt-1"><option value="short_text">Short Answer</option><option value="paragraph">Paragraph</option><option value="multiple_choice">Multiple Choice</option><option value="checkbox">Multi Choice</option><option value="dropdown">Dropdown</option><option value="number">Number</option><option value="date">Date</option><option value="scale">Scale 1-5</option><option value="yes_no">Yes / No</option></select></div><div><label>අනිවාර්යද?</label><select id="qReq" class="mt-1"><option value="1">Yes *</option><option value="0">No</option></select></div></div>
+<div id="optWrap" class="hidden"><label>Options</label><div id="optList" class="space-y-2 mt-1"></div><div class="flex gap-2 mt-2"><input id="optInput"><button type="button" onclick="addOption()" class="btn btn-ghost px-3 shrink-0">+ Add</button></div></div>
+<button class="btn btn-primary w-full">Save ප්‍රශ්නය</button><button type="button" onclick="resetQ()" class="btn btn-ghost w-full">Reset</button></form>
+<div><div class="font-semibold">මෙම අංශයේ ප්‍රශ්න (<span id="qCount">0</span>)</div><div id="qList" class="mt-3 space-y-2"></div><div class="q-preview mt-4"><div class="font-semibold text-sm">👁️ Preview</div><div id="qPreview" class="mt-3 space-y-3"></div></div></div>
+</div>
+<div class="flex gap-2 mt-5"><button onclick="backFromQ()" class="btn btn-ghost">← Back</button><button onclick="finishWizard()" class="btn btn-success ml-auto">✓ අවසන් — Dashboard</button></div></div>
+</div>
+</div>
+
+<!-- ============ ITEM PRICE LIST ============ -->
+<div id="page-pricelist" class="page hidden space-y-5">
+  <div class="card">
+    <div class="flex flex-wrap justify-between items-center gap-3">
+      <div><h2 class="font-bold text-[19px]">💰 Item Price List</h2></div>
+      <div class="flex flex-wrap gap-2">
+        <label class="btn btn-ghost px-3 py-1.5 text-xs cursor-pointer">📥 Import Excel<input type="file" id="plExcelInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="importPriceExcel(event)"></label>
+        <button onclick="downloadPriceExcel()" class="btn btn-success px-3 py-1.5 text-xs">⬇ Download Excel</button>
+      </div>
+    </div>
+    <div class="grid lg:grid-cols-[420px_1fr] gap-5 mt-5">
+      <div class="border rounded-2xl p-4 bg-slate-50 h-fit">
+        <form id="plForm" class="space-y-3 mt-4">
+          <input type="hidden" id="plEditId">
+          <div><label class="text-xs font-semibold">1. Year *</label><select id="plYear" onchange="onPlYearChange()" required class="mt-1 bg-white"></select></div>
+          <div><label class="text-xs font-semibold">2. Program *</label><select id="plProgram" onchange="onPlProgChange()" required class="mt-1 bg-white"></select></div>
+          <div><label class="text-xs font-semibold">3. Sub Program *</label><select id="plSubProgram" onchange="onPlSubProgChange()" required class="mt-1 bg-white"></select></div>
+          <div><label class="text-xs font-semibold">4. Item Name *</label><select id="plItemSelect" onchange="onPlItemSelectChange()" class="mt-1 bg-white"></select><input id="plItemCustom" placeholder="වෙනත් Item..." class="mt-2 bg-white hidden"></div>
+          <hr>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="text-xs font-semibold">5. Subsidy *</label><select id="plSubsidy" onchange="calcPlPrices()" class="mt-1 bg-white"><option value="75%">75%</option><option value="50%">50%</option><option value="25%">25%</option><option value="free">Free</option></select></div>
+            <div><label class="text-xs font-semibold">6. Unit Price *</label><input id="plUnitPrice" type="number" step="0.01" min="0" oninput="calcPlPrices()" required class="mt-1 bg-white"></div>
+          </div>
+          <div class="grid grid-cols-2 gap-3 bg-white p-3 rounded-xl border">
+            <div><label class="text-[11px] text-slate-500 font-semibold">Gov Price - Auto</label><input id="plGovPrice" type="number" readonly class="mt-1 bg-slate-50 font-bold text-emerald-700" value="0.00"></div>
+            <div><label class="text-[11px] text-slate-500 font-semibold">Farmer Price - Auto</label><input id="plFarmerPrice" type="number" readonly class="mt-1 bg-slate-50 font-bold text-indigo-700" value="0.00"></div>
+          </div>
+          <div class="flex gap-2"><button type="submit" class="btn btn-primary flex-1">💾 Save Price</button><button type="button" onclick="resetPlForm()" class="btn btn-ghost">Reset</button></div>
+        </form>
+      </div>
+      <div class="space-y-5">
+        <div class="border rounded-2xl p-4 bg-white"><div class="relative w-full h-[250px]"><canvas id="plChartCanvas"></canvas></div></div>
+        <div class="border rounded-2xl p-4 bg-white"><div class="table-wrap"><table><thead><tr><th>Year / Program</th><th>Item</th><th>Subsidy</th><th>Unit</th><th>Gov</th><th>Farmer</th><th>Action</th></tr></thead><tbody id="plTableBody"></tbody></table></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DATA ============ -->
+<div id="page-data" class="page hidden">
+<div class="card"><div class="flex flex-wrap justify-between gap-2"><h2 class="font-bold text-[19px]">දත්ත</h2><button onclick="downloadCSV()" class="btn btn-success text-xs px-4">⬇ CSV Download</button></div>
+<p class="text-xs text-slate-500 mt-1" id="dataScopeNote"></p>
+<div class="grid md:grid-cols-4 gap-3 mt-4">
+    <select id="fMain" onchange="renderData()"><option value="">සියල්ල</option><option value="extension">Extension</option><option value="development">Development</option></select>
+    <select id="fSub" onchange="renderData()"><option value="">සියලු Sub Office</option></select>
+    <input id="fSearch" placeholder="Search..." oninput="renderData()">
+    <select id="fDiv" onchange="renderData()"><option value="">සියලු අංශ</option></select>
+</div>
+<div class="table-wrap mt-4"><table><thead><tr><th>Path</th><th>Office</th><th>Answers</th><th>User</th><th>Action</th></tr></thead><tbody id="dataTbody"></tbody></table></div>
+<div id="editBox" class="hidden mt-4 border-2 border-indigo-200 rounded-2xl p-4 bg-indigo-50/50"><h4 class="font-bold">Edit</h4><div id="editFields" class="mt-3 space-y-3"></div><div class="flex gap-2 mt-3"><button onclick="saveEdit()" class="btn btn-primary px-4">Save</button><button onclick="closeEdit()" class="btn btn-ghost px-4">Cancel</button></div></div>
+</div></div>
+
+<!-- ============ USERS ============ -->
+<div id="page-users" class="page hidden">
+<div class="grid lg:grid-cols-[380px_1fr] gap-5"><div class="card h-fit"><h3 class="font-bold">User Add / Edit</h3><form id="userForm" class="mt-4 space-y-3"><input type="hidden" id="uId"><div><label>නම *</label><input id="uName" required class="mt-1"></div><div><label>Username *</label><input id="uUsername" required class="mt-1"></div><div><label>Password *</label><input id="uPassword" type="password" required class="mt-1"></div><div class="grid grid-cols-2 gap-3"><div><label>Role</label><select id="uRole" class="mt-1"><option value="unit_user">Unit</option><option value="sub_admin">Sub Admin</option><option value="main_admin">Main Admin</option></select></div><div><label>Status</label><select id="uStatus" class="mt-1"><option value="active">Active</option><option value="inactive">Inactive</option></select></div></div><div><label>Sub Office</label><select id="uSub" onchange="onUSub()" class="mt-1"></select></div><div><label>අංශය</label><select id="uDiv" onchange="onUDiv()" class="mt-1"></select></div><div><label>කාර්යාලය</label><select id="uOffice" class="mt-1"></select></div><div><label>Officer Name</label><input id="uOfficer" class="mt-1"></div><button class="btn btn-primary w-full">Save</button><button type="button" onclick="resetUser()" class="btn btn-ghost w-full">Reset</button></form></div>
+<div class="card"><h3 class="font-bold">Users</h3><input id="userSearch" placeholder="Search..." class="mt-3" oninput="renderUsers()"><div id="userList" class="mt-4 space-y-2"></div></div></div>
+</div>
+
+<!-- ============ HIERARCHY ============ -->
+<div id="page-hierarchy" class="page hidden">
+<div class="card"><h3 class="font-bold">45 උප ප්‍රදේශ + කාර්යාල</h3><div class="grid md:grid-cols-[280px_1fr] gap-5 mt-5"><div class="space-y-2" id="hierList"></div><div><div class="rounded-2xl border p-4"><h4 class="font-bold" id="hierTitle"></h4><div id="hierDivs" class="mt-3 space-y-2"></div></div><div class="rounded-2xl border p-4 mt-4"><h4 class="font-bold" id="officeTitle"></h4><div id="officeList" class="mt-3 space-y-2"></div><div class="flex gap-2 mt-4"><input id="newOfficeName" placeholder="අලුත් කාර්යාලය..."><button onclick="addOffice()" class="btn btn-primary px-4 shrink-0">+ Add</button></div></div></div></div></div>
+</div>
+
+</div></div>
+<script>
+const SUPABASE_URL='https://fqjbnwcavcxloaqwyret.supabase.co';
+const SUPABASE_KEY='sb_publishable_O5ECn-2JZ_Fn6MTASNZsjQ_UBIPqnMA';
+const sb=(typeof supabase!=='undefined')?supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
+
+// --- strict authentication and browser back-button safeguard ---
+(async function verifySession(){
+  try{
+    var sess = localStorage.getItem('fw_session');
+    var r = localStorage.getItem('role');
+    if(!sess || !r || (r !== 'main_admin' && r !== 'sub_admin')){
+      window.location.replace('index.html');
+      return;
+    }
+    if(sb){
+      var s = await sb.auth.getSession();
+      if(!s || !s.data || !s.data.session){
+        localStorage.clear();
+        window.location.replace('index.html');
+        return;
+      }
+    }
+  }catch(e){
+    window.location.replace('index.html');
+  }
+})();
+
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted || (typeof performance !== 'undefined' && performance.navigation.type === 2)) {
+        var sess = localStorage.getItem('fw_session');
+        if (!sess) { window.location.replace('index.html'); }
+    }
+});
+
+var __modalResolve=null;
+function showToast(msg,ok){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(ok===false?'err':ok===true?'ok':'');setTimeout(function(){t.className='toast';},2600);}
+function openModal(opt){return new Promise(function(res){__modalResolve=res;document.getElementById('modalIcon').textContent=opt.icon||'ℹ️';document.getElementById('modalTitle').textContent=opt.title||'';document.getElementById('modalMsg').textContent=opt.msg||'';var iw=document.getElementById('modalInputWrap');var sw=document.getElementById('modalSelectWrap');iw.classList.add('hidden');sw.classList.add('hidden');if(opt.input){iw.classList.remove('hidden');document.getElementById('modalInput').value=opt.value||'';}if(opt.selectOptions){sw.classList.remove('hidden');document.getElementById('modalSelect').innerHTML=opt.selectOptions.map(o=>'<option value="'+o.v+'">'+o.l+'</option>').join('');}document.getElementById('modalCancel').style.display=opt.hideCancel?'none':'';document.getElementById('modalOk').textContent=opt.okText||'OK';document.getElementById('modalBack').classList.add('show');});}
+function closeModal(ok){document.getElementById('modalBack').classList.remove('show');if(__modalResolve){var r=__modalResolve;__modalResolve=null;r({ok:ok,value:document.getElementById('modalInput').value});}}
+function profAlert(msg,title){return openModal({title:title||'තොරතුරු',msg:msg,icon:'✅',hideCancel:true,okText:'OK'});}
+function profConfirm(msg,title){return openModal({title:title||'විශ්වාසද?',msg:msg,icon:'⚠️',okText:'ඔව්'}).then(r=>r.ok);}
+function profPrompt(msg,defVal){return openModal({title:'නම',msg:msg,icon:'✏️',input:true,value:defVal||''}).then(r=>r.ok?r.value:null);}
+
+var role=localStorage.getItem('role')||'main_admin'; var mySub=localStorage.getItem('user_subOfficeId')||'ALL';
+document.getElementById('roleLabel').textContent=role==='main_admin'?'Main Admin':'Sub Admin';
+document.getElementById('userLabel').textContent=localStorage.getItem('user')||'';
+document.getElementById('scopeLabel').textContent=role==='main_admin'?'45 අංශ — සියල්ල':'Scope: '+(localStorage.getItem('user_subOfficeName')||mySub);
+
+var hierarchy=JSON.parse(document.getElementById('hier-data').textContent);
+var nodes=[], questions=[], users=[], responses=[], targetRecords=[], plItems=[];
+var curMain=null, curL1=null, curL2=null, curL3=null, curSub=null, curItem=null, curStep=1, selHierSub='sub1', selHierDiv=null, editingId=null;
+
+function openSidebar(){var sb=document.getElementById('sidebar');sb.style.transform='translateX(0)';sb.style.left='0';sb.style.display='flex';document.getElementById('sidebarOverlay').classList.remove('hidden');document.getElementById('sidebarCloseFab').classList.remove('hidden');}
+function closeSidebar(){var sb=document.getElementById('sidebar');if(window.innerWidth<1024)sb.style.transform='translateX(-110%)';document.getElementById('sidebarOverlay').classList.add('hidden');document.getElementById('sidebarCloseFab').classList.add('hidden');}
+
+function goNav(p){
+  closeSidebar();
+  document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));
+  document.getElementById('page-'+p).classList.remove('hidden');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.className='nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10');
+  var btn=document.querySelector('[data-nav="'+p+'"]'); if(btn)btn.className='nav-btn w-full text-left px-4 py-3 rounded-xl bg-white text-slate-900 font-semibold';
+  document.getElementById('pageTitle').textContent={'dashboard':'Dashboard','targets':'Target Setup','builder':'ප්‍රශ්න සකස් කිරීම','pricelist':'Item Price List','data':'දත්ත','users':'පරිශීලකයින්','hierarchy':'කාර්යාල'}[p]||'Dashboard';
+  if(p==='targets')resetTargetWizard();
+  if(p==='builder')resetWizard();
+  if(p==='pricelist')initPriceList();
+  if(p==='data')renderData();
+  if(p==='users')renderUsers();
+  if(p==='hierarchy')renderHierarchy();
+}
+
+async function logout(){
+  try{ if(sb) await sb.auth.signOut(); }catch(e){}
+  ['role','user','fw_session','user_subOfficeId','user_subOfficeName'].forEach(k=>localStorage.removeItem(k));
+  window.location.replace('index.html');
+}
+
+function downloadChart(canvasId, filename) {
+    var canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    var a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = filename + '.png';
+    a.click();
+}
+
+function renderDashboard(){
+  var ext=nodes.filter(n=>n.main_type==='extension').length; 
+  var dev=nodes.filter(n=>n.main_type==='development').length;
+  document.getElementById('kExt').textContent=ext; 
+  document.getElementById('kDev').textContent=dev; 
+  document.getElementById('kQ').textContent=questions.length; 
+  document.getElementById('kR').textContent=responses.length;
+  
+  var extCount = responses.filter(r=>r.main_type==='extension').length;
+  var devCount = responses.filter(r=>r.main_type==='development').length;
+  var extT = targetRecords.filter(t=>t.main_type==='extension').reduce((acc,cur)=>acc+(Number(cur.target_value)||0),0);
+  var devT = targetRecords.filter(t=>t.main_type==='development').reduce((acc,cur)=>acc+(Number(cur.target_value)||0),0);
+  
+  document.getElementById('extProgVal').textContent = extCount.toLocaleString();
+  document.getElementById('extTargetVal').textContent = extT.toLocaleString();
+  document.getElementById('extProgBar').style.width = (extT>0?Math.min(100,Math.round((extCount/extT)*100)):0)+'%';
+  
+  document.getElementById('devProgVal').textContent = devCount.toLocaleString();
+  document.getElementById('devTargetVal').textContent = devT.toLocaleString();
+  document.getElementById('devProgBar').style.width = (devT>0?Math.min(100,Math.round((devCount/devT)*100)):0)+'%';
+
+  var pub=nodes.filter(n=>n.is_published && n.level===1);
+  var byMain={extension:[],development:[]}; pub.forEach(n=>byMain[n.main_type].push(n));
+  var html='';
+  [['extension','🌾 Extension'],['development','🏗️ Development']].forEach(pair=>{
+    var list=byMain[pair[0]]; 
+    var inner=list.map(n=>'<div class="text-[13px] py-1 border-b flex justify-between"><span>'+n.title+'</span><span class="badge badge-green">Published</span></div>').join('')||'<div class="text-xs text-slate-400">Published නැත</div>';
+    html+='<div class="rounded-xl border p-4 bg-white"><div class="font-semibold text-sm">'+pair[1]+'</div><div class="mt-2">'+inner+'</div></div>';
+  });
+  document.getElementById('publishedBox').innerHTML=html;
+  document.getElementById('recentBox').innerHTML=responses.slice(0,8).map(r=>'<div class="flex justify-between gap-3 rounded-xl border p-3 text-[13px]"><div><b>'+(r.node_path||'')+'</b><div class="text-xs text-slate-500">'+(r.division||'')+' • '+(r.office||'')+'</div></div><div class="text-xs text-slate-400">'+new Date(r.created_at).toLocaleDateString()+'</div></div>').join('')||'<div class="text-xs text-slate-400">පිළිතුරු නැත</div>';
+}
+
+/* ================= Target Setup Wizard ================= */
+var tMain = null, tL1 = null, tL2 = null, tL3 = null, tL4 = null, tStep = 1;
+
+function resetTargetWizard(){ tMain=null; tL1=null; tL2=null; tL3=null; tL4=null; tGoto(1); }
+function tUpdateCrumb(){
+  var parts=[];
+  if(tMain)parts.push(tMain==='extension'?'🌾 Extension':'🏗️ Development');
+  if(tL1){let n=nodes.find(x=>x.id===tL1);if(n)parts.push(n.title);}
+  if(tL2){let n=nodes.find(x=>x.id===tL2);if(n)parts.push(n.title);}
+  if(tL3){let n=nodes.find(x=>x.id===tL3);if(n)parts.push(n.title);}
+  if(tL4){let n=nodes.find(x=>x.id===tL4);if(n)parts.push(n.title);}
+  document.getElementById('tCrumb').textContent=parts.length?parts.join(' → '):'Extension / Development තෝරන්න';
+}
+function tPickMain(m){ tMain=m; tL1=null; tL2=null; tL3=null; tL4=null; tGoto(2); }
+function tGoto(s){
+  tStep=s;
+  for(let i=1;i<=6;i++){let el=document.getElementById('tw'+i);if(el)el.classList.toggle('hidden',i!==s);}
+  if(s===2)tRenderLevel(1);
+  if(s===3)tRenderLevel(2);
+  if(s===4)tRenderLevel(3);
+  if(s===5)tRenderLevel(4);
+  if(s===6)initTargetUnitsView();
+  tUpdateCrumb();
+}
+function tChildrenOf(pid, level){
+  return nodes.filter(n=>n.main_type===tMain&&n.level===level&&(pid?n.parent_id===pid:!n.parent_id)).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+}
+function tNodeCardHtml(n, isSel, level){
+  return '<div class="node-card '+(isSel?'sel':'')+' '+(!n.is_published?'off':'')+'" onclick="tSelectNode('+level+',\''+n.id+'\')">' +
+    '<div class="flex justify-between"><div class="font-bold">'+n.title+'</div>' +
+    '<div class="flex items-center gap-2" onclick="event.stopPropagation()">' +
+      '<div class="switch '+(n.is_published?'on':'')+'" onclick="tTogglePub(\''+n.id+'\','+level+')"></div>' +
+      '<button onclick="tMoveNode(\''+n.id+'\',-1,'+level+')" class="btn btn-ghost px-2 py-1 text-xs">↑</button>' +
+      '<button onclick="tMoveNode(\''+n.id+'\',1,'+level+')" class="btn btn-ghost px-2 py-1 text-xs">↓</button>' +
+      '<button onclick="tEditNode(\''+n.id+'\','+level+')" class="text-indigo-600 text-xs">Edit</button>' +
+      '<button onclick="tDeleteNode(\''+n.id+'\','+level+')" class="text-red-500 text-xs">Del</button>' +
+    '</div></div></div>';
+}
+function tRenderLevel(level){
+  if(level===1){
+    document.getElementById('tw2Title').textContent=tMain==='extension'?'Step 2 — Season':'Step 2 — Year';
+    document.getElementById('tL1List').innerHTML=tChildrenOf(null,1).map(n=>tNodeCardHtml(n,tL1===n.id,1)).join('')||'<div class="text-xs text-slate-400">දත්ත නැත</div>';
+    document.getElementById('tw2Next').disabled=!tL1;
+  } else if(level===2){
+    document.getElementById('tw3Title').textContent='Step 3 — Program';
+    document.getElementById('tL2List').innerHTML=tChildrenOf(tL1,2).map(n=>tNodeCardHtml(n,tL2===n.id,2)).join('')||'<div class="text-xs text-slate-400">දත්ත නැත</div>';
+    document.getElementById('tw3Next').disabled=!tL2;
+  } else if(level===3){
+    document.getElementById('tw4Title').textContent='Step 4 — Sub Program';
+    document.getElementById('tL3List').innerHTML=tChildrenOf(tL2,3).map(n=>tNodeCardHtml(n,tL3===n.id,3)).join('')||'<div class="text-xs text-slate-400">දත්ත නැත</div>';
+    document.getElementById('tw4Next').textContent=tMain==='development'?'Next: Item →':'Next: AI Office Targets →';
+  } else if(level===4){
+    document.getElementById('tL4List').innerHTML=tL3?tChildrenOf(tL3,4).map(n=>tNodeCardHtml(n,tL4===n.id,4)).join(''):'';
+  }
+}
+function tSelectNode(level, id){
+  if(level===1){tL1=id;tL2=null;tL3=null;tL4=null;}
+  if(level===2){tL2=id;tL3=null;tL4=null;}
+  if(level===3){tL3=id;tL4=null;}
+  if(level===4){tL4=id;}
+  tRenderLevel(level); tUpdateCrumb();
+}
+function tAfterL3(){ if(tMain==='development')tGoto(5); else tGoto(6); }
+
+async function tAddNode(level){
+  var inpId=level===1?'tNewL1':level===2?'tNewL2':level===3?'tNewL3':'tNewL4';
+  var val=document.getElementById(inpId).value.trim(); if(!val)return;
+  var pid=level===1?null:level===2?tL1:level===3?tL2:tL3;
+  var newNode={id:'n_'+Date.now(),main_type:tMain,level:level,parent_id:pid,title:val,subtitle:'',is_published:true,sort_order:tChildrenOf(pid,level).length+1};
+  nodes.push(newNode); document.getElementById(inpId).value='';
+  if(sb) await sb.from('nodes').upsert(newNode);
+  tSelectNode(level, newNode.id);
+  showToast('සාර්ථකයි ✓',true);
+}
+async function tEditNode(id, level){
+  var n=nodes.find(x=>x.id===id); if(!n)return;
+  var newName=await profPrompt('නම වෙනස් කරන්න',n.title); if(!newName)return;
+  n.title=newName.trim();
+  if(sb) await sb.from('nodes').update({title:n.title}).eq('id',id);
+  tRenderLevel(level); tUpdateCrumb(); showToast('යාවත්කාලීන විය ✓',true);
+}
+async function tTogglePub(id, level){
+  var n=nodes.find(x=>x.id===id); if(!n)return;
+  n.is_published=!n.is_published;
+  if(sb) await sb.from('nodes').update({is_published:n.is_published}).eq('id',id);
+  tRenderLevel(level);
+}
+async function tMoveNode(id, dir, level){
+  var siblings=tChildrenOf(nodes.find(x=>x.id===id).parent_id, level);
+  var idx=siblings.findIndex(x=>x.id===id), nIdx=idx+dir;
+  if(nIdx<0||nIdx>=siblings.length)return;
+  let temp=siblings[idx]; siblings[idx]=siblings[nIdx]; siblings[nIdx]=temp;
+  for(let i=0;i<siblings.length;i++){
+    let orig=nodes.find(x=>x.id===siblings[i].id);
+    orig.sort_order=i+1;
+    if(sb) await sb.from('nodes').update({sort_order:orig.sort_order}).eq('id',orig.id);
+  }
+  tRenderLevel(level);
+}
+async function tDeleteNode(id, level){
+  if(!await profConfirm('Delete කරන්නද?'))return;
+  nodes=nodes.filter(x=>x.id!==id);
+  if(sb) await sb.from('nodes').delete().eq('id',id);
+  tRenderLevel(level); tUpdateCrumb();
+}
+
+function getTargetContextTitles(){
+  var n1=nodes.find(x=>x.id===tL1), n2=nodes.find(x=>x.id===tL2), n3=nodes.find(x=>x.id===tL3), n4=nodes.find(x=>x.id===tL4);
+  return {l1:n1?n1.title:'', l2:n2?n2.title:'', l3:n3?n3.title:'', l4:n4?n4.title:''};
+}
+
+function initTargetUnitsView(){
+  var adSel=document.getElementById('tFilterAdOffice');
+  var opts='';
+  hierarchy.forEach(h=>{
+    if(role==='sub_admin'&&h.id!==mySub)return;
+    opts+='<option value="'+h.id+'">'+h.name+'</option>';
+  });
+  adSel.innerHTML=opts;
+  renderTargetUnitsTable();
+}
+
+// Render AI Office Table filtered ONLY by AD Office (No AD Division column, no (unit) text)
+function renderTargetUnitsTable(){
+  var adId=document.getElementById('tFilterAdOffice').value;
+  var ctx=getTargetContextTitles();
+  var tbody=document.getElementById('tUnitsTbody');
+  var rowsHtml='', totalSum=0;
+
+  hierarchy.forEach(h=>{
+    if(role==='sub_admin'&&h.id!==mySub)return;
+    if(adId!=='ALL'&&h.id!==adId)return;
+
+    h.divisions.forEach(d=>{
+      d.offices.forEach(off=>{
+        var cleanOff = off.replace(/\s*\(unit\)/gi, '');
+        var recId=[tMain,ctx.l1,ctx.l2,ctx.l3,ctx.l4,h.id,d.name,cleanOff].join('|');
+        var existing=targetRecords.find(r=>r.id===recId);
+        var val=existing?Number(existing.target_value):0;
+        totalSum+=val;
+
+        rowsHtml+='<tr>'+
+          '<td class="text-xs text-slate-500">'+h.name+'</td>'+
+          '<td class="text-xs font-bold text-indigo-900">'+cleanOff+'</td>'+
+          '<td><input type="number" min="0" step="any" data-target-id="'+recId+'" data-sub-id="'+h.id+'" data-div="'+d.name+'" data-off="'+cleanOff+'" value="'+val+'" oninput="recalcTargetSum()" class="!py-1.5 text-right font-bold"></td>'+
+        '</tr>';
+      });
+    });
+  });
+
+  tbody.innerHTML=rowsHtml||'<tr><td colspan="3" class="text-center py-6 text-slate-400 text-xs">AI Offices නොමැත</td></tr>';
+  document.getElementById('tTotalSum').textContent=totalSum.toLocaleString();
+}
+
+function recalcTargetSum(){
+  var sum=0; document.querySelectorAll('[data-target-id]').forEach(inp=>{sum+=(parseFloat(inp.value)||0);});
+  document.getElementById('tTotalSum').textContent=sum.toLocaleString();
+}
+
+async function saveAllTargets(){
+  var ctx=getTargetContextTitles();
+  var inputs=document.querySelectorAll('[data-target-id]');
+  var upserts=[];
+  inputs.forEach(inp=>{
+    var recId=inp.dataset.targetId;
+    var val=parseFloat(inp.value)||0;
+    var rec={id:recId,main_type:tMain,level1:ctx.l1,level2:ctx.l2,level3:ctx.l3||'',item_name:ctx.l4||'',sub_office_id:inp.dataset.subId,division:inp.dataset.div,office:inp.dataset.off,target_value:val};
+    let idx=targetRecords.findIndex(x=>x.id===recId);
+    if(idx>-1)targetRecords[idx]=rec; else targetRecords.push(rec);
+    upserts.push(rec);
+  });
+  if(sb && upserts.length){
+    await sb.from('targets').upsert(upserts,{onConflict:'id'});
+  }
+  renderDashboard(); showToast('Targets සාර්ථකව Supabase இல் Save විය ✓',true);
+}
+function tBackFromUnits(){ if(tMain==='development')tGoto(5); else tGoto(4); }
+
+/* ================= Form Builder ================= */
+function resetWizard(){curMain=null;curL1=null;curL2=null;curL3=null;curSub=null;curItem=null;gotoStep(1);updateCrumb();}
+function updateCrumb(){
+  var parts=[]; if(curMain)parts.push(curMain==='extension'?'🌾 Extension':'🏗️ Development');
+  if(curL1){let n=nodes.find(x=>x.id===curL1);if(n)parts.push(n.title);}
+  if(curL2){let n=nodes.find(x=>x.id===curL2);if(n)parts.push(n.title);}
+  if(curL3){let n=nodes.find(x=>x.id===curL3);if(n)parts.push(n.title);}
+  if(curSub){let ns=nodes.find(x=>x.id===curSub);if(ns)parts.push(ns.title);}
+  if(curItem){let ni=nodes.find(x=>x.id===curItem);if(ni)parts.push(ni.title);}
+  if(curStep===6)parts.push('ප්‍රශ්න');
+  document.getElementById('crumb').textContent=parts.length?parts.join(' → '):'Extension / Development තෝරන්න';
+}
+function gotoStep(s){
+  if(curMain==='extension'&&s===5)s=6;
+  curStep=s; document.querySelectorAll('.wizard-step').forEach(x=>x.classList.remove('active'));
+  document.getElementById('w'+s).classList.add('active');
+  if(s===2)renderL1(); if(s===3)renderL2(); if(s===4)renderL4(); if(s===5)renderItem(); if(s===6)renderQuestions();
+  updateCrumb();
+}
+function pickMain(m){curMain=m;curL1=null;curL2=null;curL3=null;gotoStep(2);}
+function childrenOf(pid,level){return nodes.filter(n=>n.main_type===curMain&&n.level===level&&(pid?n.parent_id===pid:!n.parent_id)).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));}
+
+function builderSelectCard(n,sel,clickFn){
+  return '<div class="node-card '+(sel?'sel':'')+'" onclick="'+clickFn+'(\''+n.id+'\')"><div class="flex justify-between"><div class="font-bold">'+n.title+'</div><span class="text-indigo-600 text-sm">'+(sel?'✓':'තෝරන්න →')+'</span></div></div>';
+}
+function renderL1(){
+  document.getElementById('w2Title').textContent=curMain==='extension'?'Step 2 — Season':'Step 2 — Year';
+  document.getElementById('l1List').innerHTML=childrenOf(null,1).map(n=>builderSelectCard(n,curL1===n.id,'pickL1')).join('')||'<div class="text-xs text-slate-400">Target Setup හි දත්ත ඇතුළත් කරන්න</div>';
+  document.getElementById('w2Next').disabled=!curL1;
+}
+function pickL1(id){curL1=id;curL2=null;curL3=null;renderL1();}
+function renderL2(){
+  document.getElementById('w3Title').textContent='Step 3 — Program';
+  document.getElementById('l2List').innerHTML=childrenOf(curL1,2).map(n=>builderSelectCard(n,curL2===n.id,'pickL2')).join('')||'<div class="text-xs text-slate-400">දත්ත නැත</div>';
+  document.getElementById('w3Next').disabled=!curL2;
+}
+function pickL2(id){curL2=id;curL3=null;renderL2();}
+function w3Next(){gotoStep(4);}
+function w4Next(){if(curMain==='development')gotoStep(5);else gotoStep(6);}
+function backFromQ(){if(curMain==='development')gotoStep(5);else gotoStep(4);}
+function renderL4(){
+  let isExt=curMain==='extension';
+  document.getElementById('l3List').innerHTML=childrenOf(curL2,3).map(n=>builderSelectCard(n,(isExt?curSub:curL3)===n.id,isExt?'pickSub':'pickL3')).join('')||'<div class="text-xs text-slate-400">දත්ත නැත</div>';
+  document.getElementById('w4Next').disabled=isExt?false:!curL3;
+}
+function pickL3(id){curL3=id;renderL4();}
+function pickSub(id){curSub=id;renderL4();}
+function renderItem(){
+  let list=curL3?nodes.filter(n=>n.main_type==='development'&&n.level===4&&n.parent_id===curL3):[];
+  document.getElementById('itemList').innerHTML=list.map(n=>builderSelectCard(n,curItem===n.id,'pickItem')).join('')||'<div class="text-xs text-slate-400">Items නැත</div>';
+}
+function pickItem(id){curItem=id;renderItem();}
+
+function leafId(){
+  if(curMain==='development')return curItem||curL3;
+  return curSub||curL2;
+}
+var curOptions=[];
+function onQType(){document.getElementById('optWrap').classList.toggle('hidden',['multiple_choice','checkbox','dropdown'].indexOf(document.getElementById('qType').value)===-1);}
+function addOption(){let v=document.getElementById('optInput').value.trim();if(!v)return;curOptions.push(v);document.getElementById('optInput').value='';renderOpts();}
+function renderOpts(){document.getElementById('optList').innerHTML=curOptions.map((o,i)=>'<div class="flex gap-2"><input value="'+o+'" onchange="curOptions['+i+']=this.value"><button type="button" onclick="curOptions.splice('+i+',1);renderOpts()" class="btn btn-ghost px-2">✕</button></div>').join('');}
+function resetQ(){document.getElementById('qForm').reset();document.getElementById('qId').value='';curOptions=[];renderOpts();onQType();}
+
+function renderQuestions(){
+  var lid=leafId(); if(!lid)return;
+  var qs=questions.filter(q=>q.node_id===lid).sort((a,b)=>a.order_index-b.order_index);
+  document.getElementById('qCount').textContent=qs.length;
+  document.getElementById('qList').innerHTML=qs.map((q,i)=>'<div class="rounded-xl border p-3 bg-white flex justify-between"><div><b>'+(i+1)+'. '+q.question_text+'</b><div class="text-xs text-slate-400">'+q.question_type+'</div></div><div class="flex gap-1"><button onclick="moveQ(\''+q.id+'\',-1)" class="btn btn-ghost px-2 py-1 text-xs">↑</button><button onclick="moveQ(\''+q.id+'\',1)" class="btn btn-ghost px-2 py-1 text-xs">↓</button><button onclick="editQ(\''+q.id+'\')" class="btn btn-ghost px-2 py-1 text-xs">Edit</button><button onclick="delQ(\''+q.id+'\')" class="text-red-500 text-xs px-2">Delete</button></div></div>').join('')||'<div class="text-xs text-slate-400">ප්‍රශ්න නැත</div>';
+}
+async function moveQ(id, dir){
+  var lid=leafId(); var qs=questions.filter(q=>q.node_id===lid).sort((a,b)=>a.order_index-b.order_index);
+  let idx=qs.findIndex(q=>q.id===id), nIdx=idx+dir; if(nIdx<0||nIdx>=qs.length)return;
+  let t=qs[idx]; qs[idx]=qs[nIdx]; qs[nIdx]=t;
+  for(let i=0;i<qs.length;i++){ let q=questions.find(x=>x.id===qs[i].id); q.order_index=i+1; if(sb) await sb.from('questions').update({order_index:q.order_index}).eq('id',q.id); }
+  renderQuestions();
+}
+document.getElementById('qForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  var lid=leafId(); if(!lid)return;
+  var id=document.getElementById('qId').value;
+  var payload={id:id||'q'+Date.now(),node_id:lid,question_text:document.getElementById('qText').value.trim(),question_type:document.getElementById('qType').value,options:curOptions.slice(),is_required:document.getElementById('qReq').value==='1',order_index:id?questions.find(q=>q.id===id).order_index:questions.filter(q=>q.node_id===lid).length+1};
+  if(id){let idx=questions.findIndex(q=>q.id===id);questions[idx]=payload;}else questions.push(payload);
+  if(sb) await sb.from('questions').upsert(payload);
+  resetQ(); renderQuestions(); showToast('Save විය ✓',true);
+});
+function editQ(id){var q=questions.find(x=>x.id===id);if(!q)return;document.getElementById('qId').value=q.id;document.getElementById('qText').value=q.question_text;document.getElementById('qType').value=q.question_type;document.getElementById('qReq').value=q.is_required?'1':'0';curOptions=(q.options||[]).slice();renderOpts();onQType();}
+async function delQ(id){if(!await profConfirm('Delete කරන්නද?'))return;questions=questions.filter(x=>x.id!==id);if(sb) await sb.from('questions').delete().eq('id',id);renderQuestions();}
+function loadDevTemplate(){var lid=leafId();if(!lid)return;[['නම','short_text',[]],['ප්‍රමාණය','number',[]]].forEach((t,i)=>{let q={id:'q'+Date.now()+i,node_id:lid,question_text:t[0],question_type:t[1],options:t[2],is_required:true,order_index:questions.filter(x=>x.node_id===lid).length+1};questions.push(q);if(sb)sb.from('questions').upsert(q);});renderQuestions();}
+function loadExtTemplate(){var lid=leafId();if(!lid)return;[['වගා ප්‍රමාණය','number',[]]].forEach((t,i)=>{let q={id:'q'+Date.now()+i,node_id:lid,question_text:t[0],question_type:t[1],options:t[2],is_required:true,order_index:questions.filter(x=>x.node_id===lid).length+1};questions.push(q);if(sb)sb.from('questions').upsert(q);});renderQuestions();}
+async function finishWizard(){ renderDashboard(); goNav('dashboard'); }
+
+/* ================= Item Price List ================= */
+var plChartInst=null;
+function initPriceList(){
+  let devYears=nodes.filter(n=>n.main_type==='development'&&n.level===1);
+  document.getElementById('plYear').innerHTML=devYears.map(y=>'<option value="'+y.id+'">'+y.title+'</option>').join('')||'<option value="">Year</option>';
+  onPlYearChange();
+}
+function onPlYearChange(){
+  let yId=document.getElementById('plYear').value;
+  document.getElementById('plProgram').innerHTML=nodes.filter(n=>n.main_type==='development'&&n.level===2&&n.parent_id===yId).map(p=>'<option value="'+p.id+'">'+p.title+'</option>').join('');
+  onPlProgChange();
+}
+function onPlProgChange(){
+  let pId=document.getElementById('plProgram').value;
+  document.getElementById('plSubProgram').innerHTML=nodes.filter(n=>n.main_type==='development'&&n.level===3&&n.parent_id===pId).map(s=>'<option value="'+s.id+'">'+s.title+'</option>').join('');
+  onPlSubProgChange();
+}
+function onPlSubProgChange(){
+  let spId=document.getElementById('plSubProgram').value;
+  let items=nodes.filter(n=>n.main_type==='development'&&n.level===4&&n.parent_id===spId);
+  document.getElementById('plItemSelect').innerHTML=items.map(it=>'<option value="'+it.title+'">'+it.title+'</option>').join('')+'<option value="__CUSTOM__">+ වෙනත්...</option>';
+  onPlItemSelectChange(); renderPlTableAndChart();
+}
+function onPlItemSelectChange(){
+  let val=document.getElementById('plItemSelect').value;
+  document.getElementById('plItemCustom').classList.toggle('hidden',val!=='__CUSTOM__');
+}
+function calcPlPrices(){
+  let unit=parseFloat(document.getElementById('plUnitPrice').value)||0;
+  let sub=document.getElementById('plSubsidy').value;
+  let f=sub==='75%'?0.75:sub==='50%'?0.50:sub==='25%'?0.25:0;
+  document.getElementById('plFarmerPrice').value=(unit*f).toFixed(2);
+  document.getElementById('plGovPrice').value=(unit-(unit*f)).toFixed(2);
+}
+function resetPlForm(){document.getElementById('plForm').reset();document.getElementById('plEditId').value='';}
+document.getElementById('plForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  let editId=document.getElementById('plEditId').value;
+  let yTitle=document.getElementById('plYear').selectedOptions[0]?.text||'';
+  let pTitle=document.getElementById('plProgram').selectedOptions[0]?.text||'';
+  let spTitle=document.getElementById('plSubProgram').selectedOptions[0]?.text||'';
+  let itVal=document.getElementById('plItemSelect').value;
+  let itemName=itVal==='__CUSTOM__'?document.getElementById('plItemCustom').value.trim():itVal;
+  let unitPrice=parseFloat(document.getElementById('plUnitPrice').value)||0;
+  let sub=document.getElementById('plSubsidy').value;
+  let f=sub==='75%'?0.75:sub==='50%'?0.50:sub==='25%'?0.25:0;
+  let rec={id:editId||('pl_'+Date.now()),year:yTitle,program:pTitle,sub_program:spTitle,item_name:itemName,subsidy:sub,unit_price:unitPrice,farmer_price:parseFloat((unitPrice*f).toFixed(2)),gov_price:parseFloat((unitPrice-(unit*f)).toFixed(2))};
+  if(editId){let idx=plItems.findIndex(x=>x.id===editId);plItems[idx]=rec;}else plItems.push(rec);
+  if(sb) await sb.from('item_prices').upsert(rec,{onConflict:'id'});
+  resetPlForm(); renderPlTableAndChart(); showToast('Save විය ✓',true);
+});
+async function delPlItem(id){
+  if(!await profConfirm('Delete කරන්නද?'))return;
+  plItems=plItems.filter(x=>x.id!==id);
+  if(sb) await sb.from('item_prices').delete().eq('id',id);
+  renderPlTableAndChart();
+}
+function renderPlTableAndChart(){
+  document.getElementById('plTableBody').innerHTML=plItems.map(x=>'<tr><td class="text-xs"><b>'+x.year+'</b><br>'+x.program+'</td><td class="text-xs"><b>'+x.item_name+'</b></td><td class="text-xs">'+x.subsidy+'</td><td class="text-xs">Rs.'+x.unit_price+'</td><td class="text-xs font-bold text-emerald-600">Rs.'+x.gov_price+'</td><td class="text-xs font-bold text-indigo-600">Rs.'+x.farmer_price+'</td><td><button onclick="delPlItem(\''+x.id+'\')" class="text-red-500 text-xs">Del</button></td></tr>').join('')||'<tr><td colspan="7" class="text-center text-xs text-slate-400">දත්ත නැත</td></tr>';
+  let ctx=document.getElementById('plChartCanvas');
+  if(!ctx||typeof Chart==='undefined')return;
+  if(plChartInst)plChartInst.destroy();
+  plChartInst=new Chart(ctx,{type:'bar',data:{labels:plItems.map(x=>x.item_name),datasets:[{label:'Gov Price',data:plItems.map(x=>x.gov_price),backgroundColor:'#059669'},{label:'Farmer Price',data:plItems.map(x=>x.farmer_price),backgroundColor:'#4f46e5'}]}});
+}
+function downloadPriceExcel(){
+  if(!plItems.length)return;
+  let ws=XLSX.utils.json_to_sheet(plItems), wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Prices'); XLSX.writeFile(wb,'Prices.xlsx');
+}
+function importPriceExcel(e){
+  let file=e.target.files[0]; if(!file)return;
+  let reader=new FileReader();
+  reader.onload=async function(evt){
+    let data=new Uint8Array(evt.target.result), wb=XLSX.read(data,{type:'array'});
+    let json=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+    for(let i=0;i<json.length;i++){
+      let r=json[i];
+      let rec={id:'pl_'+Date.now()+'_'+i,year:String(r.Year||'2026'),program:String(r.Program||'PSDG'),sub_program:String(r['Sub Program']||''),item_name:String(r['Item Name']||''),subsidy:String(r.Subsidy||'50%'),unit_price:Number(r['Unit Price']||0),farmer_price:0,gov_price:0};
+      let f=rec.subsidy==='75%'?0.75:rec.subsidy==='50%'?0.50:rec.subsidy==='25%'?0.25:0;
+      rec.farmer_price=rec.unit_price*f; rec.gov_price=rec.unit_price-rec.farmer_price;
+      plItems.push(rec);
+      if(sb) await sb.from('item_prices').upsert(rec);
+    }
+    renderPlTableAndChart(); showToast('Import විය ✓',true);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+/* ================= Data & Users ================= */
+function fillDataFilters(){
+  document.getElementById('fSub').innerHTML='<option value="">සියලු Sub Office</option>'+hierarchy.map(h=>'<option value="'+h.id+'">'+h.name+'</option>').join('');
+}
+function renderData(){
+  document.getElementById('dataScopeNote').textContent='සියලු දත්ත: '+responses.length;
+  document.getElementById('dataTbody').innerHTML=responses.slice(0,100).map(r=>'<tr><td class="text-xs"><b>'+(r.node_path||'')+'</b></td><td class="text-xs">'+r.division+'<br>'+r.office+'</td><td class="text-xs">'+JSON.stringify(r.answers).substring(0,100)+'</td><td class="text-xs">'+new Date(r.created_at).toLocaleDateString()+'</td><td><button onclick="delData(\''+r.id+'\')" class="text-red-500 text-xs">Del</button></td></tr>').join('')||'<tr><td colspan="5" class="text-center text-xs text-slate-400">දත්ත නැත</td></tr>';
+}
+async function delData(id){responses=responses.filter(x=>x.id!==id);if(sb)await sb.from('responses').delete().eq('id',id);renderData();}
+function downloadCSV(){
+  let csv='Path,Division,Office,Answers\n'+responses.map(r=>'"'+r.node_path+'","'+r.division+'","'+r.office+'","'+JSON.stringify(r.answers).replace(/"/g,'""')+'"').join('\n');
+  let blob=new Blob([csv],{type:'text/csv'}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='data.csv'; a.click();
+}
+function renderUsers(){
+  document.getElementById('userList').innerHTML=users.map(u=>'<div class="rounded-xl border p-3 flex justify-between bg-white"><div><b>'+u.name+'</b><div class="text-xs text-slate-500">'+u.username+' | '+u.role+'</div></div><button onclick="delUser(\''+u.id+'\')" class="text-red-500 text-xs">Del</button></div>').join('')||'<div class="text-xs text-slate-400">Users නැත</div>';
+}
+document.getElementById('userForm').addEventListener('submit',async function(e){
+  e.preventDefault();
+  var p={id:'u'+Date.now(),name:document.getElementById('uName').value,username:document.getElementById('uUsername').value,password:document.getElementById('uPassword').value,role:document.getElementById('uRole').value,sub_office_id:document.getElementById('uSub').value,division:document.getElementById('uDiv').value,office:document.getElementById('uOffice').value,status:document.getElementById('uStatus').value};
+  users.push(p);
+  if(sb) await sb.from('profiles').upsert(p,{onConflict:'username'});
+  renderUsers(); showToast('User Save විය ✓',true);
+});
+async function delUser(id){users=users.filter(x=>x.id!==id);renderUsers();}
+function onUSub(){let h=hierarchy.find(x=>x.id===document.getElementById('uSub').value);document.getElementById('uDiv').innerHTML=h?h.divisions.map(d=>'<option>'+d.name+'</option>').join(''):'';onUDiv();}
+function onUDiv(){let divs=getOffices(document.getElementById('uDiv').value);document.getElementById('uOffice').innerHTML=divs.map(o=>'<option>'+o+'</option>').join('');}
+function getOffices(div){for(let h of hierarchy)for(let d of h.divisions)if(d.name===div)return d.offices;return [];}
+
+function renderHierarchy(){
+  document.getElementById('hierList').innerHTML=hierarchy.map(h=>'<button onclick="selH(\''+h.id+'\')" class="w-full text-left rounded-xl border p-4 '+(selHierSub===h.id?'bg-indigo-600 text-white':'bg-white')+'"><div class="font-bold">'+h.name+'</div></button>').join('');
+  let h2=hierarchy.find(x=>x.id===selHierSub);
+  document.getElementById('hierTitle').textContent=h2?h2.name:'';
+  document.getElementById('hierDivs').innerHTML=h2?h2.divisions.map(d=>'<div onclick="selDiv(\''+d.name+'\')" class="cursor-pointer border p-3 rounded-xl '+(selHierDiv===d.name?'bg-indigo-50':'')+'">'+d.name+'</div>').join(''):'';
+  document.getElementById('officeList').innerHTML=selHierDiv?getOffices(selHierDiv).map(o=>'<div class="border p-2 rounded text-sm">'+o+'</div>').join(''):'';
+}
+function selH(id){selHierSub=id;selHierDiv=null;renderHierarchy();}
+function selDiv(d){selHierDiv=d;renderHierarchy();}
+
+/* ================= Supabase Sync ================= */
+async function sbSync(){
+  if(!sb){document.getElementById('sbStatus').textContent='Offline';return;}
+  try{
+    let n=await sb.from('nodes').select('*').order('sort_order'); if(n.data) nodes=n.data;
+    let q=await sb.from('questions').select('*').order('order_index'); if(q.data) questions=q.data;
+    let r=await sb.from('responses').select('*').order('created_at',{ascending:false}); if(r.data) responses=r.data;
+    let t=await sb.from('targets').select('*'); if(t.data) targetRecords=t.data;
+    let p=await sb.from('item_prices').select('*'); if(p.data) plItems=p.data;
+    let u=await sb.from('profiles').select('*'); if(u.data) users=u.data;
+    document.getElementById('sbStatus').textContent='Supabase: Connected ✓';
+  }catch(e){document.getElementById('sbStatus').textContent='Error';}
+  renderDashboard(); renderData();
+}
+
+fillDataFilters(); document.getElementById('uSub').innerHTML=hierarchy.map(h=>'<option value="'+h.id+'">'+h.name+'</option>').join(''); onUSub();
+renderDashboard(); gotoStep(1); sbSync();
+</script>
+<script id="hier-data" type="application/json">[{"id":"sub1","name":"ADA Kundasale","divisions":[{"name":"Dambagahapitiya","offices":["Dambagahapitiya - Pradhana Karyalaya"]},{"name":"Kalunthenna","offices":["Kalunthenna - Pradhana Karyalaya"]},{"name":"Nugethenna","offices":["Nugethenna - Pradhana Karyalaya"]},{"name":"Morayaya","offices":["Morayaya - Pradhana Karyalaya"]},{"name":"Ulpathagama","offices":["Ulpathagama - Pradhana Karyalaya"]},{"name":"Namadagala","offices":["Namadagala - Pradhana Karyalaya"]},{"name":"Theldeniya","offices":["Theldeniya1 - Pradhana Karyalaya","Theldeniya2 - Pradhana Karyalaya"]},{"name":"Udispaththuwa","offices":["Udispaththuwa - Pradhana Karyalaya"]},{"name":"Wendaruwa","offices":["Wendaruwa - Pradhana Karyalaya"]},{"name":"Digana","offices":["Digana - Pradhana Karyalaya"]},{"name":"Gunnepana","offices":["Gunnepana - Pradhana Karyalaya"]},{"name":"Manikhinna","offices":["Manikhinna - Pradhana Karyalaya"]},{"name":"Wavinna","offices":["Wavinna - Pradhana Karyalaya"]},{"name":"Medamahanuwara","offices":["Medamahanuwara - Pradhana Karyalaya"]}]},{"id":"sub2","name":"ADA Kandy","divisions":[{"name":"Waththegama","offices":["Waththegama - Pradhana Karyalaya"]},{"name":"Huluganga","offices":["Huluganga - Pradhana Karyalaya"]},{"name":"Bowala","offices":["Bowala - Pradhana Karyalaya"]},{"name":"Ketawalaleula","offices":["Ketawalaleula - Pradhana Karyalaya"]},{"name":"Galaha","offices":["Galaha - Pradhana Karyalaya"]},{"name":"Marassana","offices":["Marassana - Pradhana Karyalaya"]},{"name":"Thalathuoya","offices":["Thalathuoya - Pradhana Karyalaya"]}]},{"id":"sub3","name":"ADA Udunuwara / Yatinuwara","divisions":[{"name":"Edaduwawe","offices":["Edaduwawe - Pradhana Karyalaya"]},{"name":"Giragama","offices":["Giragama - Pradhana Karyalaya"]},{"name":"Manikdiwella","offices":["Manikdiwella - Pradhana Karyalaya"]},{"name":"Alapalawala","offices":["Alapalawala - Pradhana Karyalaya"]},{"name":"Ambanwala","offices":["Ambanwala - Pradhana Karyalaya"]},{"name":"Imbuldeniya","offices":["Imbuldeniya - Pradhana Karyalaya"]},{"name":"Pethiyagoda","offices":["Pethiyagoda - Pradhana Karyalaya"]},{"name":"Thalawathura","offices":["Thalawathura - Pradhana Karyalaya"]},{"name":"Medapitiya","offices":["Medapitiya - Pradhana Karyalaya"]},{"name":"Mulgama","offices":["Mulgama - Pradhana Karyalaya"]},{"name":"Delpitiya","offices":["Delpitiya - Pradhana Karyalaya"]},{"name":"Gampola","offices":["Gampola - Pradhana Karyalaya"]},{"name":"Kuruduwaththa","offices":["Kuruduwaththa - Pradhana Karyalaya"]},{"name":"Rambukpitiya","offices":["Rambukpitiya - Pradhana Karyalaya"]}]},{"id":"sub4","name":"ADA Harispattuwa","divisions":[{"name":"Aludeniya","off_ices":["Aludeniya - Pradhana Karyalaya"],"offices":["Aludeniya - Pradhana Karyalaya"]},{"name":"Galagedara","offices":["Galagedara - Pradhana Karyalaya"]},{"name":"Welivita","offices":["Welivita - Pradhana Karyalaya"]},{"name":"Ankumbura","offices":["Ankumbura - Pradhana Karyalaya"]},{"name":"Batugoda","offices":["Batugoda - Pradhana Karyalaya"]},{"name":"Wawala","offices":["Wawala - Pradhana Karyalaya"]},{"name":"Alawathugoda","offices":["Alawathugoda - Pradhana Karyalaya"]},{"name":"Medawala","offices":["Medawala - Pradhana Karyalaya"]},{"name":"Yatiwawala","offices":["Yatiwawala - Pradhana Karyalaya"]},{"name":"Hatharaliyadda","offices":["Hatharaliyadda - Pradhana Karyalaya"]}]}]</script>
+</body></html>

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="si"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Sub Admin Dashboard | FieldWork OS</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="styles.css">
+<style>
+.modal-back{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(2px);z-index:100;display:none;align-items:flex-end;justify-content:center;padding:12px}
+.modal-back.show{display:flex}
+.modal-card{background:#fff;border-radius:22px 22px 16px 16px;width:100%;max-width:460px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(80px);background:#0f172a;color:#fff;padding:12px 18px;border-radius:999px;font-size:13px;font-weight:600;z-index:120;transition:.25s;max-width:92vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0)} .toast.ok{background:#059669}.toast.err{background:#dc2626}
+</style>
+</head>
+<body class="bg-[#f8fafc]">
+<div id="toast" class="toast"></div>
+
+<div id="sidebarOverlay" onclick="closeSidebar()" class="fixed inset-0 bg-black/50 z-[35] hidden lg:hidden"></div>
+<aside id="sidebar" class="sidebar p-5 flex flex-col">
+  <div class="flex items-center gap-3">
+    <div class="w-11 h-11 rounded-xl bg-white text-slate-900 grid place-items-center font-bold text-lg shrink-0">SA</div>
+    <div class="min-w-0 flex-1">
+      <div class="font-bold leading-tight text-white">FieldWork OS</div>
+      <div class="text-[11px] text-slate-400" id="scopeLabel">Sub Admin</div>
+    </div>
+    <button onclick="closeSidebar()" class="lg:hidden shrink-0 w-10 h-10 rounded-full bg-white/20 text-white font-bold grid place-items-center">✕</button>
+  </div>
+  <nav class="mt-7 space-y-1 text-[14px]">
+    <button data-nav="dashboard" onclick="goNav('dashboard')" class="nav-btn w-full text-left px-4 py-3 rounded-xl bg-white text-slate-900 font-semibold">🎯 Target & Progress Monitor</button>
+    <button data-nav="data" onclick="goNav('data')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">📊 දත්ත (Data & Excel)<br><span class="text-[11px] font-normal opacity-80">View / Edit / Filtered Export</span></button>
+  </nav>
+  <div class="mt-auto rounded-2xl bg-white/10 p-4 text-white">
+    <div class="text-sm font-semibold">Sub Admin (AD Office)</div>
+    <div class="text-xs text-slate-300" id="userLabel"></div>
+    <button onclick="logout()" class="mt-3 w-full rounded-xl bg-red-500 py-2 text-sm font-semibold">Logout</button>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="flex items-center gap-3">
+      <button onclick="openSidebar()" class="lg:hidden btn btn-ghost px-3">☰ Menu</button>
+      <h1 class="font-bold text-[17px] md:text-[19px]" id="pageTitle">Target & Progress Monitor</h1>
+      <span class="text-[10px] px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold whitespace-nowrap" id="topSubBadge">AD Office</span>
+    </div>
+    <span id="sbStatus" class="text-[11px] px-2 py-1 rounded bg-slate-100">Connected ✓</span>
+  </div>
+
+  <div class="p-4 md:p-6 max-w-[1150px] mx-auto space-y-5">
+    
+    <!-- ===================================================================== -->
+    <!-- DASHBOARD: EXECUTIVE TARGET & PROGRESS MONITOR (MATCHING IMAGE DESIGN)-->
+    <!-- ===================================================================== -->
+    <div id="page-dashboard" class="page space-y-5">
+      <div class="card">
+        <div class="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">✦ EXECUTIVE INFOGRAPHIC OVERVIEW • සජීවී ප්‍රගති විශ්ලේෂණය</div>
+        <h2 class="text-xl md:text-2xl font-bold text-slate-900 mt-1">AD Office Organizational Target & Progress Monitor</h2>
+        
+        <!-- Filters -->
+        <div class="grid md:grid-cols-3 gap-3 mt-4">
+          <div>
+            <label class="text-xs font-semibold text-slate-500 uppercase">PROGRAMME TYPE (වැඩසටහන)</label>
+            <select id="saFilterMain" onchange="renderSubAdminMonitor()" class="mt-1">
+              <option value="">All Programmes (සියලුම වැඩසටහන්)</option>
+              <option value="extension">Extension (ව්‍යාප්ති)</option>
+              <option value="development">Development (සංවර්ධන)</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-500 uppercase">SUB-PROGRAM / ITEM</label>
+            <select id="saFilterNode" onchange="renderSubAdminMonitor()" class="mt-1">
+              <option value="">All Sub-Programs & Items (සියලුම අයිතම)</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-500 uppercase">SEARCH AI OFFICE</label>
+            <input id="saSearchAi" placeholder="Search AI Office (උදා: Digana)..." oninput="renderSubAdminMonitor()" class="mt-1">
+          </div>
+        </div>
+
+        <!-- Filter Pills -->
+        <div class="flex flex-wrap items-center gap-2 mt-4 text-xs font-semibold">
+          <span class="text-slate-500">Filter AI Offices:</span>
+          <button onclick="setStatusFilter('all')" id="pillAll" class="px-3 py-1 rounded-full bg-slate-900 text-white">All (<span id="cntAll">0</span>)</button>
+          <button onclick="setStatusFilter('completed')" id="pillComp" class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">● Completed (<span id="cntComp">0</span>)</button>
+          <button onclick="setStatusFilter('partial')" id="pillPart" class="px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">● Partial Progress (<span id="cntPart">0</span>)</button>
+          <button onclick="setStatusFilter('nodata')" id="pillNo" class="px-3 py-1 rounded-full bg-red-50 text-red-700 border border-red-200">● No Data Entered (<span id="cntNo">0</span>)</button>
+        </div>
+
+        <!-- 4 GRADIENT KPI CARDS -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-5">
+          <!-- Blue Card -->
+          <div class="rounded-2xl p-5 text-white shadow-md" style="background:linear-gradient(135deg,#2563eb,#4f46e5)">
+            <div class="flex justify-between items-center text-[11px] font-bold uppercase opacity-90">
+              <span>UNITS ACHIEVED / TARGET</span>
+              <span class="w-7 h-7 rounded-lg bg-white/20 grid place-items-center">📦</span>
+            </div>
+            <div class="text-2xl font-bold mt-2"><span id="saAchieved">0</span> <span class="text-sm font-normal opacity-80">/ <span id="saTarget">0</span></span></div>
+            <div class="text-[11px] opacity-85 mt-1">AI Office වෙතින් ආවරණය කළ මුළු ප්‍රමාණය</div>
+          </div>
+
+          <!-- Green Card -->
+          <div class="rounded-2xl p-5 text-white shadow-md" style="background:linear-gradient(135deg,#059669,#10b981)">
+            <div class="flex justify-between items-center text-[11px] font-bold uppercase opacity-90">
+              <span>OVERALL COMPLETION RATE</span>
+              <span class="w-7 h-7 rounded-lg bg-white/20 grid place-items-center">📈</span>
+            </div>
+            <div class="text-2xl font-bold mt-2"><span id="saPct">0%</span></div>
+            <div class="text-[11px] opacity-85 mt-1">සමස්ත ඉලක්ක සපුරාලීමේ ප්‍රතිශතය</div>
+          </div>
+
+          <!-- Orange Card -->
+          <div class="rounded-2xl p-5 text-white shadow-md" style="background:linear-gradient(135deg,#d97706,#f59e0b)">
+            <div class="flex justify-between items-center text-[11px] font-bold uppercase opacity-90">
+              <span>PENDING TARGET UNITS</span>
+              <span class="w-7 h-7 rounded-lg bg-white/20 grid place-items-center">⏳</span>
+            </div>
+            <div class="text-2xl font-bold mt-2"><span id="saPending">0</span> Units</div>
+            <div class="text-[11px] opacity-85 mt-1">සම්පූර්ණ කිරීමට ඉතිරිව ඇති ප්‍රමාණය</div>
+          </div>
+
+          <!-- Red Card -->
+          <div class="rounded-2xl p-5 text-white shadow-md" style="background:linear-gradient(135deg,#dc2626,#e11d48)">
+            <div class="flex justify-between items-center text-[11px] font-bold uppercase opacity-90">
+              <span>NO DATA ENTERED</span>
+              <span class="w-7 h-7 rounded-lg bg-white/20 grid place-items-center">⚠️</span>
+            </div>
+            <div class="text-2xl font-bold mt-2"><span id="saNoDataCount">0</span> <span class="text-sm font-normal opacity-80">/ <span id="saTotalAiCount">0</span> Offices</span></div>
+            <div class="text-[11px] opacity-85 mt-1">තවමත් දත්ත ඇතුළත් කර නොමැති AI Office ගණන</div>
+          </div>
+        </div>
+
+        <!-- SEGMENT HEADER & AI OFFICE GRID (MATCHING IMAGE DESIGN) -->
+        <div class="mt-6 rounded-2xl overflow-hidden border border-slate-200 bg-slate-50">
+          <div class="p-4 text-white flex flex-wrap justify-between items-center gap-3" style="background:linear-gradient(90deg,#047857,#065f46)">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-full bg-white/20 text-[11px] font-bold" id="saSegmentBadge">AD Office Segment</span>
+                <span class="px-2.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-100 text-[11px] font-bold">Total AI Offices: <span id="saSegAiTotal">0</span></span>
+                <span class="px-2.5 py-0.5 rounded-full bg-red-500 text-white text-[11px] font-bold"><span id="saSegNotEntered">0</span> Not Entered</span>
+              </div>
+              <h3 class="text-lg font-bold mt-1" id="saSegmentTitle">AD Office Breakdown</h3>
+            </div>
+            <div class="flex gap-5 text-right">
+              <div><div class="text-[10px] uppercase opacity-75">AD TARGET</div><div class="font-bold text-base" id="saSegTarget">0</div></div>
+              <div><div class="text-[10px] uppercase opacity-75">AI ACHIEVED</div><div class="font-bold text-base" id="saSegAchieved">0</div></div>
+              <div><div class="text-[10px] uppercase opacity-75">COMPLETION %</div><div class="font-bold text-base" id="saSegPct">0%</div></div>
+            </div>
+          </div>
+
+          <div id="saAiCardsGrid" class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- AI Office cards rendered here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- DATA PAGE: FILTERED TABLE & STRICT FILTERED EXCEL DOWNLOAD            -->
+    <!-- ===================================================================== -->
+    <div id="page-data" class="page hidden">
+      <div class="card">
+        <div class="flex flex-wrap justify-between gap-2">
+          <h2 class="font-bold text-[19px]">දත්ත — බලන්න / Edit / Delete / Filtered Excel Download</h2>
+          <button onclick="downloadFilteredSubAdminExcel()" class="btn btn-success text-xs px-4">⬇ Filtered Excel Download</button>
+        </div>
+        <p class="text-xs text-slate-500 mt-1" id="dataScopeNote">Sub Admin: තමන්ට අදාළ AI Office දත්ත පමණි.</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4">
+          <select id="fMain" onchange="renderData()"><option value="">Main Type (All)</option><option value="extension">Extension</option><option value="development">Development</option></select>
+          <select id="fDiv" onchange="renderData()"><option value="">All AI Offices</option></select>
+          <select id="fL1" onchange="renderData()"><option value="">Season / Year (All)</option></select>
+          <input id="fSearch" placeholder="Search..." oninput="renderData()">
+        </div>
+
+        <div class="table-wrap mt-4">
+          <table id="subAdminDataTable">
+            <thead><tr><th>Path</th><th>AI Office</th><th>Answers</th><th>Progress Qty</th><th>User / Date</th><th>Action</th></tr></thead>
+            <tbody id="dataTbody"></tbody>
+          </table>
+        </div>
+
+        <div id="editBox" class="hidden mt-4 border-2 border-indigo-200 rounded-2xl p-4 bg-indigo-50/50">
+          <h4 class="font-bold">✏️ Edit Response</h4>
+          <div id="editFields" class="mt-3 space-y-3"></div>
+          <div class="flex gap-2 mt-3"><button onclick="saveEdit()" class="btn btn-primary px-4">Save Edit</button><button onclick="closeEdit()" class="btn btn-ghost px-4">Cancel</button></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL='https://ecpoyxjuednjixmaajux.supabase.co';
+const SUPABASE_KEY='sb_publishable_kbTMWrgN1_lRxClNYU-PQg_Qc9jpmSe';
+const sb=(typeof supabase!=='undefined')?supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
+
+const H_KEY='fw7_hier', N_KEY='fw7_nodes', Q_KEY='fw7_qs', R_KEY='fw7_resp', T_KEY='fw7_targets';
+var mySub=localStorage.getItem('user_subOfficeId')||'sub1';
+var mySubName=localStorage.getItem('user_subOfficeName')||mySub;
+
+document.getElementById('userLabel').textContent=localStorage.getItem('user')||'';
+document.getElementById('topSubBadge').textContent=mySubName;
+document.getElementById('saSegmentTitle').textContent=mySubName;
+
+var hierarchy=JSON.parse(localStorage.getItem(H_KEY)||'[]');
+var nodes=JSON.parse(localStorage.getItem(N_KEY)||'[]');
+var questions=JSON.parse(localStorage.getItem(Q_KEY)||'[]');
+var responses=JSON.parse(localStorage.getItem(R_KEY)||'[]');
+var targetsProgress=JSON.parse(localStorage.getItem(T_KEY)||'[]');
+var currentStatusFilter = 'all';
+var editingId = null;
+
+function openSidebar(){var sb=document.getElementById('sidebar');sb.style.transform='translateX(0)';sb.style.left='0';sb.style.display='flex';document.getElementById('sidebarOverlay').classList.remove('hidden');}
+function closeSidebar(){var sb=document.getElementById('sidebar');if(window.innerWidth<1024){sb.style.transform='translateX(-110%)';}document.getElementById('sidebarOverlay').classList.add('hidden');}
+function goNav(p){
+  closeSidebar();
+  document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));
+  document.getElementById('page-'+p).classList.remove('hidden');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.className='nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10');
+  var btn=document.querySelector('[data-nav="'+p+'"]');
+  if(btn)btn.className='nav-btn w-full text-left px-4 py-3 rounded-xl bg-white text-slate-900 font-semibold';
+  document.getElementById('pageTitle').textContent=p==='dashboard'?'Target & Progress Monitor':'දත්ත (Data & Excel)';
+  if(p==='dashboard') renderSubAdminMonitor();
+  if(p==='data') renderData();
+}
+
+function setStatusFilter(st){
+  currentStatusFilter = st;
+  ['pillAll','pillComp','pillPart','pillNo'].forEach(id => {
+    var el = document.getElementById(id);
+    if(el) el.classList.remove('ring-2','ring-offset-1','ring-indigo-500');
+  });
+  var activeId = st==='all'?'pillAll':st==='completed'?'pillComp':st==='partial'?'pillPart':'pillNo';
+  document.getElementById(activeId).classList.add('ring-2','ring-offset-1','ring-indigo-500');
+  renderSubAdminMonitor();
+}
+
+function renderSubAdminMonitor(){
+  var fMain = document.getElementById('saFilterMain').value;
+  var fNode = document.getElementById('saFilterNode').value;
+  var search = (document.getElementById('saSearchAi').value || '').toLowerCase();
+
+  // Find AI offices under this AD Office
+  var adObj = hierarchy.find(h => String(h.id) === String(mySub));
+  var aiList = adObj ? adObj.divisions.map(d => d.name) : [];
+
+  // Filter targets for this AD Office
+  var adTargets = targetsProgress.filter(t => String(t.ad_office_id) === String(mySub));
+  if(fMain) adTargets = adTargets.filter(t => t.main_type === fMain);
+
+  // Populate Sub-Program dropdown
+  var nodeSel = document.getElementById('saFilterNode');
+  var curNode = nodeSel.value;
+  var uniqueNodes = [...new Set(adTargets.map(t => t.node_id))];
+  nodeSel.innerHTML = '<option value="">All Sub-Programs & Items (සියලුම අයිතම)</option>' + uniqueNodes.map(nid => {
+    var nObj = nodes.find(x => x.id === nid);
+    return '<option value="'+nid+'">'+(nObj ? nObj.title : nid)+'</option>';
+  }).join('');
+  nodeSel.value = curNode;
+
+  if(fNode) adTargets = adTargets.filter(t => t.node_id === fNode);
+
+  var totalTarget = 0, totalAchieved = 0;
+  var cntComp = 0, cntPart = 0, cntNo = 0;
+
+  var cardsHtml = '';
+  aiList.forEach(aiName => {
+    if(search && !aiName.toLowerCase().includes(search)) return;
+
+    var aiRecords = adTargets.filter(t => String(t.ai_office_id).toLowerCase() === aiName.toLowerCase());
+    var aiTgt = 0, aiAch = 0;
+    aiRecords.forEach(r => {
+      aiTgt += Number(r.target_units || 0);
+      aiAch += Number(r.progress_units || 0);
+    });
+
+    totalTarget += aiTgt;
+    totalAchieved += aiAch;
+
+    var status = 'nodata';
+    if(aiAch > 0 && aiAch >= aiTgt && aiTgt > 0) { status = 'completed'; cntComp++; }
+    else if(aiAch > 0) { status = 'partial'; cntPart++; }
+    else { status = 'nodata'; cntNo++; }
+
+    if(currentStatusFilter !== 'all' && currentStatusFilter !== status) return;
+
+    var pct = aiTgt > 0 ? Math.min(100, Math.round((aiAch / aiTgt) * 100)) : 0;
+    var badge = '', border = 'border-slate-200', bar = 'bg-indigo-600';
+    if(status === 'completed'){
+      badge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">COMPLETED ✓</span>';
+      border = 'border-emerald-300'; bar = 'bg-emerald-500';
+    } else if(status === 'partial'){
+      badge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700">PARTIAL</span>';
+      border = 'border-amber-300'; bar = 'bg-amber-500';
+    } else {
+      badge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700">NO DATA</span>';
+      border = 'border-red-200';
+    }
+
+    cardsHtml += '<div class="rounded-2xl border-2 '+border+' bg-white p-4 shadow-sm flex flex-col justify-between">'+
+                 '<div>'+
+                   '<div class="flex justify-between items-center"><span class="font-bold text-sm text-slate-900">'+aiName+'</span>'+badge+'</div>'+
+                   (status === 'nodata' ?
+                     '<div class="py-6 text-center text-xs text-red-500 font-medium">දත්ත ඇතුළත් කර නොමැත<br><span class="text-[10px] text-slate-400">Awaiting AI Office Entry</span></div>' :
+                     '<div class="mt-3 pt-2 border-t border-slate-100 space-y-1 text-xs">'+
+                       '<div class="flex justify-between"><span class="text-slate-500">ලබා දුන් ඉලක්කය:</span><span class="font-bold">'+aiTgt+' Units</span></div>'+
+                       '<div class="flex justify-between"><span class="text-slate-500">ආවරණය කළ ප්‍රමාණය:</span><span class="font-bold text-emerald-600">'+aiAch+' Units</span></div>'+
+                     '</div>'
+                   )+
+                 '</div>'+
+                 '<div class="mt-2">'+
+                   '<div class="flex justify-between text-[10px] font-semibold text-slate-500 mb-1"><span>Progress: '+aiAch+'/'+aiTgt+'</span><span>'+pct+'%</span></div>'+
+                   '<div class="w-full h-2 rounded-full bg-slate-100 overflow-hidden"><div class="h-full '+bar+'" style="width:'+pct+'%"></div></div>'+
+                 '</div>'+
+                 '</div>';
+  });
+
+  var overallPct = totalTarget > 0 ? Math.round((totalAchieved / totalTarget) * 100) : 0;
+  document.getElementById('saAchieved').textContent = totalAchieved.toLocaleString();
+  document.getElementById('saTarget').textContent = totalTarget.toLocaleString();
+  document.getElementById('saPct').textContent = overallPct + '%';
+  document.getElementById('saPending').textContent = Math.max(0, totalTarget - totalAchieved).toLocaleString();
+  document.getElementById('saNoDataCount').textContent = cntNo;
+  document.getElementById('saTotalAiCount').textContent = aiList.length;
+
+  document.getElementById('cntAll').textContent = aiList.length;
+  document.getElementById('cntComp').textContent = cntComp;
+  document.getElementById('cntPart').textContent = cntPart;
+  document.getElementById('cntNo').textContent = cntNo;
+
+  document.getElementById('saSegAiTotal').textContent = aiList.length;
+  document.getElementById('saSegNotEntered').textContent = cntNo;
+  document.getElementById('saSegTarget').textContent = totalTarget.toLocaleString();
+  document.getElementById('saSegAchieved').textContent = totalAchieved.toLocaleString();
+  document.getElementById('saSegPct').textContent = overallPct + '%';
+
+  document.getElementById('saAiCardsGrid').innerHTML = cardsHtml || '<div class="col-span-full text-center py-6 text-slate-400 text-sm">No matching AI Offices found</div>';
+}
+
+/* ========================================================================= */
+/* DATA FILTERING & STRICT FILTERED EXCEL DOWNLOAD                           */
+/* ========================================================================= */
+function renderData(){
+  var list = responses.filter(r => String(r.subOfficeId) === String(mySub));
+  
+  // Populate AI office filter
+  var adObj = hierarchy.find(h => String(h.id) === String(mySub));
+  var fDivSel = document.getElementById('fDiv');
+  var curDiv = fDivSel.value;
+  if(adObj){
+    fDivSel.innerHTML = '<option value="">All AI Offices</option>' + adObj.divisions.map(d => '<option>'+d.name+'</option>').join('');
+    fDivSel.value = curDiv;
+  }
+
+  var fMain = document.getElementById('fMain').value;
+  var fDiv = fDivSel.value;
+  var fL1 = document.getElementById('fL1').value;
+  var search = (document.getElementById('fSearch').value || '').toLowerCase();
+
+  var l1s = [...new Set(list.map(r => r.level1).filter(Boolean))];
+  var fL1Sel = document.getElementById('fL1');
+  fL1Sel.innerHTML = '<option value="">Season / Year (All)</option>' + l1s.map(x => '<option>'+x+'</option>').join('');
+  fL1Sel.value = fL1;
+
+  if(fMain) list = list.filter(r => r.main_type === fMain);
+  if(fDiv) list = list.filter(r => r.division === fDiv);
+  if(fL1) list = list.filter(r => r.level1 === fL1);
+  if(search) list = list.filter(r => (JSON.stringify(r.answers) + (r.node_path||'') + (r.division||'')).toLowerCase().includes(search));
+
+  // Save filtered subset globally for Excel Download
+  window.currentFilteredSubAdminData = list;
+
+  document.getElementById('dataScopeNote').textContent = 'Sub Admin ('+mySubName+') • Filtered Records: ' + list.length;
+
+  var h = '';
+  list.forEach(r => {
+    var qs = questions.filter(q => String(q.node_id) === String(r.node_id));
+    var ansHtml = qs.length ? qs.map(q => r.answers[q.id] ? '<div><b>'+q.question_text+':</b> '+r.answers[q.id]+'</div>' : '').join('') : JSON.stringify(r.answers);
+    h += '<tr>'+
+         '<td class="text-xs"><b>'+r.node_path+'</b><br><span class="text-slate-400">'+r.main_type+'</span></td>'+
+         '<td class="text-xs font-bold">'+r.division+'</td>'+
+         '<td class="text-xs">'+ansHtml+'</td>'+
+         '<td class="text-xs font-bold text-indigo-700">'+(r.progress_qty || 0)+' Units</td>'+
+         '<td class="text-xs">'+(r.submittedName||'')+'<br>'+new Date(r.created_at).toLocaleDateString()+'</td>'+
+         '<td><button onclick="editData(''+r.id+'')" class="btn btn-ghost px-2 py-1 text-xs">Edit</button> <button onclick="delData(''+r.id+'')" class="text-red-500 text-xs px-2">Delete</button></td>'+
+         '</tr>';
+  });
+  document.getElementById('dataTbody').innerHTML = h || '<tr><td colspan="6" class="text-center py-6 text-slate-400">දත්ත නැත</td></tr>';
+}
+
+function downloadFilteredSubAdminExcel(){
+  var list = window.currentFilteredSubAdminData || [];
+  if(!list.length){ alert('Filter කළ දත්ත නැත'); return; }
+  
+  var rows = list.map(r => {
+    var obj = {
+      'Date': new Date(r.created_at).toLocaleString(),
+      'Main Type': r.main_type,
+      'Path': r.node_path,
+      'AD Office': r.subOfficeName,
+      'AI Office': r.division,
+      'Progress Qty': r.progress_qty || 0,
+      'Submitted By': r.submittedName || ''
+    };
+    var qs = questions.filter(q => String(q.node_id) === String(r.node_id));
+    qs.forEach(q => {
+      obj[q.question_text] = r.answers[q.id] || '';
+    });
+    return obj;
+  });
+
+  var ws = XLSX.utils.json_to_sheet(rows);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "FilteredReport");
+  XLSX.writeFile(wb, "SubAdmin_Filtered_Data_" + mySubName + ".xlsx");
+}
+
+function editData(id){
+  var r=responses.find(x=>x.id===id); if(!r) return; editingId=id;
+  document.getElementById('editBox').classList.remove('hidden');
+  var qs=questions.filter(q=>q.node_id===r.node_id);
+  document.getElementById('editFields').innerHTML=qs.map(q=>'<div><label class="text-xs font-semibold">'+q.question_text+'</label><input data-edit-qid="'+q.id+'" value="'+(r.answers[q.id]||'')+'"></div>').join('');
+}
+function saveEdit(){
+  var r=responses.find(x=>x.id===editingId); if(!r) return;
+  var na={}; document.querySelectorAll('[data-edit-qid]').forEach(el=>{ na[el.dataset.editQid]=el.value; });
+  r.answers=na; localStorage.setItem(R_KEY, JSON.stringify(responses));
+  document.getElementById('editBox').classList.add('hidden'); renderData();
+}
+function closeEdit(){ editingId=null; document.getElementById('editBox').classList.add('hidden'); }
+function delData(id){
+  if(!confirm('Delete record?')) return;
+  responses=responses.filter(x=>x.id!==id); localStorage.setItem(R_KEY, JSON.stringify(responses)); renderData();
+}
+async function logout(){
+  try{ if(sb) await sb.auth.signOut(); }catch(e){}
+  ['role','user','user_name','user_subOfficeId','user_subOfficeName','user_division','user_office','user_officer_name','fw_session'].forEach(k=>localStorage.removeItem(k));
+  location.href='index.html';
+}
+
+renderSubAdminMonitor();
+</script>
+</body></html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="si"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Login | FieldWork DD Kandy</title><script src="https://cdn.tailwindcss.com"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><link rel="stylesheet" href="styles.css"></head>
+<body class="min-h-screen bg-[#f8fafc] flex">
+<div class="flex-1 flex items-center justify-center p-4"><div class="w-full max-w-[440px]"><div class="card">
+<div class="flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-indigo-600 grid place-items-center text-white font-bold">A</div><span class="font-bold">FieldWork</span><span class="ml-auto badge badge-blue">DK Project</span></div>
+<h2 class="text-[28px] font-bold mt-6">DD Kandy Agriculture - Login</h2>
+<div id="loginStatus" class="text-[11px] text-slate-400 mt-2"></div><div id="err" class="hidden mt-4 rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-700"></div>
+<form id="loginForm" class="mt-6 space-y-4"><div><label class="text-[13px] font-semibold">Username / Email *</label><input id="email" required class="mt-1.5" autocomplete="off" autocapitalize="none"></div>
+<div><label class="text-[13px] font-semibold">Password *</label>
+  <div class="relative mt-1.5">
+    <input type="password" id="password" required autocomplete="new-password" class="w-full pr-10">
+    <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+      <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+    </button>
+  </div>
+</div>
+<button class="btn btn-primary w-full py-3.5">Login</button></form>
+<div id="alreadyBox" class="hidden mt-4 rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-800"><b>✅ Already Logged In:</b> <span id="alreadyWho"></span><br><button type="button" onclick="continueLoggedIn()" class="btn btn-primary mt-2 px-4 py-2 text-xs">→ Continue</button> <button type="button" onclick="doLogout()" class="btn btn-ghost mt-2 px-3 py-2 text-xs">Logout</button></div>
+<div class="mt-6 rounded-xl bg-emerald-50 p-3 text-[12px] text-emerald-900 border border-emerald-100"><b>🔒 Secure Login:</b><br>Email + Password.<br><b>Username + Password</b> </div>
+</div></div></div>
+<script>
+  window.addEventListener('pageshow', function(event) {
+    if (event.persisted || (typeof performance !== 'undefined' && performance.navigation.type === 2)) {
+        if (!localStorage.getItem('fw_session')) {
+            // Already on login page, just ensuring session cleared if needed
+        }
+    }
+});
+function togglePassword() {
+  var pw = document.getElementById('password');
+  var icon = document.getElementById('eyeIcon');
+  if (pw.type === 'password') {
+    pw.type = 'text';
+    icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+  } else {
+    pw.type = 'password';
+    icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+  }
+}
+const H_KEY='fw7_hier'; const GF_KEY='fw7_gforms'; const U_KEY='fw7_users'; const N_KEY='fw7_nodes'; const Q_KEY='fw7_qs'; const R_KEY='fw7_resp'; const E_KEY='fw7_resp';
+(function migrateV5(){ try{ var pairs=[['fieldwork_hierarchy_v5','fw7_hier'],['fieldwork_gforms_v5','fw7_gforms'],['fieldwork_entries_v5','fw7_resp']]; pairs.forEach(function(p){ var oldV=localStorage.getItem(p[0]); if(oldV && !localStorage.getItem(p[1])) localStorage.setItem(p[1], oldV); }); }catch(e){} })();
+function defaultHierarchy(){ return [{"id":"sub1","name":"ADA Kundasale","divisions":[{"name":"Dambagahapitiya","offices":["Dambagahapitiya - Pradhana Karyalaya"]},{"name":"Kalunthenna","offices":["Kalunthenna - Pradhana Karyalaya"]},{"name":"Nugethenna","offices":["Nugethenna - Pradhana Karyalaya"]},{"name":"Morayaya","offices":["Morayaya - Pradhana Karyalaya"]},{"name":"Ulpathagama","offices":["Ulpathagama - Pradhana Karyalaya"]},{"name":"Namadagala","offices":["Namadagala - Pradhana Karyalaya"]},{"name":"Theldeniya","offices":["Theldeniya1 - Pradhana Karyalaya","Theldeniya2 - Pradhana Karyalaya"]},{"name":"Udispaththuwa","offices":["Udispaththuwa - Pradhana Karyalaya"]},{"name":"Wendaruwa","offices":["Wendaruwa - Pradhana Karyalaya"]},{"name":"Digana","offices":["Digana - Pradhana Karyalaya"]},{"name":"Gunnepana","offices":["Gunnepana - Pradhana Karyalaya"]},{"name":"Manikhinna","offices":["Manikhinna - Pradhana Karyalaya"]},{"name":"Wavinna","offices":["Wavinna - Pradhana Karyalaya"]},{"name":"Medamahanuwara","offices":["Medamahanuwara - Pradhana Karyalaya"]}]},{"id":"sub2","name":"ADA Kandy","divisions":[{"name":"Waththegama","offices":["Waththegama - Pradhana Karyalaya"]},{"name":"Huluganga","offices":["Huluganga - Pradhana Karyalaya"]},{"name":"Bowala","offices":["Bowala - Pradhana Karyalaya"]},{"name":"Ketawalaleula","offices":["Ketawalaleula - Pradhana Karyalaya"]},{"name":"Galaha","offices":["Galaha - Pradhana Karyalaya"]},{"name":"Marassana","offices":["Marassana - Pradhana Karyalaya"]},{"name":"Thalathuoya","offices":["Thalathuoya - Pradhana Karyalaya"]}]},{"id":"sub3","name":"ADA Udunuwara / Yatinuwara","divisions":[{"name":"Edaduwawe","offices":["Edaduwawe - Pradhana Karyalaya"]},{"name":"Giragama","offices":["Giragama - Pradhana Karyalaya"]},{"name":"Manikdiwella","offices":["Manikdiwella - Pradhana Karyalaya"]},{"name":"Alapalawala","offices":["Alapalawala - Pradhana Karyalaya"]},{"name":"Ambanwala","offices":["Ambanwala - Pradhana Karyalaya"]},{"name":"Imbuldeniya","offices":["Imbuldeniya - Pradhana Karyalaya"]},{"name":"Pethiyagoda","offices":["Pethiyagoda - Pradhana Karyalaya"]},{"name":"Thalawathura","offices":["Thalawathura - Pradhana Karyalaya"]},{"name":"Medapitiya","offices":["Medapitiya - Pradhana Karyalaya"]},{"name":"Mulgama","offices":["Mulgama - Pradhana Karyalaya"]},{"name":"Delpitiya","offices":["Delpitiya - Pradhana Karyalaya"]},{"name":"Gampola","offices":["Gampola - Pradhana Karyalaya"]},{"name":"Kuruduwaththa","offices":["Kuruduwaththa - Pradhana Karyalaya"]},{"name":"Rambukpitiya","offices":["Rambukpitiya - Pradhana Karyalaya"]}]},{"id":"sub4","name":"ADA Harispattuwa","divisions":[{"name":"Aludeniya","offices":["Aludeniya - Pradhana Karyalaya"]},{"name":"Galagedara","offices":["Galagedara - Pradhana Karyalaya"]},{"name":"Welivita","offices":["Welivita - Pradhana Karyalaya"]},{"name":"Ankumbura","offices":["Ankumbura - Pradhana Karyalaya"]},{"name":"Batugoda","offices":["Batugoda - Pradhana Karyalaya"]},{"name":"Wawala","offices":["Wawala - Pradhana Karyalaya"]},{"name":"Alawathugoda","offices":["Alawathugoda - Pradhana Karyalaya"]},{"name":"Medawala","offices":["Medawala - Pradhana Karyalaya"]},{"name":"Yatiwawala","offices":["Yatiwawala - Pradhana Karyalaya"]},{"name":"Hatharaliyadda","offices":["Hatharaliyadda - Pradhana Karyalaya"]}]}]; }
+function loadHierarchy(){ try{ var s=localStorage.getItem(H_KEY); if(s){ var a=JSON.parse(s); if(Array.isArray(a)&&a.length) return a; } }catch(e){} return defaultHierarchy(); }
+function saveHierarchy(h){ localStorage.setItem(H_KEY, JSON.stringify(h)); }
+function getDivisionsForSub(subId){ var h=null; for(var i=0;i<loadHierarchy().length;i++){ if(loadHierarchy()[i].id===subId) h=loadHierarchy()[i]; } return h?h.divisions:[]; }
+function getOfficesForDiv(divName){ var h=loadHierarchy(); for(var i=0;i<h.length;i++){ for(var j=0;j<h[i].divisions.length;j++){ if(h[i].divisions[j].name===divName) return h[i].divisions[j].offices; } } return []; }
+function defaultUsers(){ return [];}
+function loadUsers(){ try{ var old=localStorage.getItem('fieldwork_users_v5'); if(old && !localStorage.getItem(U_KEY)){ localStorage.setItem(U_KEY, old); } }catch(e){} try{ var s=localStorage.getItem(U_KEY); if(s){ var a=JSON.parse(s); if(Array.isArray(a)&&a.length) return a; } }catch(e){} return defaultUsers(); }
+function saveUsers(u){ localStorage.setItem(U_KEY, JSON.stringify(u)); }
+function defaultGForms(){ return [];}
+function loadGForms(){ try{ var s=localStorage.getItem(GF_KEY); if(s){ var a=JSON.parse(s); if(Array.isArray(a)) return a; } }catch(e){} return defaultGForms(); }
+function saveGForms(g){ localStorage.setItem(GF_KEY, JSON.stringify(g)); }
+function loadEntries(){ try{ return JSON.parse(localStorage.getItem(E_KEY)||'[]'); }catch(e){ return []; } }
+function saveEntries(e){ localStorage.setItem(E_KEY, JSON.stringify(e)); }
+function toEmbedUrl(url){ if(!url) return ''; url=url.trim(); var m=url.match(/src="([^"]+)"/); if(m) url=m[1]; if(url.indexOf('viewform')===-1 && url.indexOf('/d/')>-1){ url=url.replace(/\/$/,'')+'/viewform'; } if(url.indexOf('embedded=true')===-1){ url+=(url.indexOf('?')===-1?'?':'&')+'embedded=true'; } return url; }
+function buildPrefilledUrl(g, ctx){ var baseUrl=toEmbedUrl(g.url); var params=[]; function add(entryId, val){ if(entryId && val) params.push(encodeURIComponent(entryId)+'='+encodeURIComponent(val)); } add(g.entrySub, ctx.subOfficeName); add(g.entryDiv, ctx.division); add(g.entryOffice, ctx.office); add(g.entryYear, ctx.year); add(g.entrySeason, ctx.season); add(g.entryUser, ctx.userName + ' (' + ctx.userEmail + ')'); if(!params.length) return baseUrl; var sep = baseUrl.indexOf('?')===-1 ? '?' : '&'; return baseUrl + sep + params.join('&'); }
+const SUPABASE_URL='https://fqjbnwcavcxloaqwyret.supabase.co';
+const SUPABASE_KEY='sb_publishable_O5ECn-2JZ_Fn6MTASNZsjQ_UBIPqnMA';
+const supabaseClient = (typeof supabase!=='undefined') ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+(function clearOldAutofill(){ try{ var em=document.getElementById('email'), pw=document.getElementById('password'); if(em) em.value=''; if(pw) pw.value=''; setTimeout(function(){ if(em) em.value=''; if(pw) pw.value=''; }, 600); }catch(e){} })();
+document.getElementById('loginForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  var loginId=document.getElementById('email').value.trim().toLowerCase();
+  var email = loginId.indexOf('@')>-1 ? loginId : loginId.replace(/\s+/g,'.').replace(/[^a-z0-9._-]/g,'') + '@agri.local';
+  var displayName = loginId; var pw=document.getElementById('password').value.trim();
+  var err=document.getElementById('err'); err.classList.add('hidden');
+  var statusEl=document.getElementById('loginStatus'); if(statusEl) statusEl.textContent='Checking...';
+  if(supabaseClient){
+    try{
+      var sbRes = await supabaseClient.auth.signInWithPassword({email: email, password: pw});
+      if(!sbRes.error && sbRes.data.user){
+        var prof = await supabaseClient.from('profiles').select('*').eq('id', sbRes.data.user.id).single();
+        var p = (prof && prof.data) ? prof.data : null;
+        if(!p){ err.textContent='Supabase Auth OK, නමුත් profiles Table එකේ ඔබේ Row එක නැත / RLS Block. Supabase Dashboard එකේ profiles වල Row එකක් එකතු කරන්න.'; err.classList.remove('hidden'); return; }
+        if(p.status==='inactive'){ err.textContent='පරිශීලක අක්‍රීයයි (Inactive).'; err.classList.remove('hidden'); return; }
+        var h=loadHierarchy(); var so=null; for(var j=0;j<h.length;j++){ if(h[j].id===(p.sub_office_id||p.subOfficeId)) so=h[j]; }
+        var role = p.role || 'unit';
+        localStorage.setItem('role', role); localStorage.setItem('user', displayName); localStorage.setItem('user_name', p.name||p.full_name||''); localStorage.setItem('user_subOfficeId', p.sub_office_id||p.subOfficeId||'ALL'); localStorage.setItem('user_subOfficeName', p.sub_office_name||(so?so.name:(p.sub_office_id||'ALL'))); localStorage.setItem('user_division', p.division||'ALL'); localStorage.setItem('user_office', p.office||''); localStorage.setItem('user_officer_name', p.officer_name||''); localStorage.setItem('fw_session', JSON.stringify({user:displayName, role:role, exp: Date.now()+12*60*60*1000}));
+        
+        if(role==='main_admin') location.href='admin.html#fw='+sessionHandoff(); 
+        else if(role==='sub_admin') location.href='subadmin.html#fw='+sessionHandoff();
+        else location.href='unit.html#fw='+sessionHandoff();
+        return;
+      } else {
+        var msg = sbRes.error ? sbRes.error.message : 'Supabase Login Failed';
+        err.textContent='පරිශීලක නාමය හෝ මුරපදය වැරදිය. (' + msg + ')'; err.classList.remove('hidden'); return;
+      }
+    }catch(e2){ console.log('SB login error', e2); err.textContent='Supabase වෙත සම්බන්ධ විය නොහැක (' + (e2.message||'Network Error') + ')'; err.classList.remove('hidden'); return; }
+  }
+  err.textContent='පරිශීලක නාමය හෝ මුරපදය වැරදිය.'; err.classList.remove('hidden');
+});
+function sessionHandoff(){ try{ var s=localStorage.getItem('fw_session')||''; return btoa(unescape(encodeURIComponent(s))); }catch(e){ return ''; } }
+function continueLoggedIn(){ try{ var j=JSON.parse(localStorage.getItem('fw_session')||'{}'); var page=(j.role==='main_admin')?'admin.html':(j.role==='sub_admin')?'subadmin.html':'unit.html'; location.href=page+'#fw='+sessionHandoff(); }catch(e){ location.href='admin.html'; } }
+async function doLogout(){ try{ if(typeof supabaseClient!=='undefined' && supabaseClient) await supabaseClient.auth.signOut(); }catch(e){} ['role','user','user_name','user_subOfficeId','user_subOfficeName','user_division','user_office','user_officer_name','fw_session'].forEach(function(k){ try{localStorage.removeItem(k);}catch(e){} }); location.reload(); }
+(function(){ try{ var s=localStorage.getItem('fw_session'); if(!s) return; var j=JSON.parse(s); if(j.exp && Date.now()>j.exp){ localStorage.removeItem('fw_session'); return; } var box=document.getElementById('alreadyBox'); if(box){ box.classList.remove('hidden'); document.getElementById('alreadyWho').textContent=(j.user||'')+' ('+(j.role||'')+')'; } }catch(e){} })();
+</script></body></html>

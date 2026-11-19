@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="si"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Unit - Data Entry & Targets | FieldWork DD Kandy</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="styles.css">
+<style>
+.modal-back{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:100;display:none;align-items:flex-end;justify-content:center;padding:12px}
+.modal-back.show{display:flex}
+.modal-card{background:#fff;border-radius:22px 22px 16px 16px;width:100%;max-width:460px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(80px);background:#0f172a;color:#fff;padding:12px 18px;border-radius:999px;font-size:13px;font-weight:600;z-index:120;transition:.25s;max-width:92vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0)} .toast.ok{background:#059669}.toast.err{background:#dc2626}
+@media(min-width:640px){.modal-back{align-items:center}.modal-card{border-radius:20px}}
+input[type="radio"]:checked + span, input[type="radio"]:checked + div { background-color: #4f46e5; color: white; border-color: #4f46e5; }
+.option-label { transition: all 0.15s ease; }
+.option-label:has(input[type="radio"]:checked) { background-color: #4f46e5; color: white; border-color: #4f46e5; }
+</style>
+</head>
+
+<div id="modalBack" class="modal-back" onclick="if(event.target===this) closeModal(false)"><div class="modal-card"><div id="modalIcon" class="text-3xl">ℹ️</div><h3 id="modalTitle" class="font-bold text-[18px] mt-2"></h3><p id="modalMsg" class="text-sm text-slate-500 mt-1"></p><div id="modalInputWrap" class="hidden mt-3"><input id="modalInput"></div><div class="flex gap-2 mt-5"><button onclick="closeModal(false)" class="btn btn-ghost flex-1">Cancel</button><button onclick="closeModal(true)" class="btn btn-primary flex-1">OK</button></div></div></div>
+<div id="toast" class="toast"></div>
+
+<body class="bg-[#f8fafc] min-h-screen"><div class="max-w-[1100px] mx-auto p-4 md:p-6">
+<!-- TOP HEADER -->
+<div class="flex justify-between items-center mb-4">
+  <div class="flex items-center gap-3">
+    <div class="w-10 h-10 rounded-xl bg-indigo-600 grid place-items-center text-white font-bold">AI</div>
+    <div>
+      <div class="font-bold">ක්ෂේත්‍ර ඒකකය - Data Entry <span class="text-[10px] px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold whitespace-nowrap">DD Kandy</span></div>
+      <div class="text-xs text-slate-500">Login - Auto Fill & Target Monitor</div>
+    </div>
+  </div>
+  <div class="flex gap-2">
+    <button onclick="setLang('si')" class="btn btn-ghost px-2 text-xs">AI USER</button>
+    <button onclick="logout()" class="btn btn-ghost">Logout</button>
+  </div>
+</div>
+
+<!-- LOCKED PROFILE CARD -->
+<div class="rounded-2xl bg-[#0f172a] text-white p-5">
+  <div class="text-[11px] text-slate-400">LOCKED - Login - Auto Set</div>
+  <div class="grid md:grid-cols-3 gap-4 mt-3">
+    <div class="rounded-xl bg-white/10 p-3"><div class="text-[11px] text-slate-400">1. AD Office</div><div class="font-bold text-sm mt-1" id="lockSub">-</div></div>
+    <div class="rounded-xl bg-white/10 p-3"><div class="text-[11px] text-slate-400">2. AI Office</div><div class="font-bold text-sm mt-1" id="lockDiv">-</div></div>
+    <div class="rounded-xl bg-white/10 p-3"><div class="text-[11px] text-slate-400">Officer</div><div class="font-bold text-sm mt-1" id="lockUser">-</div></div>
+  </div>
+</div>
+
+<!-- NAVIGATION TABS -->
+<div class="grid md:grid-cols-3 gap-4 mt-5">
+  <button onclick="showSection('targets')" id="btnTargets" class="text-left rounded-2xl border-2 border-indigo-600 bg-indigo-600 text-white p-4">
+    <div class="font-bold text-base">🎯 1. My Targets & Progress</div>
+    <div class="text-xs opacity-90 mt-1">Extension & Development ඉලක්ක හා ප්‍රගතිය</div>
+  </button>
+  <button onclick="showSection('form')" id="btnForm" class="text-left rounded-2xl border p-4 bg-white">
+    <div class="font-bold text-base">📝 2. Data Entry - දත්ත ඇතුළත් කරන්න</div>
+    <div class="text-xs text-slate-500 mt-1">Extension / Development Form & Progress</div>
+  </button>
+  <button onclick="showSection('mydata')" id="btnMy" class="text-left rounded-2xl border p-4 bg-white">
+    <div class="font-bold text-base">📊 3. My Data - මගේ දත්ත</div>
+    <div class="text-xs text-slate-500 mt-1">බලන්න / Edit / Filter / Excel Download</div>
+  </button>
+</div>
+
+<!-- ========================================================================= -->
+<!-- SECTION 1: EXECUTIVE INFOGRAPHIC TARGET & PROGRESS MONITOR (IMAGE DESIGN) -->
+<!-- ========================================================================= -->
+<div id="panel-targets" class="mt-5 space-y-5">
+  <div class="card">
+    <div class="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">✦ EXECUTIVE INFOGRAPHIC OVERVIEW • සජීවී ප්‍රගති විශ්ලේෂණය</div>
+    <h2 class="text-xl md:text-2xl font-bold text-slate-900 mt-1">My AI Office Target & Progress Monitor</h2>
+    
+    <!-- Filters -->
+    <div class="grid md:grid-cols-2 gap-3 mt-4">
+      <div>
+        <label class="text-xs font-semibold text-slate-500 uppercase">PROGRAMME (වැඩසටහන)</label>
+        <select id="tFilterMain" onchange="renderUnitTargets()" class="mt-1">
+          <option value="">All Programmes (සියලුම වැඩසටහන්)</option>
+          <option value="extension">Extension (ව්‍යාප්ති)</option>
+          <option value="development">Development (සංවර්ධන)</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs font-semibold text-slate-500 uppercase">SEARCH SUB-PROGRAM / ITEM</label>
+        <input id="tSearch" placeholder="Search item or sub-program..." oninput="renderUnitTargets()" class="mt-1">
+      </div>
+    </div>
+
+    <!-- 4 KPI GRADIENT CARDS (MATCHING IMAGE DESIGN) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-5">
+      <!-- Blue Card: Target vs Achieved Units -->
+      <div class="rounded-2xl p-5 text-white shadow-md" style="background:linear-gradient(135deg,#2563eb,#4f46e5)">
+        <div class="flex justify-between items-center text-[11px] font-bold uppercase opacity-90">
+          <span>ITEMS / UNITS ACHIEVED</span>
+          <span class="w-7 h-7 rounded-lg bg-white/20 grid place-items-center">📦</span>
+        </div>
+        <div class="text-2xl font-bold mt-2"><span id="uAchievedUnits">0</span> <span class="text-sm font-normal opacity-80">/ <span id="uTotalTarget">0</span></span></div>
+        <div class="text-[11px] opacity-85 mt-1">මුළු ඉලක්කයෙන් ආවරණය කළ ප්‍රමාණය</div>
+      </div>
+
+      <!-- Green Card: Completed Financial Value / Coverage % -->
+      <div class="rounded-2xl p-5 text-white shadow-md" style="background:linear-gradient(135deg,#059669,#10b981)">
+        <div class="flex justify-between items-center text-[11px] font-bold uppercase opacity-90">
+          <span>OVERALL COMPLETION</span>
+          <span class="w-7 h-7 rounded-lg bg-white/20 grid place-items-center">✓</span>
+        </div>
+        <div class="text-2xl font-bold mt-2"><span id="uCompletionPct">0%</span></div>
+        <div class="text-[11px] opacity-85 mt-1">සම්පූර්ණ කරන ලද ප්‍රගති ප්‍රතිශතය</div>
+      </div>
+
+      <!-- Orange Card: Pending Units -->
+      <div class="rounded-2xl p-5 text-white shadow-md" style="background:linear-gradient(135deg,#d97706,#f59e0b)">
+        <div class="flex justify-between items-center text-[11px] font-bold uppercase opacity-90">
+          <span>PENDING TARGET UNITS</span>
+          <span class="w-7 h-7 rounded-lg bg-white/20 grid place-items-center">⏳</span>
+        </div>
+        <div class="text-2xl font-bold mt-2"><span id="uPendingUnits">0</span> Units</div>
+        <div class="text-[11px] opacity-85 mt-1">තවමත් සම්පූර්ණ කිරීමට ඇති ඉලක්ක</div>
+      </div>
+
+      <!-- Red Card: Active Sub-Programs -->
+      <div class="rounded-2xl p-5 text-white shadow-md" style="background:linear-gradient(135deg,#dc2626,#e11d48)">
+        <div class="flex justify-between items-center text-[11px] font-bold uppercase opacity-90">
+          <span>ASSIGNED SUB-PROGRAMS</span>
+          <span class="w-7 h-7 rounded-lg bg-white/20 grid place-items-center">📋</span>
+        </div>
+        <div class="text-2xl font-bold mt-2"><span id="uSubCount">0</span> <span class="text-sm font-normal opacity-80">Items</span></div>
+        <div class="text-[11px] opacity-85 mt-1">ඔබගේ AI කාර්යාලයට අදාළ උප වැඩසටහන්</div>
+      </div>
+    </div>
+
+    <!-- SEGMENT BANNER & SUB-PROGRAM CARDS GRID (MATCHING IMAGE DESIGN) -->
+    <div class="mt-6 rounded-2xl overflow-hidden border border-slate-200 bg-slate-50">
+      <div class="p-4 text-white flex flex-wrap justify-between items-center gap-3" style="background:linear-gradient(90deg,#047857,#065f46)">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded-full bg-white/20 text-[11px] font-bold" id="bannerAdName">AD Office</span>
+            <span class="px-2.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-100 text-[11px] font-bold" id="bannerAiName">AI Office</span>
+          </div>
+          <h3 class="text-lg font-bold mt-1">All Sub-Programs & Items Progress Breakdown</h3>
+        </div>
+        <div class="flex gap-5 text-right">
+          <div><div class="text-[10px] uppercase opacity-75">TARGET ASSIGNED</div><div class="font-bold text-base" id="bannerTarget">0</div></div>
+          <div><div class="text-[10px] uppercase opacity-75">ACHIEVED</div><div class="font-bold text-base" id="bannerAchieved">0</div></div>
+          <div><div class="text-[10px] uppercase opacity-75">PROGRESS %</div><div class="font-bold text-base" id="bannerPct">0%</div></div>
+        </div>
+      </div>
+
+      <!-- Cards Grid -->
+      <div id="unitTargetCardsGrid" class="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- SECTION 2: DATA ENTRY FORM WITH PROGRESS UPDATE                           -->
+<!-- ========================================================================= -->
+<div id="panel-form" class="card mt-5 hidden">
+  <h2 class="font-bold text-[20px]">Data Entry - පියවරෙන් පියවර තෝරන්න</h2>
+  <div class="mt-4 space-y-4">
+    <div>
+      <label class="text-xs font-semibold">Select Type: Extension / Development තෝරන්න *</label>
+      <div class="grid grid-cols-2 gap-3 mt-1">
+        <button type="button" onclick="uSelectMain('extension')" id="uExt" class="py-3 rounded-xl font-semibold bg-indigo-600 text-white">🌾 Extension</button>
+        <button type="button" onclick="uSelectMain('development')" id="uDev" class="py-3 rounded-xl font-semibold bg-slate-100">🏗️ Development</button>
+      </div>
+    </div>
+    <div id="uL1Wrap"><label class="text-xs font-semibold" id="uL1Label">3. Season / Year තෝරන්න *</label><select id="uL1" onchange="uPickL1()"></select></div>
+    <div id="uL2Wrap"><label class="text-xs font-semibold" id="uL2Label">4. Program / Cultivation තෝරන්න *</label><select id="uL2" onchange="uPickL2()"></select></div>
+    <div id="uL3Wrap" class="hidden"><label class="text-xs font-semibold">5. Project / Sub Program තෝරන්න *</label><select id="uL3" onchange="uPickL3()"></select></div>
+    <div id="uSubWrap" class="hidden"><label class="text-xs font-semibold">5. Sub Program / උප අංශය තෝරන්න</label><select id="uSub" onchange="uPickSub()"></select></div>
+    <div id="uItemWrap" class="hidden"><label class="text-xs font-semibold">6. Item / Items Name තෝරන්න *</label><div id="uItemList" class="mt-2 space-y-1"></div></div>
+  </div>
+
+  <!-- AI OFFICE TARGET & PROGRESS UPDATE BOX INSIDE FORM -->
+  <div id="uTargetProgressBox" class="hidden mt-5 rounded-2xl border-2 border-indigo-200 bg-indigo-50/60 p-4">
+    <div class="flex flex-wrap justify-between items-center gap-2">
+      <div>
+        <div class="text-xs font-bold text-indigo-800 uppercase">🎯 AI Office Target & Progress Update</div>
+        <div class="text-xs text-slate-600 mt-0.5" id="uTargetInfoText">ඔබගේ AI කාර්යාලයට ලබා දී ඇති ඉලක්කය සහ දැනට සම්පූර්ණ කළ ප්‍රමාණය</div>
+      </div>
+      <div class="flex gap-2">
+        <span class="px-3 py-1 rounded-xl bg-white border border-indigo-200 text-xs font-bold text-indigo-700">Target: <span id="uFormTargetVal">0</span></span>
+        <span class="px-3 py-1 rounded-xl bg-emerald-600 text-white text-xs font-bold">Covered: <span id="uFormCoveredVal">0</span></span>
+      </div>
+    </div>
+    <div id="uPriceAutoInfo" class="hidden mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs bg-white p-2.5 rounded-xl border">
+      <div><span class="text-slate-400">Unit Price:</span> <b id="uAutoUnit">Rs. 0</b></div>
+      <div><span class="text-slate-400">Subsidy:</span> <b id="uAutoSub">0%</b></div>
+      <div><span class="text-slate-400">Gov Price:</span> <b id="uAutoGov">Rs. 0</b></div>
+      <div><span class="text-slate-400">Farmer Price:</span> <b class="text-emerald-700" id="uAutoFarmer">Rs. 0</b></div>
+    </div>
+    <div class="mt-3">
+      <label class="text-xs font-bold text-slate-800">මෙම යාවත්කාලීන කිරීමේදී ආවරණය කළ ප්‍රමාණය (Progress Update Quantity / எத்தனை) *</label>
+      <input type="number" step="any" id="uProgressQtyInput" placeholder="උදා: 5" class="mt-1 bg-white border-indigo-300 font-bold text-indigo-900">
+    </div>
+  </div>
+
+  <div id="uFormWrap" class="mt-5"></div>
+  <div id="uEmpty" class="hidden rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm">මේ කොටසට Form / Questions නැහැ. Admin ගෙන් අහන්න.</div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- SECTION 3: MY DATA (WITH STRICT FILTERED EXCEL DOWNLOAD)                  -->
+<!-- ========================================================================= -->
+<div id="panel-mydata" class="card mt-5 hidden">
+  <div class="flex flex-wrap justify-between gap-2">
+    <h2 class="font-bold text-[20px]">My Data - මම Update කළ දත්ත</h2>
+    <div class="flex gap-2">
+      <button onclick="downloadFilteredMyExcel()" class="btn btn-success text-xs px-3 py-1.5">⬇ Filtered Excel Download</button>
+      <button onclick="downloadMyChart()" class="btn btn-primary text-xs px-3 py-1.5">Chart Download</button>
+    </div>
+  </div>
+  <div class="grid md:grid-cols-4 gap-3 mt-4">
+    <select id="myFilterMain" onchange="renderMy()"><option value="">Main Type (All)</option><option value="extension">Extension</option><option value="development">Development</option></select>
+    <select id="myFilterL1" onchange="renderMy()"><option value="">Season / Year (All)</option></select>
+    <select id="myFilterL2" onchange="renderMy()"><option value="">Program (All)</option></select>
+    <select id="myFilterL3" onchange="renderMy()"><option value="">Sub Program (All)</option></select>
+    <select id="myFilterItem" onchange="renderMy()"><option value="">Item (All)</option></select>
+    <input id="mySearch" placeholder="Search..." oninput="renderMy()" class="md:col-span-3">
+  </div>
+  <div class="mt-5 border p-4 rounded-xl flex justify-center bg-white"><div style="position:relative; width:100%; max-width:300px; height:300px;"><canvas id="myChart"></canvas></div></div>
+  <div class="table-wrap mt-4">
+    <table id="myUnitDataTable">
+      <thead><tr><th>Path</th><th>Answers</th><th>Progress Qty</th><th>Date</th><th>Action</th></tr></thead>
+      <tbody id="myTbody"></tbody>
+    </table>
+  </div>
+  <div id="myEditBox" class="hidden mt-4 border rounded-xl p-4"><h4 class="font-bold">Edit - සංස්කරණය</h4><div id="myEditFields" class="mt-3 space-y-3"></div><div class="flex gap-2 mt-3"><button onclick="saveMyEdit()" class="btn btn-primary px-4">Save Edit</button><button onclick="closeMyEdit()" class="btn btn-ghost px-4">Cancel</button></div></div>
+</div>
+
+<div class="rounded-2xl bg-indigo-600 text-white p-5 mt-5"><div class="font-bold">උපදෙස්</div><div class="text-sm opacity-90 mt-2">Need to know more details contact the admin</div></div>
+</div>
+
+<script>
+var __mRes=null;
+function showToast(m,ok){var t=document.getElementById('toast');t.textContent=m;t.className='toast show '+(ok===false?'err':ok===true?'ok':'');setTimeout(function(){t.className='toast';},2600);}
+function openModal(o){return new Promise(function(res){__mRes=res;document.getElementById('modalIcon').textContent=o.icon||'ℹ️';document.getElementById('modalTitle').textContent=o.title||'';document.getElementById('modalMsg').textContent=o.msg||'';document.getElementById('modalInputWrap').classList.toggle('hidden',!o.input);if(o.input){document.getElementById('modalInput').value=o.value||'';}document.getElementById('modalBack').classList.add('show');});}
+function closeModal(ok){document.getElementById('modalBack').classList.remove('show');if(__mRes){var r=__mRes;__mRes=null;r({ok:ok,value:document.getElementById('modalInput').value});}}
+function profConfirm(m,t){return openModal({title:t||'විශ්වාසද?',msg:m,icon:'⚠️',okText:'OK'}).then(function(r){return r.ok;});}
+
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted || (typeof performance !== 'undefined' && performance.navigation.type === 2)) {
+        if (!localStorage.getItem('fw_session')) { window.location.href = 'index.html'; }
+    }
+});
+
+(function(){ try{ var h=(location.hash||''); if(h.indexOf('#fw=')===0){ try{ var decoded=decodeURIComponent(escape(atob(h.slice(4)))); var hj=JSON.parse(decoded); if(hj&&hj.user&&hj.role){ localStorage.setItem('fw_session',decoded); localStorage.setItem('role',hj.role); localStorage.setItem('user',hj.user); } }catch(e2){} try{ history.replaceState(null,'',location.pathname); }catch(e3){} } }catch(e){} var s=localStorage.getItem('fw_session');var r=localStorage.getItem('role');var u=localStorage.getItem('user');if(!s||!r||!u){ setTimeout(function(){ window.location.href='index.html'; }, 1500); return;}try{var j=JSON.parse(s);if(j.exp&&Date.now()>j.exp){window.location.href='index.html';}}catch(e){}})();
+
+const SUPABASE_URL='https://ecpoyxjuednjixmaajux.supabase.co';
+const SUPABASE_KEY='sb_publishable_kbTMWrgN1_lRxClNYU-PQg_Qc9jpmSe';
+const sb = (typeof supabase!=='undefined') ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+const H_KEY='fw7_hier', N_KEY='fw7_nodes', Q_KEY='fw7_qs', R_KEY='fw7_resp', P_KEY='fw7_prices', T_KEY='fw7_targets';
+function defHier(){ return [{"id":"sub1","name":"ADA Kundasale","divisions":[{"name":"Dambagahapitiya","offices":["Dambagahapitiya - Pradhana Karyalaya"]}]}]; }
+function loadHier(){ try{ var s=localStorage.getItem(H_KEY); if(s){ var a=JSON.parse(s); if(a.length) return a; } }catch(e){} return defHier(); }
+function loadLocal(k, defFn){ try{ var s=localStorage.getItem(k); if(s){ var a=JSON.parse(s); if(Array.isArray(a)) return a; } }catch(e){} return defFn(); }
+function saveLocal(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+
+var mySubId=localStorage.getItem('user_subOfficeId')||'';
+var mySubName=localStorage.getItem('user_subOfficeName')||mySubId;
+var myDiv=localStorage.getItem('user_division')||'';
+var myOffice=localStorage.getItem('user_office')||'';
+var myUser=localStorage.getItem('user')||'';
+var myName=localStorage.getItem('user_name')||myUser;
+var myOfficer=localStorage.getItem('user_officer_name')||'';
+
+document.getElementById('lockSub').textContent=mySubName;
+document.getElementById('lockDiv').textContent=myDiv;
+document.getElementById('lockUser').textContent=myOfficer || myName;
+document.getElementById('bannerAdName').textContent=mySubName;
+document.getElementById('bannerAiName').textContent=myDiv;
+
+var hierarchy=loadHier();
+var nodes=loadLocal(N_KEY, function(){return [];});
+var questions=loadLocal(Q_KEY, function(){return [];});
+var responses=loadLocal(R_KEY, function(){return [];});
+var itemPrices=loadLocal(P_KEY, function(){return [];});
+var targetsProgress=loadLocal(T_KEY, function(){return [];});
+
+var curMain='extension', curL1=null, curL2=null, curL3=null, curSub=null, curItems=[], editingId=null;
+
+function setLang(l){ showToast(l==='si'?'Sinhala':'Tamil',true); }
+
+function showSection(sec){
+  document.getElementById('panel-targets').classList.toggle('hidden', sec!=='targets');
+  document.getElementById('panel-form').classList.toggle('hidden', sec!=='form');
+  document.getElementById('panel-mydata').classList.toggle('hidden', sec!=='mydata');
+  
+  document.getElementById('btnTargets').className = sec==='targets' ? 'text-left rounded-2xl border-2 border-indigo-600 bg-indigo-600 text-white p-4' : 'text-left rounded-2xl border p-4 bg-white';
+  document.getElementById('btnForm').className = sec==='form' ? 'text-left rounded-2xl border-2 border-indigo-600 bg-indigo-600 text-white p-4' : 'text-left rounded-2xl border p-4 bg-white';
+  document.getElementById('btnMy').className = sec==='mydata' ? 'text-left rounded-2xl border-2 border-emerald-600 bg-emerald-600 text-white p-4' : 'text-left rounded-2xl border p-4 bg-white';
+  
+  if(sec==='targets') renderUnitTargets();
+  if(sec==='mydata') renderMy();
+}
+
+/* ========================================================================= */
+/* RENDER UNIT TARGETS & PROGRESS INFOGRAPHIC CARDS                          */
+/* ========================================================================= */
+function renderUnitTargets(){
+  var fMain = document.getElementById('tFilterMain').value;
+  var search = (document.getElementById('tSearch').value || '').toLowerCase();
+  
+  // Filter targets belonging to this AI Office (myDiv)
+  var myTargets = targetsProgress.filter(function(t){
+    return String(t.ai_office_id).toLowerCase() === String(myDiv).toLowerCase();
+  });
+  
+  if(fMain) myTargets = myTargets.filter(t => t.main_type === fMain);
+  if(search) myTargets = myTargets.filter(t => ((t.node_path||'') + ' ' + (t.item_name||'')).toLowerCase().includes(search));
+  
+  var totalTarget = 0, totalAchieved = 0;
+  myTargets.forEach(t => {
+    totalTarget += Number(t.target_units || 0);
+    totalAchieved += Number(t.progress_units || 0);
+  });
+  var pending = Math.max(0, totalTarget - totalAchieved);
+  var pct = totalTarget > 0 ? Math.round((totalAchieved / totalTarget) * 100) : 0;
+  
+  document.getElementById('uAchievedUnits').textContent = totalAchieved.toLocaleString();
+  document.getElementById('uTotalTarget').textContent = totalTarget.toLocaleString();
+  document.getElementById('uCompletionPct').textContent = pct + '%';
+  document.getElementById('uPendingUnits').textContent = pending.toLocaleString();
+  document.getElementById('uSubCount').textContent = myTargets.length;
+  
+  document.getElementById('bannerTarget').textContent = totalTarget.toLocaleString();
+  document.getElementById('bannerAchieved').textContent = totalAchieved.toLocaleString();
+  document.getElementById('bannerPct').textContent = pct + '%';
+  
+  var grid = document.getElementById('unitTargetCardsGrid');
+  if(!myTargets.length){
+    grid.innerHTML = '<div class="col-span-full text-center py-8 text-slate-400 text-sm">ඔබගේ AI කාර්යාලය සඳහා තවමත් ඉලක්ක (Targets) ඇතුළත් කර නොමැත.</div>';
+    return;
+  }
+  
+  var h = '';
+  myTargets.forEach(function(t){
+    var tgt = Number(t.target_units || 0);
+    var ach = Number(t.progress_units || 0);
+    var p = tgt > 0 ? Math.min(100, Math.round((ach / tgt) * 100)) : 0;
+    
+    var statusBadge = '', borderClass = 'border-slate-200', barColor = 'bg-indigo-600';
+    if(ach === 0){
+      statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700">NO DATA</span>';
+      borderClass = 'border-red-200';
+    } else if(ach >= tgt && tgt > 0){
+      statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">COMPLETED ✓</span>';
+      borderClass = 'border-emerald-300';
+      barColor = 'bg-emerald-500';
+    } else {
+      statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700">PARTIAL</span>';
+      borderClass = 'border-amber-200';
+      barColor = 'bg-amber-500';
+    }
+    
+    var nodeObj = nodes.find(n => n.id === t.node_id);
+    var title = t.item_name || (nodeObj ? nodeObj.title : t.node_id);
+    var subTitle = t.node_path || (t.main_type === 'extension' ? 'Extension Program' : 'Development Program');
+    
+    h += '<div class="rounded-2xl border-2 '+borderClass+' bg-white p-4 shadow-sm flex flex-col justify-between">'+
+         '<div>'+
+           '<div class="flex justify-between items-start gap-2">'+
+             '<div><div class="font-bold text-sm text-slate-900">'+title+'</div><div class="text-[11px] text-slate-400 mt-0.5">'+subTitle+'</div></div>'+
+             statusBadge+
+           '</div>'+
+           '<div class="mt-3 pt-3 border-t border-slate-100 space-y-1.5 text-xs">'+
+             '<div class="flex justify-between"><span class="text-slate-500">ලබා දුන් ඉලක්කය (Target):</span><span class="font-bold text-slate-800">'+tgt+' Units</span></div>'+
+             '<div class="flex justify-between"><span class="text-slate-500">ආවරණය කළ ප්‍රමාණය (Covered):</span><span class="font-bold text-emerald-600">'+ach+' Units</span></div>'+
+           '</div>'+
+         '</div>'+
+         '<div class="mt-3">'+
+           '<div class="flex justify-between text-[10px] font-semibold text-slate-500 mb-1"><span>Progress: '+ach+'/'+tgt+'</span><span>'+p+'%</span></div>'+
+           '<div class="w-full h-2 rounded-full bg-slate-100 overflow-hidden"><div class="h-full '+barColor+'" style="width:'+p+'%"></div></div>'+
+         '</div>'+
+         '</div>';
+  });
+  grid.innerHTML = h;
+}
+
+/* ========================================================================= */
+/* FORM STEP SELECTION & TARGET PROGRESS DISPLAY                             */
+/* ========================================================================= */
+function uSelectMain(m){
+  curMain=m; curL1=null; curL2=null; curL3=null; curSub=null; curItems=[];
+  document.getElementById('uExt').className= m==='extension'?'py-3 rounded-xl font-semibold bg-indigo-600 text-white':'py-3 rounded-xl font-semibold bg-slate-100';
+  document.getElementById('uDev').className= m==='development'?'py-3 rounded-xl font-semibold bg-emerald-600 text-white':'py-3 rounded-xl font-semibold bg-slate-100';
+  document.getElementById('uL3Wrap').classList.toggle('hidden', m!=='development');
+  document.getElementById('uSubWrap').classList.toggle('hidden', m!=='extension');
+  document.getElementById('uItemWrap').classList.toggle('hidden', m!=='development');
+  renderUSelects();
+}
+
+function publishedChildren(parentId, level){
+  return nodes.filter(function(n){
+    return n.main_type===curMain && n.level===level && (parentId? n.parent_id===parentId : !n.parent_id) && n.is_published;
+  }).sort(function(a,b){return a.sort_order-b.sort_order;});
+}
+
+function renderUSelects(){
+  document.getElementById('uL1Label').textContent= curMain==='extension'?'3. Season තෝරන්න *':'3. Year තෝරන්න *';
+  document.getElementById('uL2Label').textContent= curMain==='extension'?'4. Cultivation තෝරන්න *':'4. Program තෝරන්න *';
+  var l1=publishedChildren(null,1);
+  var h1='<option value="">-- තෝරන්න --</option>'+l1.map(x=>'<option value="'+x.id+'">'+x.title+'</option>').join('');
+  document.getElementById('uL1').innerHTML=h1;
+  if(curL1) document.getElementById('uL1').value=curL1;
+
+  var l2 = curL1 ? publishedChildren(curL1,2) : [];
+  if(curMain === 'development' && curL1 && !l2.length){
+    var pSet = [...new Set(itemPrices.map(x => x.program))];
+    l2 = pSet.map(p => ({id: 'prog_'+p, title: p}));
+  }
+  var h2='<option value="">-- තෝරන්න --</option>'+l2.map(x=>'<option value="'+x.id+'">'+x.title+'</option>').join('');
+  document.getElementById('uL2').innerHTML=h2;
+  if(curL2) document.getElementById('uL2').value=curL2;
+
+  if(curMain==='extension'){
+    var subs= curL2? publishedChildren(curL2,3):[];
+    var hs='<option value="">— උප අංශය නැත —</option>'+subs.map(s=>'<option value="'+s.id+'">'+s.title+'</option>').join('');
+    document.getElementById('uSub').innerHTML=hs;
+    if(curSub) document.getElementById('uSub').value=curSub;
+  }
+  if(curMain==='development'){
+    var l3= curL2? publishedChildren(curL2,3):[];
+    var h3='<option value="">-- Sub Program තෝරන්න --</option>'+l3.map(k=>'<option value="'+k.id+'">'+k.title+'</option>').join('');
+    document.getElementById('uL3').innerHTML=h3;
+    if(curL3) document.getElementById('uL3').value=curL3;
+    renderUItems();
+  }
+  renderUForm();
+}
+
+function renderUItems(){
+  var wrap=document.getElementById('uItemList'); if(!wrap) return;
+  var l2Node = nodes.find(x => x.id === curL2) || {title: (curL2||'').replace('prog_','')};
+  var progName = l2Node ? l2Node.title : '';
+  var matchingPrices = itemPrices.filter(p => p.program.toLowerCase() === progName.toLowerCase());
+  
+  if(!matchingPrices.length){
+    wrap.innerHTML='<label class="flex items-center gap-2 text-sm"><input type="checkbox" checked disabled> Item නැත — Sub Program සෘජුවම</label>';
+    curItems=[]; return;
+  }
+  var h='';
+  matchingPrices.forEach(p => {
+    var chk = curItems.indexOf(p.id)>-1 ? 'checked' : '';
+    h += '<label class="flex items-center justify-between text-sm border rounded-xl px-3 py-2 bg-white">'+
+         '<div class="flex items-center gap-2"><input type="checkbox" value="'+p.id+'" '+chk+' onchange="uToggleItem(this)"> <b>'+p.item_name+'</b></div>'+
+         '<span class="text-xs text-slate-500">Subsidy: '+(p.subsidy*100)+'% | Farmer: Rs.'+p.farmer_price+'</span></label>';
+  });
+  wrap.innerHTML=h;
+}
+
+function uToggleItem(el){
+  if(el.checked){ if(curItems.indexOf(el.value)===-1) curItems.push(el.value); }
+  else { curItems=curItems.filter(x=>x!==el.value); }
+  renderUForm();
+}
+function uPickSub(){ curSub=document.getElementById('uSub').value||null; renderUForm(); }
+function uPickL1(){ curL1=document.getElementById('uL1').value||null; curL2=null; curL3=null; curSub=null; curItems=[]; renderUSelects(); }
+function uPickL2(){ curL2=document.getElementById('uL2').value||null; curL3=null; curSub=null; curItems=[]; renderUSelects(); }
+function uPickL3(){ curL3=document.getElementById('uL3').value||null; curItems=[]; renderUItems(); renderUForm(); }
+
+function leafId(){
+  if(curMain==='development') return curL3;
+  if(curSub) return curSub;
+  return curL2;
+}
+
+function nodePath(){
+  var parts=[];
+  if(curL1){ var n1=nodes.find(x=>x.id===curL1); if(n1) parts.push(n1.title); }
+  if(curL2){ var n2=nodes.find(x=>x.id===curL2); parts.push(n2?n2.title:curL2.replace('prog_','')); }
+  if(curL3){ var n3=nodes.find(x=>x.id===curL3); if(n3) parts.push(n3.title); }
+  if(curSub){ var ns=nodes.find(x=>x.id===curSub); if(ns) parts.push(ns.title); }
+  if(curItems.length){
+    var names = curItems.map(id => { var p=itemPrices.find(x=>x.id===id); return p?p.item_name:id; });
+    parts.push('Item: ' + names.join(', '));
+  }
+  return parts.join(' > ');
+}
+
+function renderField(q){
+  var req=q.is_required?'required':'';
+  if(q.question_type==='short_text') return '<input data-qid="'+q.id+'" '+req+' placeholder="Type කරන්න...">';
+  if(q.question_type==='paragraph') return '<textarea data-qid="'+q.id+'" rows="3" '+req+' placeholder="Type කරන්න..."></textarea>';
+  if(q.question_type==='number') return '<input type="number" data-qid="'+q.id+'" '+req+' placeholder="0">';
+  if(q.question_type==='date') return '<input type="date" data-qid="'+q.id+'" '+req+'>';
+  if(q.question_type==='yes_no') return '<div class="flex gap-2"><label class="flex-1 text-center rounded-xl border py-2 text-sm option-label"><input type="radio" name="q_'+q.id+'" value="Yes" data-qid="'+q.id+'" '+(q.is_required?'required':'')+' class="hidden"><span class="block w-full h-full p-2">Yes</span></label><label class="flex-1 text-center rounded-xl border py-2 text-sm option-label"><input type="radio" name="q_'+q.id+'" value="No" data-qid="'+q.id+'" '+(q.is_required?'required':'')+' class="hidden"><span class="block w-full h-full p-2">No</span></label></div>';
+  if(q.question_type==='multiple_choice'){ return q.options.map(o=>'<label class="flex gap-2 items-center text-sm py-1 option-label rounded-lg px-2"><input type="radio" name="q_'+q.id+'" value="'+o+'" data-qid="'+q.id+'" '+(q.is_required?'required':'')+' class="!w-auto mr-2"><span>'+o+'</span></label>').join(''); }
+  if(q.question_type==='checkbox'){ return q.options.map(o=>'<label class="flex gap-2 items-center text-sm py-1 option-label rounded-lg px-2"><input type="checkbox" value="'+o+'" data-qid="'+q.id+'" data-multi="1" class="!w-auto mr-2"><span>'+o+'</span></label>').join(''); }
+  if(q.question_type==='dropdown'){ return '<select data-qid="'+q.id+'" '+(q.is_required?'required':'')+'><option value="">-- තෝරන්න --</option>'+q.options.map(o=>'<option>'+o+'</option>').join('')+'</select>'; }
+  return '<input data-qid="'+q.id+'" '+req+'>';
+}
+
+function renderUForm(){
+  var wrap=document.getElementById('uFormWrap');
+  var empty=document.getElementById('uEmpty');
+  var tpBox=document.getElementById('uTargetProgressBox');
+  var lid=leafId();
+  
+  if(!lid){
+    wrap.innerHTML=''; empty.classList.add('hidden'); tpBox.classList.add('hidden');
+    return;
+  }
+  
+  // Show AI Office Target & Progress Box
+  tpBox.classList.remove('hidden');
+  var existingTp = targetsProgress.find(t => t.node_id === lid && String(t.ai_office_id).toLowerCase() === String(myDiv).toLowerCase());
+  document.getElementById('uFormTargetVal').textContent = existingTp ? existingTp.target_units : '0';
+  document.getElementById('uFormCoveredVal').textContent = existingTp ? existingTp.progress_units : '0';
+  
+  // Auto Price Display for Development Items
+  var priceBox = document.getElementById('uPriceAutoInfo');
+  if(curMain === 'development' && curItems.length > 0){
+    var pObj = itemPrices.find(x => x.id === curItems[0]);
+    if(pObj){
+      priceBox.classList.remove('hidden');
+      document.getElementById('uAutoUnit').textContent = 'Rs. ' + pObj.unit_price;
+      document.getElementById('uAutoSub').textContent = (pObj.subsidy * 100) + '%';
+      document.getElementById('uAutoGov').textContent = 'Rs. ' + pObj.gov_price;
+      document.getElementById('uAutoFarmer').textContent = 'Rs. ' + pObj.farmer_price;
+    } else { priceBox.classList.add('hidden'); }
+  } else {
+    priceBox.classList.add('hidden');
+  }
+
+  var qs=questions.filter(function(q){return q.node_id===lid;}).sort(function(a,b){return a.order_index-b.order_index;});
+  if(!qs.length){
+    wrap.innerHTML=''; empty.classList.remove('hidden'); empty.innerHTML='මෙම අංශයට Admin තවම ප්‍රශ්න සාදා නැත.';
+    return;
+  }
+  empty.classList.add('hidden');
+  
+  var html='<div class="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-[12px]">Auto Fill: <b>'+mySubName+' | '+myDiv+' | '+myOffice+' | '+nodePath()+'</b></div>';
+  html+='<form id="dynForm" class="mt-4 space-y-4" onsubmit="return submitUForm(event)">';
+  qs.forEach((q, idx) => {
+    html+='<div class="rounded-xl border p-4 bg-white"><label class="text-[14px] font-semibold">'+(idx+1)+'. '+q.question_text+' '+(q.is_required?'<span class="text-red-500">*</span>':'')+'</label><div class="mt-2">'+renderField(q)+'</div></div>';
+  });
+  html+='<div id="okBox" class="hidden rounded-xl bg-green-50 border border-green-200 p-3 text-sm text-green-700">Your data & progress updated successfully! ✓</div>';
+  html+='<div class="flex gap-2"><button class="btn btn-primary flex-1 py-3.5">Submit & Update Progress</button><button type="button" onclick="renderUForm()" class="btn btn-ghost px-4">Clear</button></div></form>';
+  wrap.innerHTML=html;
+}
+
+function collectAns(){
+  var ans={};
+  document.querySelectorAll('#uFormWrap [data-qid]').forEach(function(el){
+    var id=el.dataset.qid;
+    if(el.dataset.multi==='1'){ if(el.checked){ if(!ans[id]) ans[id]=[]; ans[id].push(el.value); } }
+    else if(el.type==='radio'){ if(el.checked) ans[id]=el.value; }
+    else ans[id]=el.value;
+  });
+  return ans;
+}
+
+async function submitUForm(e){
+  e.preventDefault();
+  var f=document.getElementById('dynForm');
+  if(!f.checkValidity()){ f.reportValidity(); return false; }
+  
+  var progressQty = parseFloat(document.getElementById('uProgressQtyInput').value) || 0;
+  var ans=collectAns();
+  var lid=leafId();
+  if(!lid) return showToast('ප්‍රශ්න ඇති අංශය තෝරන්න',false);
+
+  var newResp = {
+    id: 'r_' + Date.now(),
+    node_id: lid,
+    main_type: curMain,
+    level1: curL1 ? (nodes.find(x=>x.id===curL1)||{}).title : '',
+    level2: curL2 ? ((nodes.find(x=>x.id===curL2)||{}).title || curL2.replace('prog_','')) : '',
+    level3: curL3 ? (nodes.find(x=>x.id===curL3)||{}).title : '',
+    node_path: nodePath(),
+    subOfficeId: mySubId,
+    subOfficeName: mySubName,
+    division: myDiv,
+    office: myOffice,
+    submittedBy: myUser,
+    submittedName: myName,
+    answers: ans,
+    progress_qty: progressQty,
+    created_at: new Date().toISOString()
+  };
+
+  responses.unshift(newResp);
+  saveLocal(R_KEY, responses);
+
+  // Update AI Office Progress Units
+  var tp = targetsProgress.find(t => t.node_id === lid && String(t.ai_office_id).toLowerCase() === String(myDiv).toLowerCase());
+  if(tp){
+    tp.progress_units = Number(tp.progress_units || 0) + progressQty;
+  } else {
+    targetsProgress.push({
+      id: 'tp_' + Date.now(),
+      main_type: curMain,
+      node_id: lid,
+      node_path: nodePath(),
+      ad_office_id: mySubId,
+      ad_office_name: mySubName,
+      ai_office_id: myDiv,
+      target_units: 0,
+      progress_units: progressQty
+    });
+  }
+  saveLocal(T_KEY, targetsProgress);
+
+  document.getElementById('okBox').classList.remove('hidden');
+  document.getElementById('uProgressQtyInput').value = '';
+  f.reset();
+  renderUForm();
+  renderUnitTargets();
+  showToast('දත්ත සහ ප්‍රගතිය (Progress) යාවත්කාලීන විය ✓', true);
+  return false;
+}
+
+/* ========================================================================= */
+/* MY DATA TABLE & FILTERED EXCEL EXPORT                                     */
+/* ========================================================================= */
+var myChartInstance = null;
+
+function renderMy(){
+  var fMain=document.getElementById('myFilterMain').value;
+  var fL1=document.getElementById('myFilterL1').value;
+  var fL2=document.getElementById('myFilterL2').value;
+  var fL3=document.getElementById('myFilterL3').value;
+  var fItem=document.getElementById('myFilterItem').value;
+  var s=(document.getElementById('mySearch').value||'').toLowerCase();
+  
+  var mine=responses.filter(function(r){ return r.division===myDiv && r.office===myOffice; });
+  if(fMain) mine=mine.filter(function(r){return r.main_type===fMain;});
+  
+  var l1s=[...new Set(mine.map(r=>r.level1).filter(Boolean))];
+  var sel=document.getElementById('myFilterL1'); var cur=sel.value;
+  sel.innerHTML='<option value="">Season / Year (All)</option>'+l1s.map(x=>'<option>'+x+'</option>').join('');
+  sel.value=cur;
+  if(fL1) mine=mine.filter(r=>r.level1===fL1);
+  
+  var l2s=[...new Set(mine.map(r=>r.level2).filter(Boolean))];
+  var sel2=document.getElementById('myFilterL2'); var cur2=sel2.value;
+  sel2.innerHTML='<option value="">Program (All)</option>'+l2s.map(x=>'<option>'+x+'</option>').join('');
+  sel2.value=cur2;
+  if(fL2) mine=mine.filter(r=>r.level2===fL2);
+  
+  var l3s=[...new Set(mine.map(r=>r.level3).filter(Boolean))];
+  var sel3=document.getElementById('myFilterL3'); var cur3=sel3.value;
+  sel3.innerHTML='<option value="">Sub Program (All)</option>'+l3s.map(x=>'<option>'+x+'</option>').join('');
+  sel3.value=cur3;
+  if(fL3) mine=mine.filter(r=>r.level3===fL3);
+  
+  if(s) mine=mine.filter(r=>(JSON.stringify(r.answers)+(r.node_path||'')).toLowerCase().indexOf(s)>-1);
+
+  // Store strictly filtered list for Excel Export
+  window.currentFilteredUnitData = mine;
+
+  // Render Chart
+  var counts={};
+  mine.forEach(r => { var k=r.level2||r.level1||'Unknown'; counts[k]=(counts[k]||0)+1; });
+  var ctx=document.getElementById('myChart');
+  if(myChartInstance) myChartInstance.destroy();
+  if(ctx && typeof Chart!=='undefined'){
+    myChartInstance = new Chart(ctx, {
+      type:'pie',
+      data:{ labels:Object.keys(counts), datasets:[{data:Object.values(counts), backgroundColor:['#4f46e5','#059669','#d97706','#dc2626']}] },
+      options:{ responsive:true, maintainAspectRatio:false }
+    });
+  }
+
+  var h='';
+  mine.forEach(r => {
+    var qs=questions.filter(q=>String(q.node_id)===String(r.node_id)).sort((a,b)=>a.order_index-b.order_index);
+    var ansHtml = qs.length ? qs.map(q => r.answers[q.id] ? '<div class="text-[12px]"><b>'+q.question_text+':</b> '+r.answers[q.id]+'</div>' : '').join('') : JSON.stringify(r.answers);
+    h+='<tr>'+
+       '<td class="text-xs"><b>'+r.node_path+'</b></td>'+
+       '<td class="text-xs">'+ansHtml+'</td>'+
+       '<td class="text-xs font-bold text-indigo-700">'+(r.progress_qty || 0)+' Units</td>'+
+       '<td class="text-xs">'+new Date(r.created_at).toLocaleDateString()+'</td>'+
+       '<td><button onclick="editMy(''+r.id+'')" class="btn btn-ghost px-2 py-1 text-xs">Edit</button> <button onclick="delMy(''+r.id+'')" class="text-red-500 text-xs px-2">Delete</button></td>'+
+       '</tr>';
+  });
+  document.getElementById('myTbody').innerHTML=h||'<tr><td colspan=5 class="text-center py-6 text-slate-400">දත්ත නැත</td></tr>';
+}
+
+// STRICT FILTERED EXCEL DOWNLOAD FOR UNIT
+function downloadFilteredMyExcel(){
+  var list = window.currentFilteredUnitData || [];
+  if(!list.length) return showToast('Filter කළ දත්ත නැත', false);
+  
+  var exportData = list.map(r => {
+    var row = {
+      'Date': new Date(r.created_at).toLocaleString(),
+      'Main Type': r.main_type,
+      'Path': r.node_path,
+      'AD Office': r.subOfficeName,
+      'AI Office': r.division,
+      'Progress Qty': r.progress_qty || 0
+    };
+    var qs = questions.filter(q => String(q.node_id) === String(r.node_id));
+    qs.forEach(q => {
+      row[q.question_text] = r.answers[q.id] || '';
+    });
+    return row;
+  });
+
+  var ws = XLSX.utils.json_to_sheet(exportData);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "MyFilteredData");
+  XLSX.writeFile(wb, "Unit_Filtered_Data_" + myDiv + ".xlsx");
+}
+
+function downloadMyChart() {
+  var canvas = document.getElementById('myChart');
+  if(!canvas) return;
+  var a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = 'Unit_Chart_'+myDiv+'.png'; a.click();
+}
+
+function editMy(id){
+  var r=responses.find(x=>x.id===id); if(!r) return; editingId=id;
+  document.getElementById('myEditBox').classList.remove('hidden');
+  var qs=questions.filter(q=>q.node_id===r.node_id);
+  document.getElementById('myEditFields').innerHTML=qs.map(q=>'<div><label class="text-xs font-semibold">'+q.question_text+'</label><input data-my-qid="'+q.id+'" value="'+(r.answers[q.id]||'')+'"></div>').join('');
+}
+function saveMyEdit(){
+  var r=responses.find(x=>x.id===editingId); if(!r) return;
+  var na={}; document.querySelectorAll('[data-my-qid]').forEach(el=>{ na[el.dataset.myQid]=el.value; });
+  r.answers=na; saveLocal(R_KEY, responses); closeMyEdit(); renderMy(); showToast('Edit Saved ✓',true);
+}
+function closeMyEdit(){ editingId=null; document.getElementById('myEditBox').classList.add('hidden'); }
+async function delMy(id){
+  if(!(await profConfirm('Delete entry?','Confirm'))) return;
+  responses=responses.filter(x=>x.id!==id); saveLocal(R_KEY, responses); renderMy();
+}
+
+async function logout(){
+  try{ if(sb) await sb.auth.signOut(); }catch(e){}
+  ['role','user','user_name','user_subOfficeId','user_subOfficeName','user_division','user_office','user_officer_name','fw_session'].forEach(k=>localStorage.removeItem(k));
+  location.href='index.html';
+}
+
+// Initialize
+uSelectMain('extension');
+renderUnitTargets();
+</script>
+</body></html>
