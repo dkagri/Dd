@@ -20,7 +20,6 @@
 .option-label:has(input[type="radio"]:checked) { background-color: #4f46e5; color: white; border-color: #4f46e5; }
 .matrix-table th, .matrix-table td { border: 1px solid #cbd5e1; padding: 9px 11px; font-size: 12.5px; }
 .matrix-table th { background-color: #e2e8f0; color: #0f172a; font-weight: 700; text-align: center; }
-.matrix-cat-row { background-color: #fed7aa; color: #7c2d12; font-weight: 700; }
 .matrix-main-cell { background-color: #fff7ed; font-weight: 700; color: #1e293b; vertical-align: middle; }
 .matrix-sub-cell { background-color: #f8fafc; font-weight: 600; color: #334155; vertical-align: middle; }
 </style>
@@ -122,7 +121,7 @@
     </div>
   </div>
 
-  <!-- REQUIREMENT 2: EXTENSION 6 COLORFUL BOXES + MORE BUTTON -->
+  <!-- EXTENSION 6 COLORFUL BOXES + MORE BUTTON -->
   <div class="card space-y-4">
     <div class="flex justify-between items-center gap-2">
       <div>
@@ -134,7 +133,7 @@
     <div id="extCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
   </div>
 
-  <!-- REQUIREMENT 2: DEVELOPMENT 6 COLORFUL BOXES + MORE BUTTON -->
+  <!-- DEVELOPMENT 6 COLORFUL BOXES + MORE BUTTON -->
   <div class="card space-y-4">
     <div class="flex justify-between items-center gap-2">
       <div>
@@ -146,33 +145,76 @@
     <div id="devCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
   </div>
 
-  <!-- REQUIREMENT 3: TARGET & PROGRESS CHART / MATRIX TABLE (SEPARATE MAIN PROGRAM / SUB PROGRAM / ITEM) -->
-  <div class="card">
-    <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
-      <div>
-        <div class="text-[11px] font-bold text-indigo-600 uppercase">📋 PHYSICAL TARGET & PROGRESS SHEET</div>
-        <h3 class="text-lg font-bold text-slate-900">Main Program / Sub Program / Item — Target & Progress</h3>
-        <p class="text-xs text-slate-500">ஒரு Sub Program-இன் கீழ் பல Items தனித்தனியாகக் காட்டப்படும் (Target 0 இருந்தாலும் காட்டும்)</p>
-      </div>
-      <button onclick="downloadTargetSheetExcel()" class="btn btn-success px-4 py-2 text-xs">⬇ Download Target Chart (Excel)</button>
+  <!-- PHYSICAL TARGET & PROGRESS SHEET (SEPARATE EXTENSION & DEVELOPMENT TABLES + FILTERS + SEPARATE EXCEL DOWNLOAD) -->
+  <div class="card space-y-5">
+    <div>
+      <div class="text-[11px] font-bold text-indigo-600 uppercase">📋 PHYSICAL TARGET & PROGRESS SHEET</div>
+      <h3 class="text-lg font-bold text-slate-900">Main Program / Sub Program / Item — Target & Progress</h3>
+      <p class="text-xs text-slate-500">ஒரு Sub Program-இன் கீழ் பல Items தனித்தனியாகக் காட்டப்படும் (Target 0 இருந்தாலும் காட்டும்)</p>
     </div>
 
-    <div class="table-wrap">
-      <table class="matrix-table w-full border-collapse" id="targetMatrixTable">
-        <thead>
-          <tr>
-            <th>Type</th>
-            <th>Main Program<br><span class="text-[11px] font-normal">(ප්‍රධාන ක්‍රියාකාරකම)</span></th>
-            <th>Sub Program<br><span class="text-[11px] font-normal">(උප වැඩසටහන)</span></th>
-            <th>Item<br><span class="text-[11px] font-normal">(භාණ්ඩය / Item)</span></th>
-            <th>Target<br><span class="text-[11px] font-normal">(ඉලක්කය)</span></th>
-            <th>Progress<br><span class="text-[11px] font-normal">(ප්‍රගතිය)</span></th>
-            <th>Remaining<br><span class="text-[11px] font-normal">(ඉතිරි)</span></th>
-            <th>%</th>
-          </tr>
-        </thead>
-        <tbody id="targetMatrixBody"></tbody>
-      </table>
+    <!-- MAIN PROGRAM & SUB PROGRAM FILTERS FOR TARGET TABLES -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-2xl border">
+      <div>
+        <label class="text-[11px] font-bold text-slate-600 uppercase">Filter by Main Program</label>
+        <select id="sheetFilterMainProg" onchange="onSheetMainProgChange()" class="mt-1 bg-white text-xs">
+          <option value="">All Main Programs</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-[11px] font-bold text-slate-600 uppercase">Filter by Sub Program</label>
+        <select id="sheetFilterSubProg" onchange="renderTargetSheets()" class="mt-1 bg-white text-xs">
+          <option value="">All Sub Programs</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- EXTENSION TARGET TABLE -->
+    <div class="space-y-3 border rounded-2xl p-4 bg-white">
+      <div class="flex flex-wrap justify-between items-center gap-2">
+        <h4 class="text-base font-bold text-blue-900">🌾 Extension Target & Progress Table</h4>
+        <button onclick="downloadTargetSheetExcel('extension')" class="btn btn-success px-4 py-2 text-xs">⬇ Download Extension Excel</button>
+      </div>
+      <div class="table-wrap">
+        <table class="matrix-table w-full border-collapse" id="extTargetMatrixTable">
+          <thead>
+            <tr>
+              <th>Main Program<br><span class="text-[11px] font-normal">(ප්‍රධාන ක්‍රියාකාරකම)</span></th>
+              <th>Sub Program<br><span class="text-[11px] font-normal">(උප වැඩසටහන)</span></th>
+              <th>Item<br><span class="text-[11px] font-normal">(භාණ්ඩය / Item)</span></th>
+              <th>Target<br><span class="text-[11px] font-normal">(ඉලක්කය)</span></th>
+              <th>Progress<br><span class="text-[11px] font-normal">(ප්‍රගතිය)</span></th>
+              <th>Remaining<br><span class="text-[11px] font-normal">(ඉතිරි)</span></th>
+              <th>%</th>
+            </tr>
+          </thead>
+          <tbody id="extTargetMatrixBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- DEVELOPMENT TARGET TABLE -->
+    <div class="space-y-3 border rounded-2xl p-4 bg-white">
+      <div class="flex flex-wrap justify-between items-center gap-2">
+        <h4 class="text-base font-bold text-emerald-900">🏗️ Development Target & Progress Table</h4>
+        <button onclick="downloadTargetSheetExcel('development')" class="btn btn-success px-4 py-2 text-xs">⬇ Download Development Excel</button>
+      </div>
+      <div class="table-wrap">
+        <table class="matrix-table w-full border-collapse" id="devTargetMatrixTable">
+          <thead>
+            <tr>
+              <th>Main Program<br><span class="text-[11px] font-normal">(ප්‍රධාන ක්‍රියාකාරකම)</span></th>
+              <th>Sub Program<br><span class="text-[11px] font-normal">(උප වැඩසටහන)</span></th>
+              <th>Item<br><span class="text-[11px] font-normal">(භාණ්ඩය / Item)</span></th>
+              <th>Target<br><span class="text-[11px] font-normal">(ඉලක්කය)</span></th>
+              <th>Progress<br><span class="text-[11px] font-normal">(ප්‍රගතිය)</span></th>
+              <th>Remaining<br><span class="text-[11px] font-normal">(ඉතිරි)</span></th>
+              <th>%</th>
+            </tr>
+          </thead>
+          <tbody id="devTargetMatrixBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
@@ -371,7 +413,6 @@ var nodes=[], questions=[], responses=[], itemPrices=[], targetRecords=[];
 var curMain='extension', curL1=null, curL2=null, curL3=null, curSub=null, curItem=null, editingId=null;
 var showAllExtBoxes=false, showAllDevBoxes=false;
 
-// Multi-color palettes for boxes
 const COLOR_THEMES = [
   { border: 'border-indigo-300', bg: 'bg-indigo-50/70', badge: 'bg-indigo-600 text-white', bar: 'bg-indigo-600', title: 'text-indigo-950' },
   { border: 'border-emerald-300', bg: 'bg-emerald-50/70', badge: 'bg-emerald-600 text-white', bar: 'bg-emerald-600', title: 'text-emerald-950' },
@@ -459,7 +500,6 @@ function buildAiTargetRows(){
     });
   });
 
-  // Include published hierarchy nodes so Target = 0 items are also shown
   var l1Nodes = (nodes||[]).filter(n => n.level === 1 && n.is_published);
   l1Nodes.forEach(n1 => {
     var l2Nodes = (nodes||[]).filter(n => n.level === 2 && n.parent_id === n1.id && n.is_published);
@@ -549,6 +589,31 @@ function renderBoxGrid(rows, gridId, btnId, showAllFlag, defaultLimit){
   }).join('');
 }
 
+function populateSheetFilterDropdowns(allRows){
+  var mainSel = document.getElementById('sheetFilterMainProg');
+  var subSel = document.getElementById('sheetFilterSubProg');
+  if(!mainSel || !subSel) return;
+
+  var prevMain = mainSel.value;
+  var prevSub = subSel.value;
+
+  var mains = [...new Set(allRows.map(r => r.level2).filter(Boolean))].sort();
+  mainSel.innerHTML = '<option value="">All Main Programs</option>' + mains.map(m => '<option value="' + m + '">' + m + '</option>').join('');
+  if(mains.includes(prevMain)) mainSel.value = prevMain;
+  else prevMain = '';
+
+  var subSource = prevMain ? allRows.filter(r => r.level2 === prevMain) : allRows;
+  var subs = [...new Set(subSource.map(r => r.level3).filter(Boolean))].sort();
+  subSel.innerHTML = '<option value="">All Sub Programs</option>' + subs.map(s => '<option value="' + s + '">' + s + '</option>').join('');
+  if(subs.includes(prevSub)) subSel.value = prevSub;
+  else subSel.value = '';
+}
+
+function onSheetMainProgChange(){
+  document.getElementById('sheetFilterSubProg').value = '';
+  renderTargetSheets();
+}
+
 function renderUnitTargets(){
   var allRows = buildAiTargetRows();
   var search = norm(document.getElementById('tSearch').value);
@@ -556,7 +621,6 @@ function renderUnitTargets(){
   var extAll = allRows.filter(r => r.main_type === 'extension');
   var devAll = allRows.filter(r => r.main_type === 'development');
 
-  // Top Extension Box
   var extT = extAll.reduce((s, r) => s + r.target, 0);
   var extC = extAll.reduce((s, r) => s + r.covered, 0);
   var extPct = extT > 0 ? Math.min(100, Math.round((extC / extT) * 100)) : (extC > 0 ? 100 : 0);
@@ -565,7 +629,6 @@ function renderUnitTargets(){
   document.getElementById('extBoxPct').textContent = extPct + '%';
   document.getElementById('extBoxBar').style.width = extPct + '%';
 
-  // Top Development Box
   var devT = devAll.reduce((s, r) => s + r.target, 0);
   var devC = devAll.reduce((s, r) => s + r.covered, 0);
   var devPct = devT > 0 ? Math.min(100, Math.round((devC / devT) * 100)) : (devC > 0 ? 100 : 0);
@@ -580,46 +643,41 @@ function renderUnitTargets(){
   document.getElementById('extTotalCount').textContent = extFiltered.length;
   document.getElementById('devTotalCount').textContent = devFiltered.length;
 
-  // Render 6 boxes for Extension & 6 boxes for Development with More button
   renderBoxGrid(extFiltered, 'extCardsGrid', 'btnMoreExt', showAllExtBoxes, 6);
   renderBoxGrid(devFiltered, 'devCardsGrid', 'btnMoreDev', showAllDevBoxes, 6);
 
-  // Render Target Matrix Table with separate Main Program, Sub Program, Item columns
-  renderTargetMatrixTable(extFiltered.concat(devFiltered));
+  window.baseSheetRows = extFiltered.concat(devFiltered);
+  populateSheetFilterDropdowns(window.baseSheetRows);
+  renderTargetSheets();
 }
 
-function renderTargetMatrixTable(rows){
-  var tbody = document.getElementById('targetMatrixBody');
+function renderSingleCategoryMatrix(rows, tbodyId){
+  var tbody = document.getElementById(tbodyId);
   if(!rows.length){
-    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-6 text-slate-400">Target දත්ත නොමැත</td></tr>';
-    window.currentTargetMatrixRows = [];
-    return;
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-400">Target දත්ත නොමැත</td></tr>';
+    return [];
   }
 
   var sorted = rows.slice().sort((a,b) => {
-    if(a.main_type !== b.main_type) return a.main_type.localeCompare(b.main_type);
-    if(a.level2 !== b.level2) return a.level2.localeCompare(b.level2);
-    if(a.level3 !== b.level3) return a.level3.localeCompare(b.level3);
+    if((a.level2||'') !== (b.level2||'')) return (a.level2||'').localeCompare(b.level2||'');
+    if((a.level3||'') !== (b.level3||'')) return (a.level3||'').localeCompare(b.level3||'');
     return (a.item_name||'').localeCompare(b.item_name||'');
   });
-  window.currentTargetMatrixRows = sorted;
 
   var html = '';
   var i = 0;
   while(i < sorted.length){
     var r = sorted[i];
-    // Merge consecutive rows sharing same main_type + level2 (Main Program)
     var mainSpan = 1;
-    while(i + mainSpan < sorted.length && sorted[i + mainSpan].main_type === r.main_type && sorted[i + mainSpan].level2 === r.level2){
+    while(i + mainSpan < sorted.length && (sorted[i + mainSpan].level2||'') === (r.level2||'')){
       mainSpan++;
     }
 
     var j = 0;
     while(j < mainSpan){
       var subRow = sorted[i + j];
-      // Merge consecutive rows within this Main Program sharing same level3 (Sub Program) so multiple items sit neatly beneath one Sub Program
       var subSpan = 1;
-      while(j + subSpan < mainSpan && sorted[i + j + subSpan].level3 === subRow.level3){
+      while(j + subSpan < mainSpan && (sorted[i + j + subSpan].level3||'') === (subRow.level3||'')){
         subSpan++;
       }
 
@@ -630,7 +688,6 @@ function renderTargetMatrixTable(rows){
 
         html += '<tr>';
         if((j + k) === 0){
-          html += '<td rowspan="' + mainSpan + '" class="text-center font-bold text-xs">' + (it.main_type === 'extension' ? '🌾 Extension' : '🏗️ Development') + '</td>';
           html += '<td rowspan="' + mainSpan + '" class="matrix-main-cell">' + (it.level2 || '-') + '</td>';
         }
         if(k === 0){
@@ -648,17 +705,35 @@ function renderTargetMatrixTable(rows){
     i += mainSpan;
   }
   tbody.innerHTML = html;
+  return sorted;
 }
 
-function downloadTargetSheetExcel(){
-  var rows = window.currentTargetMatrixRows || [];
+function renderTargetSheets(){
+  var base = window.baseSheetRows || [];
+  var fMainProg = (document.getElementById('sheetFilterMainProg') || {}).value || '';
+  var fSubProg = (document.getElementById('sheetFilterSubProg') || {}).value || '';
+
+  var filtered = base.filter(r => {
+    if(fMainProg && r.level2 !== fMainProg) return false;
+    if(fSubProg && r.level3 !== fSubProg) return false;
+    return true;
+  });
+
+  var extRows = filtered.filter(r => r.main_type === 'extension');
+  var devRows = filtered.filter(r => r.main_type === 'development');
+
+  window.currentExtSheetRows = renderSingleCategoryMatrix(extRows, 'extTargetMatrixBody');
+  window.currentDevSheetRows = renderSingleCategoryMatrix(devRows, 'devTargetMatrixBody');
+}
+
+function downloadTargetSheetExcel(type){
+  var rows = type === 'development' ? (window.currentDevSheetRows || []) : (window.currentExtSheetRows || []);
   if(!rows.length) return showToast('Download කිරීමට Target දත්ත නැත', false);
 
   var exportRows = rows.map(it => {
     var rem = Math.max(0, it.target - it.covered);
     var pct = it.target > 0 ? Math.min(100, Math.round((it.covered / it.target) * 100)) : (it.covered > 0 ? 100 : 0);
     return {
-      'Type': it.main_type === 'extension' ? 'Extension' : 'Development',
       'Season / Year': it.level1 || '',
       'Main Program': it.level2 || '',
       'Sub Program': it.level3 || '',
@@ -670,10 +745,11 @@ function downloadTargetSheetExcel(){
     };
   });
 
+  var label = type === 'development' ? 'Development' : 'Extension';
   var ws = XLSX.utils.json_to_sheet(exportRows);
   var wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Target_Progress');
-  XLSX.writeFile(wb, 'Target_Chart_' + (myDiv || 'Unit') + '.xlsx');
+  XLSX.utils.book_append_sheet(wb, ws, label + '_Targets');
+  XLSX.writeFile(wb, label + '_Target_Chart_' + (myDiv || 'Unit') + '.xlsx');
 }
 
 /* ========================================================================= */
@@ -873,7 +949,6 @@ async function submitUForm(e){
   if(itemTitle) ans.__item_name = itemTitle;
   if(myUser) ans.__user = myUser;
 
-  // Use exact columns that exist in Supabase responses table to avoid schema cache errors
   var dbPayload = {
     id: 'r_' + Date.now(),
     node_id: String(lid),
