@@ -18,10 +18,11 @@
 @media(min-width:640px){.modal-back{align-items:center}.modal-card{border-radius:20px}}
 .option-label { transition: all 0.15s ease; }
 .option-label:has(input[type="radio"]:checked) { background-color: #4f46e5; color: white; border-color: #4f46e5; }
-.matrix-table th, .matrix-table td { border: 1px solid #cbd5e1; padding: 10px 12px; font-size: 13px; }
+.matrix-table th, .matrix-table td { border: 1px solid #cbd5e1; padding: 9px 11px; font-size: 12.5px; }
 .matrix-table th { background-color: #e2e8f0; color: #0f172a; font-weight: 700; text-align: center; }
 .matrix-cat-row { background-color: #fed7aa; color: #7c2d12; font-weight: 700; }
 .matrix-main-cell { background-color: #fff7ed; font-weight: 700; color: #1e293b; vertical-align: middle; }
+.matrix-sub-cell { background-color: #f8fafc; font-weight: 600; color: #334155; vertical-align: middle; }
 </style>
 </head>
 
@@ -29,7 +30,7 @@
 <div id="modalBack" class="modal-back" onclick="if(event.target===this) closeModal(false)"><div class="modal-card"><div id="modalIcon" class="text-3xl">ℹ️</div><h3 id="modalTitle" class="font-bold text-[18px] mt-2"></h3><p id="modalMsg" class="text-sm text-slate-500 mt-1"></p><div id="modalInputWrap" class="hidden mt-3"><input id="modalInput"></div><div class="flex gap-2 mt-5"><button onclick="closeModal(false)" class="btn btn-ghost flex-1">Cancel</button><button onclick="closeModal(true)" class="btn btn-primary flex-1">OK</button></div></div></div>
 <div id="toast" class="toast"></div>
 
-<div class="max-w-[1150px] mx-auto p-4 md:p-6">
+<div class="max-w-[1180px] mx-auto p-4 md:p-6">
 <!-- TOP HEADER -->
 <div class="flex justify-between items-center mb-4">
   <div class="flex items-center gap-3">
@@ -59,7 +60,7 @@
 <div class="grid md:grid-cols-3 gap-4 mt-5">
   <button onclick="showSection('targets')" id="btnTargets" class="text-left rounded-2xl border-2 border-indigo-600 bg-indigo-600 text-white p-4">
     <div class="font-bold text-base">🎯 1. Targets & Progress</div>
-    <div class="text-xs opacity-90 mt-1">Extension / Development Boxes & Target Sheet</div>
+    <div class="text-xs opacity-90 mt-1">Extension (6) & Development (6) Boxes + Sheet</div>
   </button>
   <button onclick="showSection('form')" id="btnForm" class="text-left rounded-2xl border p-4 bg-white">
     <div class="font-bold text-base">📝 2. Data Entry - දත්ත ඇතුළත් කරන්න</div>
@@ -67,18 +68,17 @@
   </button>
   <button onclick="showSection('mydata')" id="btnMy" class="text-left rounded-2xl border p-4 bg-white">
     <div class="font-bold text-base">📊 3. My Data - මගේ දත්ත</div>
-    <div class="text-xs text-slate-500 mt-1">Filter / தனித்தனி தலைப்பு Table / Excel Download</div>
+    <div class="text-xs text-slate-500 mt-1">Extension & Development தனித்தனி Tables + Excel</div>
   </button>
 </div>
 
 <!-- ========================================================================= -->
-<!-- SECTION 1: TARGETS & PROGRESS (BOXES + MERGED MATRIX SHEET + EXCEL)       -->
+<!-- SECTION 1: TARGETS & PROGRESS (6+6 MULTI-COLOR BOXES + MORE + MATRIX)     -->
 <!-- ========================================================================= -->
 <div id="panel-targets" class="mt-5 space-y-5">
 
-  <!-- SEPARATE SUMMARY BOXES: EXTENSION vs DEVELOPMENT -->
+  <!-- TOP SUMMARY BOXES: EXTENSION vs DEVELOPMENT -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <!-- Extension Box -->
     <div class="rounded-3xl p-5 text-white shadow-md" style="background:linear-gradient(135deg,#2563eb,#1d4ed8)">
       <div class="flex justify-between items-start">
         <div>
@@ -96,7 +96,6 @@
       </div>
     </div>
 
-    <!-- Development Box -->
     <div class="rounded-3xl p-5 text-white shadow-md" style="background:linear-gradient(135deg,#059669,#047857)">
       <div class="flex justify-between items-start">
         <div>
@@ -115,34 +114,45 @@
     </div>
   </div>
 
-  <!-- FILTER BAR -->
-  <div class="card">
+  <!-- SEARCH FILTER -->
+  <div class="card !py-3">
     <div class="flex flex-wrap justify-between items-center gap-3">
-      <div>
-        <h2 class="text-lg font-bold text-slate-900">AI Range Target & Progress Breakdown</h2>
-        <p class="text-xs text-slate-500">உப பிரிவுகள் (Sub-Programs / Items) அடிப்படையிலான இலக்கு மற்றும் முன்னேற்றம்</p>
-      </div>
-      <div class="flex flex-wrap gap-2">
-        <select id="tFilterMain" onchange="renderUnitTargets()" class="!w-auto text-xs font-semibold">
-          <option value="">සියල්ල (Extension & Development)</option>
-          <option value="extension">🌾 Extension Only</option>
-          <option value="development">🏗️ Development Only</option>
-        </select>
-        <input id="tSearch" placeholder="Search program / item..." oninput="renderUnitTargets()" class="!w-auto text-xs">
-      </div>
+      <div class="text-sm font-bold text-slate-800">🎨 AI Range Target & Progress Boxes (Extension 6 + Development 6)</div>
+      <input id="tSearch" placeholder="Search program / sub-program / item..." oninput="renderUnitTargets()" class="!w-full sm:!w-72 text-xs">
     </div>
-
-    <!-- SUB-PROGRAM PROGRESS CARDS (BOXES) -->
-    <div id="unitTargetCardsGrid" class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
   </div>
 
-  <!-- REQUIREMENT 2: STRUCTURED TARGET CHART / MATRIX TABLE (LIKE IMAGE 136601) + EXCEL DOWNLOAD -->
+  <!-- REQUIREMENT 2: EXTENSION 6 COLORFUL BOXES + MORE BUTTON -->
+  <div class="card space-y-4">
+    <div class="flex justify-between items-center gap-2">
+      <div>
+        <h3 class="text-lg font-bold text-blue-900">🌾 Extension Target & Progress Boxes (<span id="extTotalCount">0</span>)</h3>
+        <p class="text-xs text-slate-500">முதல் 6 பெட்டிகள் காட்டப்படுகின்றன — அனைத்தையும் பார்க்க More அழுத்தவும்</p>
+      </div>
+      <button id="btnMoreExt" onclick="toggleMoreExt()" class="hidden btn btn-ghost px-4 py-2 text-xs font-bold border border-blue-200 text-blue-700 hover:bg-blue-50">More ↓</button>
+    </div>
+    <div id="extCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  </div>
+
+  <!-- REQUIREMENT 2: DEVELOPMENT 6 COLORFUL BOXES + MORE BUTTON -->
+  <div class="card space-y-4">
+    <div class="flex justify-between items-center gap-2">
+      <div>
+        <h3 class="text-lg font-bold text-emerald-900">🏗️ Development Target & Progress Boxes (<span id="devTotalCount">0</span>)</h3>
+        <p class="text-xs text-slate-500">முதல் 6 பெட்டிகள் காட்டப்படுகின்றன — அனைத்தையும் பார்க்க More அழுத்தவும்</p>
+      </div>
+      <button id="btnMoreDev" onclick="toggleMoreDev()" class="hidden btn btn-ghost px-4 py-2 text-xs font-bold border border-emerald-200 text-emerald-700 hover:bg-emerald-50">More ↓</button>
+    </div>
+    <div id="devCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  </div>
+
+  <!-- REQUIREMENT 3: TARGET & PROGRESS CHART / MATRIX TABLE (SEPARATE MAIN PROGRAM / SUB PROGRAM / ITEM) -->
   <div class="card">
     <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
       <div>
         <div class="text-[11px] font-bold text-indigo-600 uppercase">📋 PHYSICAL TARGET & PROGRESS SHEET</div>
-        <h3 class="text-lg font-bold text-slate-900">ප්‍රධාන ක්‍රියාකාරකම / ක්‍රියාකාරකම් ලැයිස්තුව / භෞතික ඉලක්කය</h3>
-        <p class="text-xs text-slate-500">Target 0 இருந்தாலும் அனைத்து பிரிவுகளும் ஒரே அட்டவணையாகக் காட்டப்படும்</p>
+        <h3 class="text-lg font-bold text-slate-900">Main Program / Sub Program / Item — Target & Progress</h3>
+        <p class="text-xs text-slate-500">ஒரு Sub Program-இன் கீழ் பல Items தனித்தனியாகக் காட்டப்படும் (Target 0 இருந்தாலும் காட்டும்)</p>
       </div>
       <button onclick="downloadTargetSheetExcel()" class="btn btn-success px-4 py-2 text-xs">⬇ Download Target Chart (Excel)</button>
     </div>
@@ -151,12 +161,14 @@
       <table class="matrix-table w-full border-collapse" id="targetMatrixTable">
         <thead>
           <tr>
-            <th class="w-1/4">ප්‍රධාන ක්‍රියාකාරකම<br><span class="text-[11px] font-normal">(Main Program)</span></th>
-            <th class="w-1/3">ක්‍රියාකාරකම් ලැයිස්තුව<br><span class="text-[11px] font-normal">(Sub Program / Item)</span></th>
-            <th>භෞතික ඉලක්කය<br><span class="text-[11px] font-normal">(Target)</span></th>
-            <th>සම්පූර්ණ කළ ප්‍රමාණය<br><span class="text-[11px] font-normal">(Progress)</span></th>
-            <th>ඉතිරි ඉලක්කය<br><span class="text-[11px] font-normal">(Remaining)</span></th>
-            <th>ප්‍රගතිය %</th>
+            <th>Type</th>
+            <th>Main Program<br><span class="text-[11px] font-normal">(ප්‍රධාන ක්‍රියාකාරකම)</span></th>
+            <th>Sub Program<br><span class="text-[11px] font-normal">(උප වැඩසටහන)</span></th>
+            <th>Item<br><span class="text-[11px] font-normal">(භාණ්ඩය / Item)</span></th>
+            <th>Target<br><span class="text-[11px] font-normal">(ඉලක්කය)</span></th>
+            <th>Progress<br><span class="text-[11px] font-normal">(ප්‍රගතිය)</span></th>
+            <th>Remaining<br><span class="text-[11px] font-normal">(ඉතිරි)</span></th>
+            <th>%</th>
           </tr>
         </thead>
         <tbody id="targetMatrixBody"></tbody>
@@ -192,7 +204,7 @@
     <div id="uItemWrap" class="hidden"><label class="text-xs font-semibold">5. Item Name තෝරන්න *</label><select id="uItemSelect" onchange="uPickItem()"></select></div>
   </div>
 
-  <!-- REQUIREMENT 4: TARGET & LIVE PROGRESS DISPLAY INSIDE DATA ENTRY -->
+  <!-- TARGET & LIVE PROGRESS DISPLAY INSIDE DATA ENTRY -->
   <div id="uTargetProgressBox" class="hidden mt-5 rounded-2xl border-2 border-indigo-200 bg-indigo-50/70 p-4">
     <div class="flex flex-wrap justify-between items-center gap-3">
       <div>
@@ -224,53 +236,73 @@
 </div>
 
 <!-- ========================================================================= -->
-<!-- SECTION 3: MY DATA (FILTER + SEPARATE COLUMN HEADERS TABLE + EXCEL)       -->
+<!-- SECTION 3: MY DATA (SEPARATE EXTENSION & DEVELOPMENT TABLES + EXCEL)      -->
 <!-- ========================================================================= -->
-<div id="panel-mydata" class="card mt-5 hidden space-y-4">
-  <div class="flex flex-wrap justify-between items-center gap-2">
-    <div>
-      <h2 class="font-bold text-[20px]">My Data - මම Update කළ දත්ත</h2>
-      <p class="text-xs text-slate-500">பிரிவுகள் அடிப்படையில் Filter செய்து தனித்தனி தலைப்புகளுடன் பார்க்கவும் Excel Download செய்யவும்.</p>
+<div id="panel-mydata" class="mt-5 hidden space-y-5">
+  <div class="card space-y-4">
+    <div class="flex flex-wrap justify-between items-center gap-2">
+      <div>
+        <h2 class="font-bold text-[20px]">My Data - මම Update කළ දත්ත</h2>
+        <p class="text-xs text-slate-500">Extension மற்றும் Development ஆகியவை தனித்தனி Table-களாகத் தனித்தனி தலைப்புகளுடன் காட்டப்படுகின்றன.</p>
+      </div>
+      <button onclick="downloadFilteredMyExcel()" class="btn btn-success text-xs px-4 py-2">⬇ Download Filtered Excel</button>
     </div>
-    <button onclick="downloadFilteredMyExcel()" class="btn btn-success text-xs px-4 py-2">⬇ Download Filtered Excel</button>
+
+    <div class="grid md:grid-cols-5 gap-3 bg-slate-50 p-3 rounded-2xl border">
+      <div>
+        <label class="text-[11px] font-semibold text-slate-500">Main Type</label>
+        <select id="myFilterMain" onchange="onMyFilterChange()" class="mt-1 bg-white text-xs">
+          <option value="">All (Extension & Dev)</option>
+          <option value="extension">Extension</option>
+          <option value="development">Development</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-[11px] font-semibold text-slate-500">Season / Year</label>
+        <select id="myFilterL1" onchange="renderMy()" class="mt-1 bg-white text-xs"><option value="">All</option></select>
+      </div>
+      <div>
+        <label class="text-[11px] font-semibold text-slate-500">Main Program</label>
+        <select id="myFilterL2" onchange="renderMy()" class="mt-1 bg-white text-xs"><option value="">All</option></select>
+      </div>
+      <div>
+        <label class="text-[11px] font-semibold text-slate-500">Sub Program / Item</label>
+        <select id="myFilterL3" onchange="renderMy()" class="mt-1 bg-white text-xs"><option value="">All</option></select>
+      </div>
+      <div>
+        <label class="text-[11px] font-semibold text-slate-500">Search</label>
+        <input id="mySearch" placeholder="Search..." oninput="renderMy()" class="mt-1 bg-white text-xs">
+      </div>
+    </div>
   </div>
 
-  <div class="grid md:grid-cols-5 gap-3 bg-slate-50 p-3 rounded-2xl border">
-    <div>
-      <label class="text-[11px] font-semibold text-slate-500">Main Type</label>
-      <select id="myFilterMain" onchange="onMyFilterChange()" class="mt-1 bg-white text-xs">
-        <option value="">All (Extension & Dev)</option>
-        <option value="extension">Extension</option>
-        <option value="development">Development</option>
-      </select>
+  <!-- EXTENSION TABLE BLOCK -->
+  <div id="extDataSection" class="card space-y-3 border-l-4 border-l-blue-600">
+    <div class="flex justify-between items-center">
+      <h3 class="font-bold text-base text-blue-900">🌾 Extension Data Table (<span id="extDataCount">0</span>)</h3>
     </div>
-    <div>
-      <label class="text-[11px] font-semibold text-slate-500">Season / Year</label>
-      <select id="myFilterL1" onchange="renderMy()" class="mt-1 bg-white text-xs"><option value="">All</option></select>
-    </div>
-    <div>
-      <label class="text-[11px] font-semibold text-slate-500">Main Program</label>
-      <select id="myFilterL2" onchange="renderMy()" class="mt-1 bg-white text-xs"><option value="">All</option></select>
-    </div>
-    <div>
-      <label class="text-[11px] font-semibold text-slate-500">Sub Program / Item</label>
-      <select id="myFilterL3" onchange="renderMy()" class="mt-1 bg-white text-xs"><option value="">All</option></select>
-    </div>
-    <div>
-      <label class="text-[11px] font-semibold text-slate-500">Search</label>
-      <input id="mySearch" placeholder="Search..." oninput="renderMy()" class="mt-1 bg-white text-xs">
+    <div class="table-wrap">
+      <table id="extUnitDataTable">
+        <thead id="extMyThead"></thead>
+        <tbody id="extMyTbody"></tbody>
+      </table>
     </div>
   </div>
 
-  <!-- DYNAMIC TABLE WITH SEPARATE HEADERS PER QUESTION -->
-  <div class="table-wrap">
-    <table id="myUnitDataTable">
-      <thead id="myThead"></thead>
-      <tbody id="myTbody"></tbody>
-    </table>
+  <!-- DEVELOPMENT TABLE BLOCK -->
+  <div id="devDataSection" class="card space-y-3 border-l-4 border-l-emerald-600">
+    <div class="flex justify-between items-center">
+      <h3 class="font-bold text-base text-emerald-900">🏗️ Development Data Table (<span id="devDataCount">0</span>)</h3>
+    </div>
+    <div class="table-wrap">
+      <table id="devUnitDataTable">
+        <thead id="devMyThead"></thead>
+        <tbody id="devMyTbody"></tbody>
+      </table>
+    </div>
   </div>
 
-  <div id="myEditBox" class="hidden mt-4 border-2 border-indigo-200 rounded-2xl p-4 bg-indigo-50/50">
+  <div id="myEditBox" class="hidden mt-4 border-2 border-indigo-200 rounded-2xl p-4 bg-indigo-50/50 card">
     <h4 class="font-bold">Edit Entry - දත්ත සංස්කරණය</h4>
     <div class="mt-2">
       <label class="text-xs font-semibold">Progress Quantity</label>
@@ -292,7 +324,7 @@ const SUPABASE_KEY='sb_publishable_O5ECn-2JZ_Fn6MTASNZsjQ_UBIPqnMA';
 const sb = (typeof supabase!=='undefined') ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 var __mRes=null;
-function showToast(m,ok){var t=document.getElementById('toast');t.textContent=m;t.className='toast show '+(ok===false?'err':ok===true?'ok':'');setTimeout(function(){t.className='toast';},2600);}
+function showToast(m,ok){var t=document.getElementById('toast');t.textContent=m;t.className='toast show '+(ok===false?'err':ok===true?'ok':'');setTimeout(function(){t.className='toast';},2800);}
 function openModal(o){return new Promise(function(res){__mRes=res;document.getElementById('modalIcon').textContent=o.icon||'ℹ️';document.getElementById('modalTitle').textContent=o.title||'';document.getElementById('modalMsg').textContent=o.msg||'';document.getElementById('modalInputWrap').classList.toggle('hidden',!o.input);if(o.input){document.getElementById('modalInput').value=o.value||'';}document.getElementById('modalBack').classList.add('show');});}
 function closeModal(ok){document.getElementById('modalBack').classList.remove('show');if(__mRes){var r=__mRes;__mRes=null;r({ok:ok,value:document.getElementById('modalInput').value});}}
 function profConfirm(m,t){return openModal({title:t||'විශ්වාසද?',msg:m,icon:'⚠️',okText:'OK'}).then(function(r){return r.ok;});}
@@ -337,6 +369,21 @@ document.getElementById('lockUser').textContent=myOfficer || myName || '-';
 
 var nodes=[], questions=[], responses=[], itemPrices=[], targetRecords=[];
 var curMain='extension', curL1=null, curL2=null, curL3=null, curSub=null, curItem=null, editingId=null;
+var showAllExtBoxes=false, showAllDevBoxes=false;
+
+// Multi-color palettes for boxes
+const COLOR_THEMES = [
+  { border: 'border-indigo-300', bg: 'bg-indigo-50/70', badge: 'bg-indigo-600 text-white', bar: 'bg-indigo-600', title: 'text-indigo-950' },
+  { border: 'border-emerald-300', bg: 'bg-emerald-50/70', badge: 'bg-emerald-600 text-white', bar: 'bg-emerald-600', title: 'text-emerald-950' },
+  { border: 'border-amber-300', bg: 'bg-amber-50/70', badge: 'bg-amber-600 text-white', bar: 'bg-amber-500', title: 'text-amber-950' },
+  { border: 'border-rose-300', bg: 'bg-rose-50/70', badge: 'bg-rose-600 text-white', bar: 'bg-rose-600', title: 'text-rose-950' },
+  { border: 'border-cyan-300', bg: 'bg-cyan-50/70', badge: 'bg-cyan-700 text-white', bar: 'bg-cyan-600', title: 'text-cyan-950' },
+  { border: 'border-violet-300', bg: 'bg-violet-50/70', badge: 'bg-violet-600 text-white', bar: 'bg-violet-600', title: 'text-violet-950' },
+  { border: 'border-teal-300', bg: 'bg-teal-50/70', badge: 'bg-teal-700 text-white', bar: 'bg-teal-600', title: 'text-teal-950' },
+  { border: 'border-orange-300', bg: 'bg-orange-50/70', badge: 'bg-orange-600 text-white', bar: 'bg-orange-500', title: 'text-orange-950' }
+];
+
+function norm(s){ return String(s||'').trim().toLowerCase(); }
 
 function showSection(sec){
   document.getElementById('panel-targets').classList.toggle('hidden', sec!=='targets');
@@ -352,37 +399,41 @@ function showSection(sec){
   if(sec==='mydata') renderMy();
 }
 
-/* ========================================================================= */
-/* HELPER: COMPUTE TARGET & PROGRESS FOR THIS AI RANGE                       */
-/* ========================================================================= */
-function norm(s){ return String(s||'').trim().toLowerCase(); }
-
 function getMyResponses(){
   return (responses||[]).filter(r => {
     if(myDiv && norm(r.division) === norm(myDiv)) return true;
-    if(myUser && norm(r.submitted_by || r.submittedBy) === norm(myUser)) return true;
+    if(myOffice && norm(r.office) === norm(myOffice)) return true;
     return false;
   });
 }
 
 function getProgressedQtyForEntry(r){
-  if(r.progress_qty !== undefined && r.progress_qty !== null && !isNaN(Number(r.progress_qty))) {
-    return Number(r.progress_qty);
+  if(r && r.answers && r.answers.__progress_qty !== undefined && r.answers.__progress_qty !== null && !isNaN(Number(r.answers.__progress_qty))) {
+    return Number(r.answers.__progress_qty);
   }
-  if(r.answers && r.answers.__progress_qty !== undefined) {
-    return Number(r.answers.__progress_qty) || 0;
+  if(r && r.progress_qty !== undefined && r.progress_qty !== null && !isNaN(Number(r.progress_qty))) {
+    return Number(r.progress_qty);
   }
   return 0;
 }
 
-// Build unified items list combining all published hierarchy nodes + targetRecords for this AI Office
+function getItemNameForEntry(r){
+  if(r && r.answers && r.answers.__item_name) return String(r.answers.__item_name);
+  if(r && r.item_name) return String(r.item_name);
+  return '';
+}
+
 function buildAiTargetRows(){
   var myMine = getMyResponses();
-  var myTgts = (targetRecords||[]).filter(t => norm(t.division) === norm(myDiv));
+  var myTgts = (targetRecords||[]).filter(t => {
+    if(!myDiv) return true;
+    var cleanOff = norm(t.office).replace(/\s*\(unit\)/gi, '');
+    return norm(t.division) === norm(myDiv) || cleanOff.includes(norm(myDiv)) || norm(myDiv).includes(norm(t.division));
+  });
+
   var rows = [];
   var seenKeys = new Set();
 
-  // 1. Add all rows from targetRecords assigned to this AI Office
   myTgts.forEach(t => {
     var key = [t.main_type, t.level1, t.level2, t.level3||'', t.item_name||''].map(norm).join('|');
     seenKeys.add(key);
@@ -392,7 +443,7 @@ function buildAiTargetRows(){
       if(t.level1 && norm(r.level1) !== norm(t.level1)) return false;
       if(t.level2 && norm(r.level2) !== norm(t.level2)) return false;
       if(t.level3 && norm(r.level3) !== norm(t.level3)) return false;
-      if(t.item_name && norm(r.item_name || (r.answers && r.answers.__item_name) || '') !== norm(t.item_name)) return false;
+      if(t.item_name && norm(getItemNameForEntry(r)) !== norm(t.item_name)) return false;
       return true;
     });
 
@@ -408,12 +459,12 @@ function buildAiTargetRows(){
     });
   });
 
-  // 2. Include published nodes that don't have a target record yet (so Target = 0 still shows up!)
-  var l1Nodes = nodes.filter(n => n.level === 1 && n.is_published);
+  // Include published hierarchy nodes so Target = 0 items are also shown
+  var l1Nodes = (nodes||[]).filter(n => n.level === 1 && n.is_published);
   l1Nodes.forEach(n1 => {
-    var l2Nodes = nodes.filter(n => n.level === 2 && n.parent_id === n1.id && n.is_published);
+    var l2Nodes = (nodes||[]).filter(n => n.level === 2 && n.parent_id === n1.id && n.is_published);
     l2Nodes.forEach(n2 => {
-      var l3Nodes = nodes.filter(n => n.level === 3 && n.parent_id === n2.id && n.is_published);
+      var l3Nodes = (nodes||[]).filter(n => n.level === 3 && n.parent_id === n2.id && n.is_published);
       if(!l3Nodes.length){
         var k0 = [n1.main_type, n1.title, n2.title, '', ''].map(norm).join('|');
         if(!seenKeys.has(k0)){
@@ -423,13 +474,13 @@ function buildAiTargetRows(){
         }
       } else {
         l3Nodes.forEach(n3 => {
-          var l4Nodes = nodes.filter(n => n.level === 4 && n.parent_id === n3.id && n.is_published);
+          var l4Nodes = (nodes||[]).filter(n => n.level === 4 && n.parent_id === n3.id && n.is_published);
           if(n1.main_type === 'development' && l4Nodes.length){
             l4Nodes.forEach(n4 => {
               var k4 = [n1.main_type, n1.title, n2.title, n3.title, n4.title].map(norm).join('|');
               if(!seenKeys.has(k4)){
                 seenKeys.add(k4);
-                var cov4 = myMine.filter(r => norm(r.main_type)===norm(n1.main_type) && norm(r.level1)===norm(n1.title) && norm(r.level2)===norm(n2.title) && norm(r.level3)===norm(n3.title) && norm(r.item_name||(r.answers&&r.answers.__item_name)||'')===norm(n4.title)).reduce((s,r)=>s+getProgressedQtyForEntry(r),0);
+                var cov4 = myMine.filter(r => norm(r.main_type)===norm(n1.main_type) && norm(r.level1)===norm(n1.title) && norm(r.level2)===norm(n2.title) && norm(r.level3)===norm(n3.title) && norm(getItemNameForEntry(r))===norm(n4.title)).reduce((s,r)=>s+getProgressedQtyForEntry(r),0);
                 rows.push({ main_type: n1.main_type, level1: n1.title, level2: n2.title, level3: n3.title, item_name: n4.title, target: 0, covered: cov4 });
               }
             });
@@ -449,189 +500,184 @@ function buildAiTargetRows(){
   return rows;
 }
 
-/* ========================================================================= */
-/* RENDER SECTION 1: BOXES + CARDS + MERGED MATRIX TABLE                     */
-/* ========================================================================= */
+function toggleMoreExt(){ showAllExtBoxes = !showAllExtBoxes; renderUnitTargets(); }
+function toggleMoreDev(){ showAllDevBoxes = !showAllDevBoxes; renderUnitTargets(); }
+
+function renderBoxGrid(rows, gridId, btnId, showAllFlag, defaultLimit){
+  var grid = document.getElementById(gridId);
+  var btn = document.getElementById(btnId);
+  if(!rows.length){
+    grid.innerHTML = '<div class="col-span-full text-center py-5 text-slate-400 text-xs">දත්ත නොමැත</div>';
+    if(btn) btn.classList.add('hidden');
+    return;
+  }
+
+  if(btn){
+    if(rows.length > defaultLimit){
+      btn.classList.remove('hidden');
+      btn.textContent = showAllFlag ? 'Show Less ↑' : ('More (' + (rows.length - defaultLimit) + '+) ↓');
+    } else {
+      btn.classList.add('hidden');
+    }
+  }
+
+  var visibleRows = showAllFlag ? rows : rows.slice(0, defaultLimit);
+
+  grid.innerHTML = visibleRows.map((r, idx) => {
+    var th = COLOR_THEMES[idx % COLOR_THEMES.length];
+    var p = r.target > 0 ? Math.min(100, Math.round((r.covered / r.target) * 100)) : (r.covered > 0 ? 100 : 0);
+    var title = r.item_name || r.level3 || r.level2;
+    var subPath = [r.level1, r.level2, r.item_name ? r.level3 : ''].filter(Boolean).join(' • ');
+    var statusText = r.covered >= r.target && r.target > 0 ? 'COMPLETED ✓' : (r.covered > 0 ? 'IN PROGRESS' : 'PENDING');
+
+    return '<div class="rounded-2xl border-2 ' + th.border + ' ' + th.bg + ' p-4 shadow-sm flex flex-col justify-between">' +
+      '<div>' +
+        '<div class="flex justify-between items-start gap-2">' +
+          '<div><div class="font-bold text-sm ' + th.title + '">' + title + '</div><div class="text-[11px] text-slate-500 mt-0.5">' + subPath + '</div></div>' +
+          '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold ' + th.badge + '">' + statusText + '</span>' +
+        '</div>' +
+        '<div class="mt-3 pt-2.5 border-t border-black/10 grid grid-cols-2 gap-2 text-xs">' +
+          '<div><span class="text-slate-500">Target:</span> <b class="text-slate-900">' + r.target + '</b></div>' +
+          '<div class="text-right"><span class="text-slate-500">Progress:</span> <b class="text-emerald-700">' + r.covered + '</b></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="mt-3">' +
+        '<div class="flex justify-between text-[10px] font-bold text-slate-600 mb-1"><span>' + r.covered + ' / ' + r.target + '</span><span>' + p + '%</span></div>' +
+        '<div class="w-full h-2.5 rounded-full bg-white/80 overflow-hidden border border-black/5"><div class="h-full ' + th.bar + '" style="width:' + p + '%"></div></div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
 function renderUnitTargets(){
   var allRows = buildAiTargetRows();
+  var search = norm(document.getElementById('tSearch').value);
 
-  // 1. Update Extension Summary Box
-  var extRows = allRows.filter(r => r.main_type === 'extension');
-  var extT = extRows.reduce((s, r) => s + r.target, 0);
-  var extC = extRows.reduce((s, r) => s + r.covered, 0);
+  var extAll = allRows.filter(r => r.main_type === 'extension');
+  var devAll = allRows.filter(r => r.main_type === 'development');
+
+  // Top Extension Box
+  var extT = extAll.reduce((s, r) => s + r.target, 0);
+  var extC = extAll.reduce((s, r) => s + r.covered, 0);
   var extPct = extT > 0 ? Math.min(100, Math.round((extC / extT) * 100)) : (extC > 0 ? 100 : 0);
   document.getElementById('extBoxTarget').textContent = extT.toLocaleString();
   document.getElementById('extBoxCovered').textContent = extC.toLocaleString();
   document.getElementById('extBoxPct').textContent = extPct + '%';
   document.getElementById('extBoxBar').style.width = extPct + '%';
 
-  // 2. Update Development Summary Box
-  var devRows = allRows.filter(r => r.main_type === 'development');
-  var devT = devRows.reduce((s, r) => s + r.target, 0);
-  var devC = devRows.reduce((s, r) => s + r.covered, 0);
+  // Top Development Box
+  var devT = devAll.reduce((s, r) => s + r.target, 0);
+  var devC = devAll.reduce((s, r) => s + r.covered, 0);
   var devPct = devT > 0 ? Math.min(100, Math.round((devC / devT) * 100)) : (devC > 0 ? 100 : 0);
   document.getElementById('devBoxTarget').textContent = devT.toLocaleString();
   document.getElementById('devBoxCovered').textContent = devC.toLocaleString();
   document.getElementById('devBoxPct').textContent = devPct + '%';
   document.getElementById('devBoxBar').style.width = devPct + '%';
 
-  // Filter for cards & matrix
-  var fMain = document.getElementById('tFilterMain').value;
-  var search = norm(document.getElementById('tSearch').value);
-  var filtered = allRows.filter(r => {
-    if(fMain && r.main_type !== fMain) return false;
-    if(search && ![r.level1, r.level2, r.level3, r.item_name].join(' ').toLowerCase().includes(search)) return false;
-    return true;
-  });
+  var extFiltered = search ? extAll.filter(r => [r.level1, r.level2, r.level3, r.item_name].join(' ').toLowerCase().includes(search)) : extAll;
+  var devFiltered = search ? devAll.filter(r => [r.level1, r.level2, r.level3, r.item_name].join(' ').toLowerCase().includes(search)) : devAll;
 
-  // 3. Render Sub-Program / Item Boxes
-  var grid = document.getElementById('unitTargetCardsGrid');
-  if(!filtered.length){
-    grid.innerHTML = '<div class="col-span-full text-center py-6 text-slate-400 text-sm">දත්ත නොමැත</div>';
-  } else {
-    grid.innerHTML = filtered.map(r => {
-      var p = r.target > 0 ? Math.min(100, Math.round((r.covered / r.target) * 100)) : (r.covered > 0 ? 100 : 0);
-      var title = r.item_name || r.level3 || r.level2;
-      var subPath = [r.main_type === 'extension' ? '🌾 Extension' : '🏗️ Development', r.level1, r.level2, r.item_name ? r.level3 : ''].filter(Boolean).join(' • ');
-      var badge = r.covered >= r.target && r.target > 0
-        ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">COMPLETED</span>'
-        : (r.covered > 0 ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700">IN PROGRESS</span>'
-          : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">PENDING</span>');
-      return '<div class="rounded-2xl border bg-white p-4 shadow-sm flex flex-col justify-between">' +
-        '<div>' +
-          '<div class="flex justify-between items-start gap-2">' +
-            '<div><div class="font-bold text-sm text-slate-900">' + title + '</div><div class="text-[11px] text-slate-400 mt-0.5">' + subPath + '</div></div>' +
-            badge +
-          '</div>' +
-          '<div class="mt-3 pt-2 border-t grid grid-cols-2 gap-2 text-xs">' +
-            '<div><span class="text-slate-400">Target:</span> <b class="text-slate-800">' + r.target + '</b></div>' +
-            '<div class="text-right"><span class="text-slate-400">Progress:</span> <b class="text-emerald-600">' + r.covered + '</b></div>' +
-          '</div>' +
-        '</div>' +
-        '<div class="mt-3">' +
-          '<div class="flex justify-between text-[10px] font-semibold text-slate-500 mb-1"><span>' + r.covered + ' / ' + r.target + '</span><span>' + p + '%</span></div>' +
-          '<div class="w-full h-2 rounded-full bg-slate-100 overflow-hidden"><div class="h-full ' + (r.main_type==='extension'?'bg-indigo-600':'bg-emerald-600') + '" style="width:' + p + '%"></div></div>' +
-        '</div>' +
-      '</div>';
-    }).join('');
-  }
+  document.getElementById('extTotalCount').textContent = extFiltered.length;
+  document.getElementById('devTotalCount').textContent = devFiltered.length;
 
-  // 4. Render Merged Matrix Table (Main Program rowspan merged like Image 136601)
-  renderTargetMatrixTable(filtered);
+  // Render 6 boxes for Extension & 6 boxes for Development with More button
+  renderBoxGrid(extFiltered, 'extCardsGrid', 'btnMoreExt', showAllExtBoxes, 6);
+  renderBoxGrid(devFiltered, 'devCardsGrid', 'btnMoreDev', showAllDevBoxes, 6);
+
+  // Render Target Matrix Table with separate Main Program, Sub Program, Item columns
+  renderTargetMatrixTable(extFiltered.concat(devFiltered));
 }
 
 function renderTargetMatrixTable(rows){
   var tbody = document.getElementById('targetMatrixBody');
   if(!rows.length){
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-slate-400">Target දත්ත නොමැත</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-6 text-slate-400">Target දත්ත නොමැත</td></tr>';
     window.currentTargetMatrixRows = [];
     return;
   }
 
-  // Group by Main Type -> Main Program (level2) so repeating Main Programs merge with rowspan
   var sorted = rows.slice().sort((a,b) => {
     if(a.main_type !== b.main_type) return a.main_type.localeCompare(b.main_type);
     if(a.level2 !== b.level2) return a.level2.localeCompare(b.level2);
-    return (a.level3 + a.item_name).localeCompare(b.level3 + b.item_name);
+    if(a.level3 !== b.level3) return a.level3.localeCompare(b.level3);
+    return (a.item_name||'').localeCompare(b.item_name||'');
   });
   window.currentTargetMatrixRows = sorted;
 
   var html = '';
-  var lastCat = '';
   var i = 0;
   while(i < sorted.length){
     var r = sorted[i];
-    var catLabel = r.main_type === 'extension' ? '🌾 EXTENSION PROGRAMMES (කෘෂිකර්ම ව්‍යාප්ති)' : '🏗️ DEVELOPMENT PROGRAMMES (සංවර්ධන වැඩසටහන්)';
-    if(catLabel !== lastCat){
-      html += '<tr class="matrix-cat-row"><td colspan="6" class="text-left px-3 py-2">' + catLabel + '</td></tr>';
-      lastCat = catLabel;
+    // Merge consecutive rows sharing same main_type + level2 (Main Program)
+    var mainSpan = 1;
+    while(i + mainSpan < sorted.length && sorted[i + mainSpan].main_type === r.main_type && sorted[i + mainSpan].level2 === r.level2){
+      mainSpan++;
     }
 
-    // Count consecutive rows with same main_type + level2 for rowspan
-    var span = 1;
-    while(i + span < sorted.length && sorted[i + span].main_type === r.main_type && sorted[i + span].level2 === r.level2){
-      span++;
-    }
-
-    for(var j = 0; j < span; j++){
-      var itemRow = sorted[i + j];
-      var subActivity = [itemRow.level3, itemRow.item_name].filter(Boolean).join(' — ') || itemRow.level2;
-      if(itemRow.level1) subActivity += ' (' + itemRow.level1 + ')';
-      var rem = Math.max(0, itemRow.target - itemRow.covered);
-      var pct = itemRow.target > 0 ? Math.min(100, Math.round((itemRow.covered / itemRow.target) * 100)) : (itemRow.covered > 0 ? 100 : 0);
-
-      html += '<tr>';
-      if(j === 0){
-        html += '<td rowspan="' + span + '" class="matrix-main-cell">' + itemRow.level2 + '</td>';
+    var j = 0;
+    while(j < mainSpan){
+      var subRow = sorted[i + j];
+      // Merge consecutive rows within this Main Program sharing same level3 (Sub Program) so multiple items sit neatly beneath one Sub Program
+      var subSpan = 1;
+      while(j + subSpan < mainSpan && sorted[i + j + subSpan].level3 === subRow.level3){
+        subSpan++;
       }
-      html += '<td class="text-slate-800">' + subActivity + '</td>' +
-              '<td class="text-center font-bold text-slate-900">' + itemRow.target + '</td>' +
-              '<td class="text-center font-bold text-emerald-700">' + itemRow.covered + '</td>' +
-              '<td class="text-center font-semibold text-amber-700">' + rem + '</td>' +
-              '<td class="text-center font-bold text-indigo-700">' + pct + '%</td>' +
-              '</tr>';
+
+      for(var k = 0; k < subSpan; k++){
+        var it = sorted[i + j + k];
+        var rem = Math.max(0, it.target - it.covered);
+        var pct = it.target > 0 ? Math.min(100, Math.round((it.covered / it.target) * 100)) : (it.covered > 0 ? 100 : 0);
+
+        html += '<tr>';
+        if((j + k) === 0){
+          html += '<td rowspan="' + mainSpan + '" class="text-center font-bold text-xs">' + (it.main_type === 'extension' ? '🌾 Extension' : '🏗️ Development') + '</td>';
+          html += '<td rowspan="' + mainSpan + '" class="matrix-main-cell">' + (it.level2 || '-') + '</td>';
+        }
+        if(k === 0){
+          html += '<td rowspan="' + subSpan + '" class="matrix-sub-cell">' + (it.level3 || '-') + '</td>';
+        }
+        html += '<td class="text-slate-900 font-medium">' + (it.item_name || '-') + '</td>' +
+                '<td class="text-center font-bold text-slate-900">' + it.target + '</td>' +
+                '<td class="text-center font-bold text-emerald-700">' + it.covered + '</td>' +
+                '<td class="text-center font-semibold text-amber-700">' + rem + '</td>' +
+                '<td class="text-center font-bold text-indigo-700">' + pct + '%</td>' +
+                '</tr>';
+      }
+      j += subSpan;
     }
-    i += span;
+    i += mainSpan;
   }
   tbody.innerHTML = html;
 }
 
-// REQUIREMENT 2: EXCEL DOWNLOAD OF TARGET CHART WITH MERGED MAIN PROGRAM CELLS
 function downloadTargetSheetExcel(){
   var rows = window.currentTargetMatrixRows || [];
   if(!rows.length) return showToast('Download කිරීමට Target දත්ත නැත', false);
 
-  var aoa = [
-    ['DD KANDY AGRICULTURE - AI OFFICE TARGET & PROGRESS SHEET'],
-    ['AD Office: ' + mySubName, 'AI Office: ' + myDiv, 'Officer: ' + (myOfficer || myName)],
-    [],
-    ['Category', 'ප්‍රධාන ක්‍රියාකාරකම (Main Program)', 'ක්‍රියාකාරකම් ලැයිස්තුව (Sub Program / Item)', 'භෞතික ඉලක්කය (Target)', 'සම්පූර්ණ කළ ප්‍රමාණය (Progress)', 'ඉතිරි ඉලක්කය (Remaining)', 'ප්‍රගතිය %']
-  ];
+  var exportRows = rows.map(it => {
+    var rem = Math.max(0, it.target - it.covered);
+    var pct = it.target > 0 ? Math.min(100, Math.round((it.covered / it.target) * 100)) : (it.covered > 0 ? 100 : 0);
+    return {
+      'Type': it.main_type === 'extension' ? 'Extension' : 'Development',
+      'Season / Year': it.level1 || '',
+      'Main Program': it.level2 || '',
+      'Sub Program': it.level3 || '',
+      'Item': it.item_name || '',
+      'Target': it.target,
+      'Progress': it.covered,
+      'Remaining': rem,
+      'Progress %': pct + '%'
+    };
+  });
 
-  var merges = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }
-  ];
-
-  var i = 0;
-  while(i < rows.length){
-    var r = rows[i];
-    var span = 1;
-    while(i + span < rows.length && rows[i + span].main_type === r.main_type && rows[i + span].level2 === r.level2){
-      span++;
-    }
-    var startExcelRow = aoa.length;
-    for(var j = 0; j < span; j++){
-      var it = rows[i + j];
-      var subAct = [it.level3, it.item_name].filter(Boolean).join(' - ') || it.level2;
-      if(it.level1) subAct += ' (' + it.level1 + ')';
-      var rem = Math.max(0, it.target - it.covered);
-      var pct = it.target > 0 ? Math.min(100, Math.round((it.covered / it.target) * 100)) : (it.covered > 0 ? 100 : 0);
-      aoa.push([
-        it.main_type === 'extension' ? 'Extension' : 'Development',
-        j === 0 ? it.level2 : '',
-        subAct,
-        it.target,
-        it.covered,
-        rem,
-        pct + '%'
-      ]);
-    }
-    if(span > 1){
-      merges.push({ s: { r: startExcelRow, c: 1 }, e: { r: startExcelRow + span - 1, c: 1 } });
-    }
-    i += span;
-  }
-
-  var ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws['!merges'] = merges;
-  ws['!cols'] = [{ wch: 15 }, { wch: 30 }, { wch: 42 }, { wch: 18 }, { wch: 20 }, { wch: 18 }, { wch: 12 }];
+  var ws = XLSX.utils.json_to_sheet(exportRows);
   var wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Target_Chart');
-  XLSX.writeFile(wb, 'Target_Progress_' + (myDiv || 'Unit') + '.xlsx');
+  XLSX.utils.book_append_sheet(wb, ws, 'Target_Progress');
+  XLSX.writeFile(wb, 'Target_Chart_' + (myDiv || 'Unit') + '.xlsx');
 }
 
 /* ========================================================================= */
-/* SECTION 2: DATA ENTRY FORM (MULTI-UPDATE UNDER SAME HEADINGS)             */
+/* SECTION 2: DATA ENTRY FORM                                                */
 /* ========================================================================= */
 function uSelectMain(m){
   curMain=m; curL1=null; curL2=null; curL3=null; curSub=null; curItem=null;
@@ -723,7 +769,6 @@ function renderUForm(){
     return;
   }
   
-  // Show Target & Progress for the selected context
   tpBox.classList.remove('hidden');
   var n1Title = curL1 ? (nodes.find(x=>x.id===curL1)||{}).title || '' : '';
   var n2Title = curL2 ? (nodes.find(x=>x.id===curL2)||{}).title || '' : '';
@@ -749,7 +794,6 @@ function renderUForm(){
   document.getElementById('uFormCoveredVal').textContent = cVal;
   document.getElementById('uFormRemVal').textContent = Math.max(0, tVal - cVal);
 
-  // Price Auto Info for Development Items
   var priceBox = document.getElementById('uPriceAutoInfo');
   if(curMain === 'development' && itemTitle){
     var pObj = (itemPrices||[]).find(x => norm(x.item_name) === norm(itemTitle) && (!n1Title || norm(x.year) === norm(n1Title)));
@@ -764,10 +808,9 @@ function renderUForm(){
     priceBox.classList.add('hidden');
   }
 
-  // Get Questions for selected leaf node (fallback to parent if item-level questions weren't added)
-  var qs=(questions||[]).filter(q => q.node_id === lid).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
+  var qs=(questions||[]).filter(q => String(q.node_id) === String(lid)).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
   if(!qs.length && curMain === 'development' && curItem && curL3){
-    qs = (questions||[]).filter(q => q.node_id === curL3).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
+    qs = (questions||[]).filter(q => String(q.node_id) === String(curL3)).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
   }
 
   if(!qs.length){
@@ -828,55 +871,108 @@ async function submitUForm(e){
 
   ans.__progress_qty = progressQty;
   if(itemTitle) ans.__item_name = itemTitle;
+  if(myUser) ans.__user = myUser;
 
-  var newResp = {
+  // Use exact columns that exist in Supabase responses table to avoid schema cache errors
+  var dbPayload = {
     id: 'r_' + Date.now(),
-    node_id: lid,
+    node_id: String(lid),
     main_type: curMain,
     level1: n1Title,
     level2: n2Title,
     level3: n3Title,
     node_path: nodePath(),
-    sub_office_id: mySubId,
     division: myDiv,
     office: myOffice,
-    submitted_by: myUser,
     answers: ans,
-    progress_qty: progressQty,
     created_at: new Date().toISOString()
   };
 
   if(sb){
-    var ins = await sb.from('responses').insert(newResp);
+    var ins = await sb.from('responses').insert(dbPayload);
     if(ins.error){
-      // Fallback if progress_qty column doesn't exist yet in responses table
-      var fallbackResp = Object.assign({}, newResp);
-      delete fallbackResp.progress_qty;
-      var ins2 = await sb.from('responses').insert(fallbackResp);
-      if(ins2.error){
-        return showToast('Save Error: ' + ins2.error.message, false);
-      }
+      return showToast('Save Error: ' + ins.error.message, false);
     }
   }
 
-  responses.unshift(newResp);
+  responses.unshift(dbPayload);
 
-  // Keep selected headings intact so officer can immediately enter another record under the same headings!
   resetFormInputsOnly();
   renderUForm();
   renderUnitTargets();
-  showToast('දත්ත Save වී Progress Auto Update විය! (තවත් දත්ත ඇතුළත් කළ හැක) ✓', true);
+  showToast('දත්ත Save වී Progress Auto Update විය ✓', true);
   return false;
 }
 
 /* ========================================================================= */
-/* SECTION 3: MY DATA - SEPARATE DYNAMIC HEADERS & FILTERED EXCEL DOWNLOAD   */
+/* SECTION 3: MY DATA - SEPARATE EXTENSION & DEVELOPMENT TABLES + EXCEL      */
 /* ========================================================================= */
 function onMyFilterChange(){
   document.getElementById('myFilterL1').value = '';
   document.getElementById('myFilterL2').value = '';
   document.getElementById('myFilterL3').value = '';
   renderMy();
+}
+
+function buildDynamicSubTable(list, theadId, tbodyId, countId){
+  if(countId) document.getElementById(countId).textContent = list.length;
+
+  var qColMap = new Map();
+  list.forEach(r => {
+    var qs = (questions||[]).filter(q => String(q.node_id) === String(r.node_id)).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
+    qs.forEach(q => {
+      if(!qColMap.has(q.question_text)) qColMap.set(q.question_text, []);
+      if(!qColMap.get(q.question_text).includes(q.id)) qColMap.get(q.question_text).push(q.id);
+    });
+  });
+
+  var headers = Array.from(qColMap.keys());
+  document.getElementById(theadId).innerHTML = '<tr>' +
+    '<th>Date</th>' +
+    '<th>Main Program</th>' +
+    '<th>Sub Program / Item</th>' +
+    '<th>Progress Qty</th>' +
+    headers.map(h => '<th>' + h + '</th>').join('') +
+    '<th>Action</th>' +
+    '</tr>';
+
+  if(!list.length){
+    document.getElementById(tbodyId).innerHTML = '<tr><td colspan="' + (5 + headers.length) + '" class="text-center py-5 text-slate-400 text-xs">දත්ත නොමැත</td></tr>';
+    return { headers, qColMap };
+  }
+
+  document.getElementById(tbodyId).innerHTML = list.map(r => {
+    var qty = getProgressedQtyForEntry(r);
+    var itemN = getItemNameForEntry(r);
+    var subLabel = [r.level3, itemN].filter(Boolean).join(' — ') || r.node_path || '';
+
+    var cells = headers.map(hText => {
+      var ids = qColMap.get(hText) || [];
+      var val = '';
+      for(var k=0; k<ids.length; k++){
+        if(r.answers && r.answers[ids[k]] !== undefined && r.answers[ids[k]] !== ''){
+          var raw = r.answers[ids[k]];
+          val = Array.isArray(raw) ? raw.join(', ') : raw;
+          break;
+        }
+      }
+      return '<td class="text-xs">' + (val !== '' ? val : '-') + '</td>';
+    }).join('');
+
+    return '<tr>' +
+      '<td class="text-xs whitespace-nowrap">' + (r.created_at ? new Date(r.created_at).toLocaleDateString() : '') + '</td>' +
+      '<td class="text-xs font-bold">' + (r.level2 || '-') + '</td>' +
+      '<td class="text-xs">' + subLabel + '</td>' +
+      '<td class="text-xs font-bold text-emerald-700 text-center">' + qty + '</td>' +
+      cells +
+      '<td class="whitespace-nowrap">' +
+        '<button onclick="editMy(\'' + r.id + '\')" class="btn btn-ghost px-2 py-1 text-xs">Edit</button> ' +
+        '<button onclick="delMy(\'' + r.id + '\')" class="text-red-500 text-xs px-2">Del</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+
+  return { headers, qColMap };
 }
 
 function renderMy(){
@@ -889,7 +985,6 @@ function renderMy(){
   var mine = getMyResponses();
   if(fMain) mine=mine.filter(r => norm(r.main_type)===norm(fMain));
   
-  // Populate cascading dropdowns
   var l1s=[...new Set(mine.map(r=>r.level1).filter(Boolean))];
   var sel1=document.getElementById('myFilterL1');
   sel1.innerHTML='<option value="">All</option>'+l1s.map(x=>'<option value="'+x+'">'+x+'</option>').join('');
@@ -910,97 +1005,38 @@ function renderMy(){
   
   if(s) mine=mine.filter(r=>(JSON.stringify(r.answers)+(r.node_path||'')).toLowerCase().includes(s));
 
-  window.currentFilteredUnitData = mine;
+  var extList = mine.filter(r => norm(r.main_type) === 'extension');
+  var devList = mine.filter(r => norm(r.main_type) === 'development');
 
-  // Collect distinct question columns across filtered responses so every question gets its own column header!
-  var qColMap = new Map();
-  mine.forEach(r => {
-    var qs = (questions||[]).filter(q => String(q.node_id) === String(r.node_id)).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
-    qs.forEach(q => {
-      if(!qColMap.has(q.question_text)) qColMap.set(q.question_text, []);
-      if(!qColMap.get(q.question_text).includes(q.id)) qColMap.get(q.question_text).push(q.id);
-    });
-  });
+  document.getElementById('extDataSection').classList.toggle('hidden', fMain === 'development');
+  document.getElementById('devDataSection').classList.toggle('hidden', fMain === 'extension');
 
-  var dynamicHeaders = Array.from(qColMap.keys());
-  window.currentDynamicHeaders = dynamicHeaders;
-  window.currentQColMap = qColMap;
-
-  // Render Table Headers
-  var theadHtml = '<tr>' +
-    '<th>දිනය (Date)</th>' +
-    '<th>අංශය (Type)</th>' +
-    '<th>වැඩසටහන / උප பிரிவு (Program Path)</th>' +
-    '<th>Progress Qty</th>' +
-    dynamicHeaders.map(h => '<th>' + h + '</th>').join('') +
-    '<th>Action</th>' +
-    '</tr>';
-  document.getElementById('myThead').innerHTML = theadHtml;
-
-  // Render Table Rows
-  if(!mine.length){
-    document.getElementById('myTbody').innerHTML = '<tr><td colspan="' + (5 + dynamicHeaders.length) + '" class="text-center py-6 text-slate-400">දත්ත නැත</td></tr>';
-    return;
-  }
-
-  var tbodyHtml = mine.map(r => {
-    var qty = getProgressedQtyForEntry(r);
-    var ansCells = dynamicHeaders.map(hText => {
-      var possibleIds = qColMap.get(hText) || [];
-      var val = '';
-      for(var k=0; k<possibleIds.length; k++){
-        if(r.answers && r.answers[possibleIds[k]] !== undefined && r.answers[possibleIds[k]] !== ''){
-          var raw = r.answers[possibleIds[k]];
-          val = Array.isArray(raw) ? raw.join(', ') : raw;
-          break;
-        }
-      }
-      return '<td class="text-xs">' + (val !== '' ? val : '-') + '</td>';
-    }).join('');
-
-    return '<tr>' +
-      '<td class="text-xs whitespace-nowrap">' + (r.created_at ? new Date(r.created_at).toLocaleDateString() : '') + '</td>' +
-      '<td class="text-xs font-bold uppercase">' + (r.main_type || '') + '</td>' +
-      '<td class="text-xs"><b>' + (r.node_path || '') + '</b></td>' +
-      '<td class="text-xs font-bold text-emerald-700 text-center">' + qty + '</td>' +
-      ansCells +
-      '<td class="whitespace-nowrap">' +
-        '<button onclick="editMy(\'' + r.id + '\')" class="btn btn-ghost px-2 py-1 text-xs">Edit</button> ' +
-        '<button onclick="delMy(\'' + r.id + '\')" class="text-red-500 text-xs px-2">Del</button>' +
-      '</td>' +
-    '</tr>';
-  }).join('');
-
-  document.getElementById('myTbody').innerHTML = tbodyHtml;
+  window.extExportMeta = buildDynamicSubTable(extList, 'extMyThead', 'extMyTbody', 'extDataCount');
+  window.devExportMeta = buildDynamicSubTable(devList, 'devMyThead', 'devMyTbody', 'devDataCount');
+  window.extExportList = extList;
+  window.devExportList = devList;
 }
 
-// REQUIREMENT 6: DOWNLOAD FILTERED DATA WITH SEPARATE COLUMN HEADERS AS EXCEL
-function downloadFilteredMyExcel(){
-  var list = window.currentFilteredUnitData || [];
-  if(!list.length) return showToast('Download කිරීමට Filter කළ දත්ත නැත', false);
-
-  var dynamicHeaders = window.currentDynamicHeaders || [];
-  var qColMap = window.currentQColMap || new Map();
-
-  var exportRows = list.map(r => {
+function formatRowsForExcel(list, meta){
+  var headers = (meta && meta.headers) || [];
+  var qColMap = (meta && meta.qColMap) || new Map();
+  return list.map(r => {
     var obj = {
       'Date': r.created_at ? new Date(r.created_at).toLocaleString() : '',
       'Type': (r.main_type || '').toUpperCase(),
       'Season / Year': r.level1 || '',
       'Main Program': r.level2 || '',
       'Sub Program': r.level3 || '',
-      'Full Path': r.node_path || '',
-      'AD Office': mySubName,
+      'Item': getItemNameForEntry(r),
       'AI Office': myDiv,
       'Progress Qty': getProgressedQtyForEntry(r)
     };
-
-    dynamicHeaders.forEach(hText => {
-      var possibleIds = qColMap.get(hText) || [];
+    headers.forEach(hText => {
+      var ids = qColMap.get(hText) || [];
       var val = '';
-      for(var k=0; k<possibleIds.length; k++){
-        if(r.answers && r.answers[possibleIds[k]] !== undefined && r.answers[possibleIds[k]] !== ''){
-          var raw = r.answers[possibleIds[k]];
+      for(var k=0; k<ids.length; k++){
+        if(r.answers && r.answers[ids[k]] !== undefined && r.answers[ids[k]] !== ''){
+          var raw = r.answers[ids[k]];
           val = Array.isArray(raw) ? raw.join(', ') : raw;
           break;
         }
@@ -1009,15 +1045,27 @@ function downloadFilteredMyExcel(){
     });
     return obj;
   });
+}
 
-  var ws = XLSX.utils.json_to_sheet(exportRows);
+function downloadFilteredMyExcel(){
+  var extRows = formatRowsForExcel(window.extExportList || [], window.extExportMeta);
+  var devRows = formatRowsForExcel(window.devExportList || [], window.devExportMeta);
+  if(!extRows.length && !devRows.length) return showToast('Download කිරීමට Filter කළ දත්ත නැත', false);
+
   var wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Filtered_Data');
-  XLSX.writeFile(wb, 'AI_Office_Data_' + (myDiv || 'Unit') + '.xlsx');
+  if(extRows.length){
+    var wsExt = XLSX.utils.json_to_sheet(extRows);
+    XLSX.utils.book_append_sheet(wb, wsExt, 'Extension_Data');
+  }
+  if(devRows.length){
+    var wsDev = XLSX.utils.json_to_sheet(devRows);
+    XLSX.utils.book_append_sheet(wb, wsDev, 'Development_Data');
+  }
+  XLSX.writeFile(wb, 'AI_Filtered_Data_' + (myDiv || 'Unit') + '.xlsx');
 }
 
 function editMy(id){
-  var r=responses.find(x=>x.id===id); if(!r) return; editingId=id;
+  var r=responses.find(x=>String(x.id)===String(id)); if(!r) return; editingId=id;
   document.getElementById('myEditBox').classList.remove('hidden');
   document.getElementById('myEditQty').value = getProgressedQtyForEntry(r);
   var qs=(questions||[]).filter(q=>String(q.node_id)===String(r.node_id)).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
@@ -1025,13 +1073,12 @@ function editMy(id){
 }
 
 async function saveMyEdit(){
-  var r=responses.find(x=>x.id===editingId); if(!r) return;
+  var r=responses.find(x=>String(x.id)===String(editingId)); if(!r) return;
   var newQty = parseFloat(document.getElementById('myEditQty').value) || 0;
   var na = Object.assign({}, r.answers || {});
   document.querySelectorAll('[data-my-qid]').forEach(el=>{ na[el.dataset.myQid]=el.value; });
   na.__progress_qty = newQty;
   r.answers = na;
-  r.progress_qty = newQty;
 
   if(sb){
     await sb.from('responses').update({ answers: na }).eq('id', r.id);
@@ -1046,7 +1093,7 @@ function closeMyEdit(){ editingId=null; document.getElementById('myEditBox').cla
 
 async function delMy(id){
   if(!(await profConfirm('මෙම දත්තය Delete කරන්නද?'))) return;
-  responses=responses.filter(x=>x.id!==id);
+  responses=responses.filter(x=>String(x.id)!==String(id));
   if(sb) await sb.from('responses').delete().eq('id', id);
   renderMy();
   renderUnitTargets();
@@ -1059,9 +1106,6 @@ async function logout(){
   window.location.replace('index.html');
 }
 
-/* ========================================================================= */
-/* SUPABASE REAL-TIME SYNC                                                   */
-/* ========================================================================= */
 async function sbSyncAll(){
   var st = document.getElementById('sbSyncStatus');
   if(!sb){ if(st) st.textContent='Offline Mode'; return; }
