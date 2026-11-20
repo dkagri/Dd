@@ -20,6 +20,7 @@
 .matrix-main-cell { background-color: #fff7ed; font-weight: 700; color: #1e293b; vertical-align: middle; }
 .matrix-sub-cell { background-color: #f8fafc; font-weight: 600; color: #334155; vertical-align: middle; }
 .matrix-item-cell { background-color: #ffffff; font-weight: 500; color: #334155; vertical-align: middle; }
+.matrix-all-row td { background-color: #eef2ff !important; font-weight: 800 !important; color: #1e1b4b !important; border-top: 2px solid #6366f1 !important; border-bottom: 2px solid #6366f1 !important; }
 </style>
 </head>
 <body class="bg-[#f8fafc]">
@@ -165,7 +166,7 @@
         </div>
       </div>
 
-      <!-- EXTENSION TARGET TABLE (3 FILTERS + MERGED MAIN PROGRAM & SUB PROGRAM) -->
+      <!-- EXTENSION TARGET TABLE (3 FILTERS + MERGED MAIN PROGRAM & SUB PROGRAM + ALL TOTAL) -->
       <div class="card space-y-4 border-l-4 border-l-blue-600">
         <div class="flex flex-wrap justify-between items-center gap-2">
           <div>
@@ -214,7 +215,7 @@
         </div>
       </div>
 
-      <!-- DEVELOPMENT TARGET TABLE (3 FILTERS + MERGED MAIN PROGRAM, SUB PROGRAM & ITEM) -->
+      <!-- DEVELOPMENT TARGET TABLE (3 FILTERS + MERGED MAIN PROGRAM, SUB PROGRAM & ITEM + ALL TOTAL) -->
       <div class="card space-y-4 border-l-4 border-l-emerald-600">
         <div class="flex flex-wrap justify-between items-center gap-2">
           <div>
@@ -458,6 +459,7 @@ var nodes=[], questions=[], responses=[], targetRecords=[], profiles=[];
 var showAllExtBoxes=false, showAllDevBoxes=false, editingId=null;
 
 function norm(s){ return String(s||'').trim().toLowerCase(); }
+function isAllLabel(s){ return norm(s) === 'all'; }
 
 function getMyAiOffices(){
   var set = new Set();
@@ -466,12 +468,13 @@ function getMyAiOffices(){
   }
   (profiles||[]).forEach(p => {
     var sameAd = (mySubId && norm(p.sub_office_id) === norm(mySubId)) || (mySubName && norm(p.sub_office_name) === norm(mySubName));
-    if(sameAd && p.division) set.add(p.division);
+    if(sameAd && p.division && !isAllLabel(p.division)) set.add(p.division);
   });
   return Array.from(set);
 }
 
 function isUnderMyAd(divisionName, officeName){
+  if(isAllLabel(divisionName)) return false;
   var aiList = getMyAiOffices().map(norm);
   if(divisionName && aiList.includes(norm(divisionName))) return true;
   if(officeName){
@@ -591,13 +594,17 @@ function getRowAdminRank(r, orderMap){
   return 999999;
 }
 
+function getGroupKey(r){
+  return [r.main_type, r.level1||'', r.level2||'', r.level3||'', r.item_name||''].map(norm).join('|');
+}
+
 function buildAdTargetRows(){
   var aiOffices = getMyAiOffices();
   var myResps = getMyResponses();
   var myTgts = (targetRecords||[]).filter(t => isUnderMyAd(t.division, t.office));
   var orderMap = getAdminNodeOrderMap();
 
-  var rows = [];
+  var aiRows = [];
   var seen = new Set();
 
   myTgts.forEach((t, idx) => {
@@ -615,7 +622,7 @@ function buildAdTargetRows(){
       return true;
     }).reduce((s, r) => s + getProgressedQty(r), 0);
 
-    rows.push({
+    aiRows.push({
       target_id: t.id,
       ai_office: matchedAi,
       main_type: t.main_type || 'extension',
@@ -625,6 +632,7 @@ function buildAdTargetRows(){
       item_name: t.item_name || '',
       target: Number(t.target_value || 0),
       covered: cov,
+      is_all_row: false,
       orderIndex: idx
     });
   });
@@ -640,7 +648,7 @@ function buildAdTargetRows(){
           if(!seen.has(k0)){
             seen.add(k0);
             var cov0 = myResps.filter(r => norm(r.division)===norm(aiName) && norm(r.main_type)===norm(n1.main_type) && norm(r.level1)===norm(n1.title) && norm(r.level2)===norm(n2.title)).reduce((s,r)=>s+getProgressedQty(r),0);
-            rows.push({ target_id: null, ai_office: aiName, main_type: n1.main_type, level1: n1.title, level2: n2.title, level3: '', item_name: '', target: 0, covered: cov0, orderIndex: rows.length + 1000 });
+            aiRows.push({ target_id: null, ai_office: aiName, main_type: n1.main_type, level1: n1.title, level2: n2.title, level3: '', item_name: '', target: 0, covered: cov0, is_all_row: false, orderIndex: aiRows.length + 1000 });
           }
         } else {
           l3Nodes.forEach(n3 => {
@@ -651,7 +659,7 @@ function buildAdTargetRows(){
                 if(!seen.has(k4)){
                   seen.add(k4);
                   var cov4 = myResps.filter(r => norm(r.division)===norm(aiName) && norm(r.main_type)===norm(n1.main_type) && norm(r.level1)===norm(n1.title) && norm(r.level2)===norm(n2.title) && norm(r.level3)===norm(n3.title) && norm(getItemName(r))===norm(n4.title)).reduce((s,r)=>s+getProgressedQty(r),0);
-                  rows.push({ target_id: null, ai_office: aiName, main_type: n1.main_type, level1: n1.title, level2: n2.title, level3: n3.title, item_name: n4.title, target: 0, covered: cov4, orderIndex: rows.length + 1000 });
+                  aiRows.push({ target_id: null, ai_office: aiName, main_type: n1.main_type, level1: n1.title, level2: n2.title, level3: n3.title, item_name: n4.title, target: 0, covered: cov4, is_all_row: false, orderIndex: aiRows.length + 1000 });
                 }
               });
             } else {
@@ -659,7 +667,7 @@ function buildAdTargetRows(){
               if(!seen.has(k3)){
                 seen.add(k3);
                 var cov3 = myResps.filter(r => norm(r.division)===norm(aiName) && norm(r.main_type)===norm(n1.main_type) && norm(r.level1)===norm(n1.title) && norm(r.level2)===norm(n2.title) && norm(r.level3)===norm(n3.title)).reduce((s,r)=>s+getProgressedQty(r),0);
-                rows.push({ target_id: null, ai_office: aiName, main_type: n1.main_type, level1: n1.title, level2: n2.title, level3: n3.title, item_name: '', target: 0, covered: cov3, orderIndex: rows.length + 1000 });
+                aiRows.push({ target_id: null, ai_office: aiName, main_type: n1.main_type, level1: n1.title, level2: n2.title, level3: n3.title, item_name: '', target: 0, covered: cov3, is_all_row: false, orderIndex: aiRows.length + 1000 });
               }
             }
           });
@@ -668,18 +676,62 @@ function buildAdTargetRows(){
     });
   });
 
-  // Sort strictly by Admin's node hierarchy order so identical Program/Sub Program group together
-  rows.sort((a,b) => {
+  // Group AI rows by (main_type, level1, level2, level3, item_name) and attach sum "ALL" row to each group
+  var groups = new Map();
+  aiRows.forEach(r => {
+    var gk = getGroupKey(r);
+    if(!groups.has(gk)){
+      groups.set(gk, {
+        main_type: r.main_type,
+        level1: r.level1,
+        level2: r.level2,
+        level3: r.level3,
+        item_name: r.item_name,
+        items: [],
+        sumTarget: 0,
+        sumCovered: 0
+      });
+    }
+    var g = groups.get(gk);
+    g.items.push(r);
+    g.sumTarget += Number(r.target || 0);
+    g.sumCovered += Number(r.covered || 0);
+  });
+
+  var sortedGroups = Array.from(groups.values()).sort((a,b) => {
     var ra = getRowAdminRank(a, orderMap);
     var rb = getRowAdminRank(b, orderMap);
     if(ra !== rb) return ra - rb;
-    var aiA = aiOffices.indexOf(a.ai_office);
-    var aiB = aiOffices.indexOf(b.ai_office);
-    if(aiA !== -1 && aiB !== -1 && aiA !== aiB) return aiA - aiB;
-    return a.orderIndex - b.orderIndex;
+    return String(a.item_name||'').localeCompare(String(b.item_name||''));
   });
 
-  return rows;
+  var finalRows = [];
+  sortedGroups.forEach(g => {
+    g.items.sort((a,b) => {
+      var aiA = aiOffices.indexOf(a.ai_office);
+      var aiB = aiOffices.indexOf(b.ai_office);
+      if(aiA !== -1 && aiB !== -1 && aiA !== aiB) return aiA - aiB;
+      return String(a.ai_office||'').localeCompare(String(b.ai_office||''));
+    });
+    g.items.forEach(it => finalRows.push(it));
+
+    // Append ALL summary row for this group with total Target & Progress across all AI offices
+    finalRows.push({
+      target_id: null,
+      ai_office: 'ALL',
+      main_type: g.main_type,
+      level1: g.level1,
+      level2: g.level2,
+      level3: g.level3,
+      item_name: g.item_name,
+      target: g.sumTarget,
+      covered: g.sumCovered,
+      is_all_row: true,
+      orderIndex: 999999
+    });
+  });
+
+  return finalRows;
 }
 
 function populateSelectPreserve(selId, optionsArr, defaultLabel){
@@ -766,20 +818,21 @@ function renderDashboardAll(){
   var allRows = buildAdTargetRows();
   var aiOffices = getMyAiOffices();
 
-  var extAll = allRows.filter(r => r.main_type === 'extension');
-  var devAll = allRows.filter(r => r.main_type === 'development');
+  // For KPI cards and boxes, use individual AI office rows (not duplicate ALL rows)
+  var extAiOnly = allRows.filter(r => r.main_type === 'extension' && !r.is_all_row);
+  var devAiOnly = allRows.filter(r => r.main_type === 'development' && !r.is_all_row);
 
   // Extension Box Filters (AI Office, Program, Sub Program / Item)
   populateSelectPreserve('extBoxFilterAi', aiOffices, 'All AI Offices');
-  populateSelectPreserve('extBoxFilterProg', [...new Set(extAll.map(r=>r.level2).filter(Boolean))], 'All Programs');
+  populateSelectPreserve('extBoxFilterProg', [...new Set(extAiOnly.map(r=>r.level2).filter(Boolean))], 'All Programs');
   var eAi = document.getElementById('extBoxFilterAi').value;
   var ePr = document.getElementById('extBoxFilterProg').value;
-  var extSubSource = extAll.filter(r => (!ePr || norm(r.level2)===norm(ePr)));
+  var extSubSource = extAiOnly.filter(r => (!ePr || norm(r.level2)===norm(ePr)));
   var extSubItems = [...new Set(extSubSource.map(r => [r.level3, r.item_name].filter(Boolean).join(' — ')).filter(Boolean))];
   populateSelectPreserve('extBoxFilterSub', extSubItems, 'All Sub Programs / Items');
   var eSub = document.getElementById('extBoxFilterSub').value;
 
-  var extBoxes = extAll.filter(r => {
+  var extBoxes = extAiOnly.filter(r => {
     var subLbl = [r.level3, r.item_name].filter(Boolean).join(' — ');
     return (!eAi || norm(r.ai_office)===norm(eAi)) &&
            (!ePr || norm(r.level2)===norm(ePr)) &&
@@ -797,15 +850,15 @@ function renderDashboardAll(){
 
   // Development Box Filters (AI Office, Program, Sub Program / Item)
   populateSelectPreserve('devBoxFilterAi', aiOffices, 'All AI Offices');
-  populateSelectPreserve('devBoxFilterProg', [...new Set(devAll.map(r=>r.level2).filter(Boolean))], 'All Programs');
+  populateSelectPreserve('devBoxFilterProg', [...new Set(devAiOnly.map(r=>r.level2).filter(Boolean))], 'All Programs');
   var dAi = document.getElementById('devBoxFilterAi').value;
   var dPr = document.getElementById('devBoxFilterProg').value;
-  var devSubSource = devAll.filter(r => (!dPr || norm(r.level2)===norm(dPr)));
+  var devSubSource = devAiOnly.filter(r => (!dPr || norm(r.level2)===norm(dPr)));
   var devSubItems = [...new Set(devSubSource.map(r => [r.level3, r.item_name].filter(Boolean).join(' — ')).filter(Boolean))];
   populateSelectPreserve('devBoxFilterSub', devSubItems, 'All Sub Programs / Items');
   var dSub = document.getElementById('devBoxFilterSub').value;
 
-  var devBoxes = devAll.filter(r => {
+  var devBoxes = devAiOnly.filter(r => {
     var subLbl = [r.level3, r.item_name].filter(Boolean).join(' — ');
     return (!dAi || norm(r.ai_office)===norm(dAi)) &&
            (!dPr || norm(r.level2)===norm(dPr)) &&
@@ -823,41 +876,63 @@ function renderDashboardAll(){
 
   // Table filter dropdowns (AI Office, Program, Sub Program)
   populateSelectPreserve('extTblFilterAi', aiOffices, 'All AI Offices');
-  populateSelectPreserve('extTblFilterProg', [...new Set(extAll.map(r=>r.level2).filter(Boolean))], 'All Programs');
+  populateSelectPreserve('extTblFilterProg', [...new Set(extAiOnly.map(r=>r.level2).filter(Boolean))], 'All Programs');
   var etPr = document.getElementById('extTblFilterProg').value;
-  populateSelectPreserve('extTblFilterSub', [...new Set(extAll.filter(r => !etPr || norm(r.level2)===norm(etPr)).map(r=>r.level3).filter(Boolean))], 'All Sub Programs');
+  populateSelectPreserve('extTblFilterSub', [...new Set(extAiOnly.filter(r => !etPr || norm(r.level2)===norm(etPr)).map(r=>r.level3).filter(Boolean))], 'All Sub Programs');
 
   populateSelectPreserve('devTblFilterAi', aiOffices, 'All AI Offices');
-  populateSelectPreserve('devTblFilterProg', [...new Set(devAll.map(r=>r.level2).filter(Boolean))], 'All Programs');
+  populateSelectPreserve('devTblFilterProg', [...new Set(devAiOnly.map(r=>r.level2).filter(Boolean))], 'All Programs');
   var dtPr = document.getElementById('devTblFilterProg').value;
-  var devTblSubItems = [...new Set(devAll.filter(r => !dtPr || norm(r.level2)===norm(dtPr)).map(r => [r.level3, r.item_name].filter(Boolean).join(' — ')).filter(Boolean))];
+  var devTblSubItems = [...new Set(devAiOnly.filter(r => !dtPr || norm(r.level2)===norm(dtPr)).map(r => [r.level3, r.item_name].filter(Boolean).join(' — ')).filter(Boolean))];
   populateSelectPreserve('devTblFilterSub', devTblSubItems, 'All Sub Programs / Items');
 
   renderTargetTables();
 }
 
+function recalculateAllRowsForFilteredView(rows){
+  // When AI Office filter is applied, recompute ALL row sums from matching AI rows in the filtered list
+  var groupTotals = new Map();
+  rows.forEach(r => {
+    if(!r.is_all_row){
+      var gk = getGroupKey(r);
+      if(!groupTotals.has(gk)) groupTotals.set(gk, { target: 0, covered: 0 });
+      var gt = groupTotals.get(gk);
+      gt.target += Number(r.target || 0);
+      gt.covered += Number(r.covered || 0);
+    }
+  });
+
+  return rows.map(r => {
+    if(r.is_all_row){
+      var gt = groupTotals.get(getGroupKey(r)) || { target: 0, covered: 0 };
+      return Object.assign({}, r, { target: gt.target, covered: gt.covered });
+    }
+    return r;
+  });
+}
+
 function renderTargetTables(){
   var allRows = buildAdTargetRows();
 
-  // Populate sub-program dropdowns dynamically when program changes
   var extAll = allRows.filter(r => r.main_type === 'extension');
   var etPr = document.getElementById('extTblFilterProg').value;
-  populateSelectPreserve('extTblFilterSub', [...new Set(extAll.filter(r => !etPr || norm(r.level2)===norm(etPr)).map(r=>r.level3).filter(Boolean))], 'All Sub Programs');
+  populateSelectPreserve('extTblFilterSub', [...new Set(extAll.filter(r => !r.is_all_row && (!etPr || norm(r.level2)===norm(etPr))).map(r=>r.level3).filter(Boolean))], 'All Sub Programs');
 
   var devAll = allRows.filter(r => r.main_type === 'development');
   var dtPr = document.getElementById('devTblFilterProg').value;
-  var devTblSubItems = [...new Set(devAll.filter(r => !dtPr || norm(r.level2)===norm(dtPr)).map(r => [r.level3, r.item_name].filter(Boolean).join(' — ')).filter(Boolean))];
+  var devTblSubItems = [...new Set(devAll.filter(r => !r.is_all_row && (!dtPr || norm(r.level2)===norm(dtPr))).map(r => [r.level3, r.item_name].filter(Boolean).join(' — ')).filter(Boolean))];
   populateSelectPreserve('devTblFilterSub', devTblSubItems, 'All Sub Programs / Items');
 
-  // 1. Extension Table (3 Filters + Merged Main Program & Sub Program)
+  // 1. Extension Table
   var eAi = document.getElementById('extTblFilterAi').value;
   var ePr = document.getElementById('extTblFilterProg').value;
   var eSub = document.getElementById('extTblFilterSub').value;
   var extRows = extAll.filter(r =>
-    (!eAi || norm(r.ai_office)===norm(eAi)) &&
     (!ePr || norm(r.level2)===norm(ePr)) &&
-    (!eSub || norm(r.level3)===norm(eSub))
+    (!eSub || norm(r.level3)===norm(eSub)) &&
+    (r.is_all_row || !eAi || norm(r.ai_office)===norm(eAi))
   );
+  extRows = recalculateAllRowsForFilteredView(extRows);
   window.currentExtTargetRows = extRows;
 
   var eMainSpans = computeRowSpans(extRows, r => r.level2 || '-');
@@ -868,8 +943,9 @@ function renderTargetTables(){
     var pct = it.target > 0 ? Math.min(100, Math.round((it.covered/it.target)*100)) : (it.covered > 0 ? 100 : 0);
     var mainTd = eMainSpans[i] > 0 ? '<td rowspan="' + eMainSpans[i] + '" class="matrix-main-cell text-xs">' + (it.level2 || '-') + '</td>' : '';
     var subTd  = eSubSpans[i] > 0  ? '<td rowspan="' + eSubSpans[i] + '" class="matrix-sub-cell text-xs">' + (it.level3 || '-') + '</td>' : '';
+    var rowCls = it.is_all_row ? 'matrix-all-row' : '';
 
-    return '<tr>' +
+    return '<tr class="' + rowCls + '">' +
       mainTd +
       subTd +
       '<td class="font-bold text-xs">' + it.ai_office + '</td>' +
@@ -880,16 +956,17 @@ function renderTargetTables(){
     '</tr>';
   }).join('') : '<tr><td colspan="7" class="text-center py-5 text-slate-400 text-xs">Extension Target தரவுகள் இல்லை</td></tr>';
 
-  // 2. Development Table (3 Filters + Merged Main Program, Sub Program & Item)
+  // 2. Development Table
   var dAi = document.getElementById('devTblFilterAi').value;
   var dPr = document.getElementById('devTblFilterProg').value;
   var dSub = document.getElementById('devTblFilterSub').value;
   var devRows = devAll.filter(r => {
     var subLbl = [r.level3, r.item_name].filter(Boolean).join(' — ');
-    return (!dAi || norm(r.ai_office)===norm(dAi)) &&
-           (!dPr || norm(r.level2)===norm(dPr)) &&
-           (!dSub || norm(subLbl)===norm(dSub));
+    return (!dPr || norm(r.level2)===norm(dPr)) &&
+           (!dSub || norm(subLbl)===norm(dSub)) &&
+           (r.is_all_row || !dAi || norm(r.ai_office)===norm(dAi));
   });
+  devRows = recalculateAllRowsForFilteredView(devRows);
   window.currentDevTargetRows = devRows;
 
   var dMainSpans = computeRowSpans(devRows, r => r.level2 || '-');
@@ -902,8 +979,9 @@ function renderTargetTables(){
     var mainTd = dMainSpans[i] > 0 ? '<td rowspan="' + dMainSpans[i] + '" class="matrix-main-cell text-xs">' + (it.level2 || '-') + '</td>' : '';
     var subTd  = dSubSpans[i] > 0  ? '<td rowspan="' + dSubSpans[i] + '" class="matrix-sub-cell text-xs">' + (it.level3 || '-') + '</td>' : '';
     var itemTd = dItemSpans[i] > 0 ? '<td rowspan="' + dItemSpans[i] + '" class="matrix-item-cell text-xs">' + (it.item_name || '-') + '</td>' : '';
+    var rowCls = it.is_all_row ? 'matrix-all-row' : '';
 
-    return '<tr>' +
+    return '<tr class="' + rowCls + '">' +
       mainTd +
       subTd +
       itemTd +
@@ -956,11 +1034,11 @@ function downloadTargetTableExcel(type){
 }
 
 /* ========================================================================= */
-/* TARGET SET SECTION: 4 FILTERS + ROWSPAN MERGE                           */
+/* TARGET SET SECTION: 4 FILTERS + ROWSPAN MERGE + ALL TOTAL ROW           */
 /* ========================================================================= */
 function renderTargetSetFilters(){
   var t = document.getElementById('tsType').value;
-  var allRows = buildAdTargetRows().filter(r => r.main_type === t);
+  var allRows = buildAdTargetRows().filter(r => r.main_type === t && !r.is_all_row);
   var progs = [...new Set(allRows.map(r => r.level2).filter(Boolean))];
   populateSelectPreserve('tsProg', progs, '-- All Programs --');
 
@@ -995,8 +1073,9 @@ function renderTargetSetList(){
     r.main_type === t &&
     (!prog || norm(r.level2) === norm(prog)) &&
     (!subProg || norm(r.level3) === norm(subProg)) &&
-    (!aiOff || norm(r.ai_office) === norm(aiOff))
+    (r.is_all_row || !aiOff || norm(r.ai_office) === norm(aiOff))
   );
+  rows = recalculateAllRowsForFilteredView(rows);
 
   var thead = document.getElementById('targetSetThead');
   var tbody = document.getElementById('targetSetTbody');
@@ -1041,10 +1120,23 @@ function renderTargetSetList(){
     if(t === 'development'){
       itemCell = itemSpans[idx] > 0 ? '<td rowspan="' + itemSpans[idx] + '" class="matrix-item-cell text-xs">' + (r.item_name || '-') + '</td>' : '';
     }
-    var aiCell   = '<td class="font-bold text-xs">' + r.ai_office + '</td>';
-    var covCell  = '<td class="text-center font-bold text-emerald-700">' + r.covered + '</td>';
-    var tgtCell  = '<td class="text-center"><input type="number" step="any" min="0" id="' + inpId + '" value="' + r.target + '" class="!w-28 text-center font-bold bg-white"></td>';
-    var actCell  = '<td class="text-center"><button onclick="saveSingleAiTarget(' + idx + ')" class="btn btn-primary px-3 py-1.5 text-xs">Save Target</button></td>';
+    var aiCell = '<td class="font-bold text-xs">' + r.ai_office + '</td>';
+    var covCell = '<td class="text-center font-bold text-emerald-700">' + r.covered + '</td>';
+
+    if(r.is_all_row){
+      return '<tr class="matrix-all-row">' +
+        progCell +
+        subCell +
+        itemCell +
+        aiCell +
+        covCell +
+        '<td class="text-center font-extrabold text-indigo-950">' + r.target + '</td>' +
+        '<td class="text-center text-[11px] text-indigo-800">Total All AI</td>' +
+      '</tr>';
+    }
+
+    var tgtCell = '<td class="text-center"><input type="number" step="any" min="0" id="' + inpId + '" value="' + r.target + '" class="!w-28 text-center font-bold bg-white"></td>';
+    var actCell = '<td class="text-center"><button onclick="saveSingleAiTarget(' + idx + ')" class="btn btn-primary px-3 py-1.5 text-xs">Save Target</button></td>';
 
     return '<tr>' + progCell + subCell + itemCell + aiCell + covCell + tgtCell + actCell + '</tr>';
   }).join('');
@@ -1055,7 +1147,7 @@ function renderTargetSetList(){
 async function saveSingleAiTarget(idx){
   var rows = window.currentTargetSetRows || [];
   var r = rows[idx];
-  if(!r) return;
+  if(!r || r.is_all_row) return;
 
   var valEl = document.getElementById('tsVal_' + idx);
   var newTarget = parseFloat(valEl.value);
@@ -1096,6 +1188,7 @@ async function saveSingleAiTarget(idx){
 
   r.target = newTarget;
   renderDashboardAll();
+  renderTargetSetList();
   showToast(r.ai_office + ' Target (' + newTarget + ') Save ஆனது ✓', true);
 }
 
