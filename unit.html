@@ -150,7 +150,7 @@
     <div>
       <div class="text-[11px] font-bold text-indigo-600 uppercase">📋 PHYSICAL TARGET & PROGRESS SHEET</div>
       <h3 class="text-lg font-bold text-slate-900">Main Program / Sub Program / Item — Target & Progress</h3>
-      <p class="text-xs text-slate-500">ஒரு Sub Program-இன் கீழ் பல Items தனித்தனியாகக் காட்டப்படும் (Target 0 இருந்தாலும் காட்டும்)</p>
+      <p class="text-xs text-slate-500">Admin Target Setup உருவாக்கிய/மாற்றிய அதே வரிசையில் காட்டப்படும் (Target 0 இருந்தாலும் காட்டும்)</p>
     </div>
 
     <!-- MAIN PROGRAM & SUB PROGRAM FILTERS FOR TARGET TABLES -->
@@ -464,6 +464,29 @@ function getItemNameForEntry(r){
   return '';
 }
 
+// Lookup order index from hierarchy nodes (sort_order) and targetRecords array order
+function getNodeSortRank(mainType, level, title, parentTitle){
+  var matches = (nodes||[]).filter(n =>
+    norm(n.main_type) === norm(mainType) &&
+    Number(n.level) === Number(level) &&
+    norm(n.title) === norm(title)
+  );
+  if(parentTitle && matches.length > 1){
+    var byParent = matches.find(m => {
+      var p = (nodes||[]).find(pn => String(pn.id) === String(m.parent_id));
+      return p && norm(p.title) === norm(parentTitle);
+    });
+    if(byParent) matches = [byParent];
+  }
+  if(matches.length){
+    var sOrd = Number(matches[0].sort_order);
+    if(!isNaN(sOrd)) return sOrd;
+    var idx = (nodes||[]).indexOf(matches[0]);
+    if(idx > -1) return idx;
+  }
+  return 999999;
+}
+
 function buildAiTargetRows(){
   var myMine = getMyResponses();
   var myTgts = (targetRecords||[]).filter(t => {
@@ -475,7 +498,7 @@ function buildAiTargetRows(){
   var rows = [];
   var seenKeys = new Set();
 
-  myTgts.forEach(t => {
+  myTgts.forEach((t, tIdx) => {
     var key = [t.main_type, t.level1, t.level2, t.level3||'', t.item_name||''].map(norm).join('|');
     seenKeys.add(key);
 
@@ -489,6 +512,10 @@ function buildAiTargetRows(){
     });
 
     var covered = matchedResp.reduce((sum, r) => sum + getProgressedQtyForEntry(r), 0);
+    var mainRank = getNodeSortRank(t.main_type, 2, t.level2, t.level1);
+    var subRank = getNodeSortRank(t.main_type, 3, t.level3, t.level2);
+    var itemRank = getNodeSortRank(t.main_type, 4, t.item_name, t.level3);
+
     rows.push({
       main_type: t.main_type || 'extension',
       level1: t.level1 || '',
@@ -496,32 +523,39 @@ function buildAiTargetRows(){
       level3: t.level3 || '',
       item_name: t.item_name || '',
       target: Number(t.target_value || 0),
-      covered: covered
+      covered: covered,
+      mainRank: mainRank !== 999999 ? mainRank : tIdx,
+      subRank: subRank !== 999999 ? subRank : tIdx,
+      itemRank: itemRank !== 999999 ? itemRank : tIdx,
+      orderIndex: tIdx
     });
   });
 
-  var l1Nodes = (nodes||[]).filter(n => n.level === 1 && n.is_published);
+  var l1Nodes = (nodes||[]).filter(n => n.level === 1 && n.is_published).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
   l1Nodes.forEach(n1 => {
-    var l2Nodes = (nodes||[]).filter(n => n.level === 2 && n.parent_id === n1.id && n.is_published);
-    l2Nodes.forEach(n2 => {
-      var l3Nodes = (nodes||[]).filter(n => n.level === 3 && n.parent_id === n2.id && n.is_published);
+    var l2Nodes = (nodes||[]).filter(n => n.level === 2 && n.parent_id === n1.id && n.is_published).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+    l2Nodes.forEach((n2, n2Idx) => {
+      var mRank = !isNaN(Number(n2.sort_order)) ? Number(n2.sort_order) : n2Idx;
+      var l3Nodes = (nodes||[]).filter(n => n.level === 3 && n.parent_id === n2.id && n.is_published).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
       if(!l3Nodes.length){
         var k0 = [n1.main_type, n1.title, n2.title, '', ''].map(norm).join('|');
         if(!seenKeys.has(k0)){
           seenKeys.add(k0);
           var cov0 = myMine.filter(r => norm(r.main_type)===norm(n1.main_type) && norm(r.level1)===norm(n1.title) && norm(r.level2)===norm(n2.title)).reduce((s,r)=>s+getProgressedQtyForEntry(r),0);
-          rows.push({ main_type: n1.main_type, level1: n1.title, level2: n2.title, level3: '', item_name: '', target: 0, covered: cov0 });
+          rows.push({ main_type: n1.main_type, level1: n1.title, level2: n2.title, level3: '', item_name: '', target: 0, covered: cov0, mainRank: mRank, subRank: 0, itemRank: 0, orderIndex: rows.length + 1000 });
         }
       } else {
-        l3Nodes.forEach(n3 => {
-          var l4Nodes = (nodes||[]).filter(n => n.level === 4 && n.parent_id === n3.id && n.is_published);
+        l3Nodes.forEach((n3, n3Idx) => {
+          var sRank = !isNaN(Number(n3.sort_order)) ? Number(n3.sort_order) : n3Idx;
+          var l4Nodes = (nodes||[]).filter(n => n.level === 4 && n.parent_id === n3.id && n.is_published).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
           if(n1.main_type === 'development' && l4Nodes.length){
-            l4Nodes.forEach(n4 => {
+            l4Nodes.forEach((n4, n4Idx) => {
+              var iRank = !isNaN(Number(n4.sort_order)) ? Number(n4.sort_order) : n4Idx;
               var k4 = [n1.main_type, n1.title, n2.title, n3.title, n4.title].map(norm).join('|');
               if(!seenKeys.has(k4)){
                 seenKeys.add(k4);
                 var cov4 = myMine.filter(r => norm(r.main_type)===norm(n1.main_type) && norm(r.level1)===norm(n1.title) && norm(r.level2)===norm(n2.title) && norm(r.level3)===norm(n3.title) && norm(getItemNameForEntry(r))===norm(n4.title)).reduce((s,r)=>s+getProgressedQtyForEntry(r),0);
-                rows.push({ main_type: n1.main_type, level1: n1.title, level2: n2.title, level3: n3.title, item_name: n4.title, target: 0, covered: cov4 });
+                rows.push({ main_type: n1.main_type, level1: n1.title, level2: n2.title, level3: n3.title, item_name: n4.title, target: 0, covered: cov4, mainRank: mRank, subRank: sRank, itemRank: iRank, orderIndex: rows.length + 1000 });
               }
             });
           } else {
@@ -529,7 +563,7 @@ function buildAiTargetRows(){
             if(!seenKeys.has(k3)){
               seenKeys.add(k3);
               var cov3 = myMine.filter(r => norm(r.main_type)===norm(n1.main_type) && norm(r.level1)===norm(n1.title) && norm(r.level2)===norm(n2.title) && norm(r.level3)===norm(n3.title)).reduce((s,r)=>s+getProgressedQtyForEntry(r),0);
-              rows.push({ main_type: n1.main_type, level1: n1.title, level2: n2.title, level3: n3.title, item_name: '', target: 0, covered: cov3 });
+              rows.push({ main_type: n1.main_type, level1: n1.title, level2: n2.title, level3: n3.title, item_name: '', target: 0, covered: cov3, mainRank: mRank, subRank: sRank, itemRank: 0, orderIndex: rows.length + 1000 });
             }
           }
         });
@@ -597,13 +631,13 @@ function populateSheetFilterDropdowns(allRows){
   var prevMain = mainSel.value;
   var prevSub = subSel.value;
 
-  var mains = [...new Set(allRows.map(r => r.level2).filter(Boolean))].sort();
+  var mains = [...new Set(allRows.map(r => r.level2).filter(Boolean))];
   mainSel.innerHTML = '<option value="">All Main Programs</option>' + mains.map(m => '<option value="' + m + '">' + m + '</option>').join('');
   if(mains.includes(prevMain)) mainSel.value = prevMain;
   else prevMain = '';
 
   var subSource = prevMain ? allRows.filter(r => r.level2 === prevMain) : allRows;
-  var subs = [...new Set(subSource.map(r => r.level3).filter(Boolean))].sort();
+  var subs = [...new Set(subSource.map(r => r.level3).filter(Boolean))];
   subSel.innerHTML = '<option value="">All Sub Programs</option>' + subs.map(s => '<option value="' + s + '">' + s + '</option>').join('');
   if(subs.includes(prevSub)) subSel.value = prevSub;
   else subSel.value = '';
@@ -651,6 +685,17 @@ function renderUnitTargets(){
   renderTargetSheets();
 }
 
+// Sort strictly by Admin Target Setup order (mainRank -> subRank -> itemRank -> orderIndex)
+function sortByAdminOrder(rows){
+  return rows.slice().sort((a,b) => {
+    if((a.mainRank ?? 999999) !== (b.mainRank ?? 999999)) return (a.mainRank ?? 999999) - (b.mainRank ?? 999999);
+    if((a.level2||'') !== (b.level2||'')) return (a.level2||'').localeCompare(b.level2||'');
+    if((a.subRank ?? 999999) !== (b.subRank ?? 999999)) return (a.subRank ?? 999999) - (b.subRank ?? 999999);
+    if((a.itemRank ?? 999999) !== (b.itemRank ?? 999999)) return (a.itemRank ?? 999999) - (b.itemRank ?? 999999);
+    return (a.orderIndex ?? 0) - (b.orderIndex ?? 0);
+  });
+}
+
 function renderSingleCategoryMatrix(rows, tbodyId){
   var tbody = document.getElementById(tbodyId);
   if(!rows.length){
@@ -658,11 +703,7 @@ function renderSingleCategoryMatrix(rows, tbodyId){
     return [];
   }
 
-  var sorted = rows.slice().sort((a,b) => {
-    if((a.level2||'') !== (b.level2||'')) return (a.level2||'').localeCompare(b.level2||'');
-    if((a.level3||'') !== (b.level3||'')) return (a.level3||'').localeCompare(b.level3||'');
-    return (a.item_name||'').localeCompare(b.item_name||'');
-  });
+  var sorted = sortByAdminOrder(rows);
 
   var html = '';
   var i = 0;
