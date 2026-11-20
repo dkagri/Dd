@@ -6,7 +6,6 @@
 <title>Sub Admin Dashboard | FieldWork OS</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="stylesheet" href="styles.css">
 <style>
@@ -15,9 +14,29 @@
 .modal-card{background:#fff;border-radius:22px 22px 16px 16px;width:100%;max-width:460px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(80px);background:#0f172a;color:#fff;padding:12px 18px;border-radius:999px;font-size:13px;font-weight:600;z-index:120;transition:.25s;max-width:92vw;text-align:center}
 .toast.show{transform:translateX(-50%) translateY(0)} .toast.ok{background:#059669}.toast.err{background:#dc2626}
+@media(min-width:640px){.modal-back{align-items:center}.modal-card{border-radius:20px}}
+.matrix-table th, .matrix-table td { border: 1px solid #cbd5e1; padding: 9px 11px; font-size: 12.5px; }
+.matrix-table th { background-color: #e2e8f0; color: #0f172a; font-weight: 700; text-align: center; }
+.matrix-main-cell { background-color: #fff7ed; font-weight: 700; color: #1e293b; vertical-align: middle; }
+.matrix-sub-cell { background-color: #f8fafc; font-weight: 600; color: #334155; vertical-align: middle; }
+.matrix-item-cell { background-color: #ffffff; font-weight: 500; color: #334155; vertical-align: middle; }
 </style>
 </head>
 <body class="bg-[#f8fafc]">
+
+<div id="modalBack" class="modal-back" onclick="if(event.target===this) closeModal(false)">
+  <div class="modal-card">
+    <div id="modalIcon" class="text-3xl">ℹ️</div>
+    <h3 id="modalTitle" class="font-bold text-[18px] mt-2"></h3>
+    <p id="modalMsg" class="text-sm text-slate-500 mt-1"></p>
+    <div id="modalInputWrap" class="hidden mt-3"><input id="modalInput"></div>
+    <div class="flex gap-2 mt-5">
+      <button onclick="closeModal(false)" class="btn btn-ghost flex-1">Cancel</button>
+      <button onclick="closeModal(true)" class="btn btn-primary flex-1">OK</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <div id="sidebarOverlay" onclick="closeSidebar()" class="fixed inset-0 bg-black/50 z-[35] hidden lg:hidden"></div>
@@ -30,13 +49,16 @@
     </div>
     <button onclick="closeSidebar()" class="lg:hidden shrink-0 w-10 h-10 rounded-full bg-white/20 text-white font-bold grid place-items-center">✕</button>
   </div>
+
   <nav class="mt-7 space-y-1 text-[14px]">
-    <button data-nav="dashboard" onclick="goNav('dashboard')" class="nav-btn w-full text-left px-4 py-3 rounded-xl bg-white text-slate-900 font-semibold">🎯 Target & Progress Monitor</button>
-    <button data-nav="data" onclick="goNav('data')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">📊 දත්ත (Data & Excel)<br><span class="text-[11px] font-normal opacity-80">View / Edit / Filtered Export</span></button>
+    <button data-nav="dashboard" onclick="goNav('dashboard')" class="nav-btn w-full text-left px-4 py-3 rounded-xl bg-white text-slate-900 font-semibold">🎯 Dashboard & Target Sheet</button>
+    <button data-nav="targetset" onclick="goNav('targetset')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">📌 Target Set<br><span class="text-[11px] font-normal opacity-80">AI Office Targets Update</span></button>
+    <button data-nav="data" onclick="goNav('data')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">📊 දත්ත (Data & Excel)<br><span class="text-[11px] font-normal opacity-80">Extension & Dev Tables</span></button>
   </nav>
+
   <div class="mt-auto rounded-2xl bg-white/10 p-4 text-white">
-    <div class="text-sm font-semibold">Sub Admin (AD Office)</div>
-    <div class="text-xs text-slate-300" id="userLabel"></div>
+    <div class="text-sm font-semibold" id="adOfficeCardTitle">Sub Admin (AD Office)</div>
+    <div class="text-xs text-slate-300 truncate" id="userLabel"></div>
     <button onclick="logout()" class="mt-3 w-full rounded-xl bg-red-500 py-2 text-sm font-semibold">Logout</button>
   </div>
 </aside>
@@ -45,150 +67,325 @@
   <div class="topbar">
     <div class="flex items-center gap-3">
       <button onclick="openSidebar()" class="lg:hidden btn btn-ghost px-3">☰ Menu</button>
-      <h1 class="font-bold text-[17px] md:text-[19px]" id="pageTitle">Target & Progress Monitor</h1>
-      <span class="text-[10px] px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold whitespace-nowrap" id="topSubBadge">AD Office</span>
+      <h1 class="font-bold text-[17px] md:text-[19px]" id="pageTitle">Dashboard & Target Sheet</h1>
+      <span class="text-[10px] px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold whitespace-nowrap" id="topSubBadge">AD Office</span>
     </div>
-    <span id="sbStatus" class="text-[11px] px-2 py-1 rounded bg-slate-100">Connected ✓</span>
+    <div class="flex items-center gap-2">
+      <button onclick="sbSyncAll()" class="btn btn-ghost px-2.5 py-1 text-xs">↻ Sync</button>
+      <span id="sbStatus" class="text-[11px] px-2 py-1 rounded bg-slate-100">Syncing...</span>
+    </div>
   </div>
 
-  <div class="p-4 md:p-6 max-w-[1150px] mx-auto space-y-5">
-    
+  <div class="p-4 md:p-6 max-w-[1180px] mx-auto space-y-5">
+
     <!-- ===================================================================== -->
-    <!-- DASHBOARD: EXECUTIVE TARGET & PROGRESS MONITOR (MATCHING IMAGE DESIGN)-->
+    <!-- 1. DASHBOARD: EXTENSION (6) & DEVELOPMENT (6) BOXES + SEPARATE TABLES -->
     <!-- ===================================================================== -->
-    <div id="page-dashboard" class="page space-y-5">
-      <div class="card">
-        <div class="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">✦ EXECUTIVE INFOGRAPHIC OVERVIEW • සජීවී ප්‍රගති විශ්ලේෂණය</div>
-        <h2 class="text-xl md:text-2xl font-bold text-slate-900 mt-1">AD Office Organizational Target & Progress Monitor</h2>
-        
-        <!-- Filters -->
-        <div class="grid md:grid-cols-3 gap-3 mt-4">
+    <div id="page-dashboard" class="page space-y-6">
+
+      <!-- EXTENSION DASHBOARD SECTION (6 BOXES + MORE + 3 FILTERS) -->
+      <div class="card space-y-4 border-t-4 border-t-blue-600">
+        <div class="flex flex-wrap justify-between items-start gap-3">
           <div>
-            <label class="text-xs font-semibold text-slate-500 uppercase">PROGRAMME TYPE (වැඩසටහන)</label>
-            <select id="saFilterMain" onchange="renderSubAdminMonitor()" class="mt-1">
-              <option value="">All Programmes (සියලුම වැඩසටහන්)</option>
-              <option value="extension">Extension (ව්‍යාප්ති)</option>
-              <option value="development">Development (සංවර්ධන)</option>
+            <span class="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[11px] font-bold uppercase">🌾 EXTENSION TARGET & PROGRESS</span>
+            <h2 class="text-lg md:text-xl font-bold text-slate-900 mt-1">Extension AI Range Boxes (<span id="extBoxCount">0</span>)</h2>
+          </div>
+          <div class="text-right bg-blue-50 px-3.5 py-2 rounded-2xl border border-blue-200">
+            <div class="text-[10px] font-bold text-blue-700 uppercase">EXTENSION PROGRESS</div>
+            <div class="text-base font-extrabold text-blue-950"><span id="extSumCov">0</span> / <span id="extSumTgt">0</span> (<span id="extSumPct">0%</span>)</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-2xl border">
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">1. AI Office (Extension)</label>
+            <select id="extBoxFilterAi" onchange="renderDashboardAll()" class="mt-1 bg-white text-xs">
+              <option value="">All AI Offices</option>
             </select>
           </div>
           <div>
-            <label class="text-xs font-semibold text-slate-500 uppercase">SUB-PROGRAM / ITEM</label>
-            <select id="saFilterNode" onchange="renderSubAdminMonitor()" class="mt-1">
-              <option value="">All Sub-Programs & Items (සියලුම අයිතම)</option>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">2. Program (Extension)</label>
+            <select id="extBoxFilterProg" onchange="onExtBoxProgChange()" class="mt-1 bg-white text-xs">
+              <option value="">All Programs</option>
             </select>
           </div>
           <div>
-            <label class="text-xs font-semibold text-slate-500 uppercase">SEARCH AI OFFICE</label>
-            <input id="saSearchAi" placeholder="Search AI Office (උදා: Digana)..." oninput="renderSubAdminMonitor()" class="mt-1">
+            <label class="text-[11px] font-bold text-slate-600 uppercase">3. Sub Program / Item (Ext)</label>
+            <select id="extBoxFilterSub" onchange="renderDashboardAll()" class="mt-1 bg-white text-xs">
+              <option value="">All Sub Programs / Items</option>
+            </select>
           </div>
         </div>
 
-        <!-- Filter Pills -->
-        <div class="flex flex-wrap items-center gap-2 mt-4 text-xs font-semibold">
-          <span class="text-slate-500">Filter AI Offices:</span>
-          <button onclick="setStatusFilter('all')" id="pillAll" class="px-3 py-1 rounded-full bg-slate-900 text-white">All (<span id="cntAll">0</span>)</button>
-          <button onclick="setStatusFilter('completed')" id="pillComp" class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">● Completed (<span id="cntComp">0</span>)</button>
-          <button onclick="setStatusFilter('partial')" id="pillPart" class="px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">● Partial Progress (<span id="cntPart">0</span>)</button>
-          <button onclick="setStatusFilter('nodata')" id="pillNo" class="px-3 py-1 rounded-full bg-red-50 text-red-700 border border-red-200">● No Data Entered (<span id="cntNo">0</span>)</button>
+        <div id="extBoxGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+        <div class="flex justify-center pt-1">
+          <button id="btnMoreExtBoxes" onclick="toggleMoreExtBoxes()" class="hidden btn btn-ghost px-5 py-2 text-xs font-bold border border-blue-200 text-blue-700 hover:bg-blue-50">More ↓</button>
         </div>
+      </div>
 
-        <!-- 4 GRADIENT KPI CARDS -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-5">
-          <!-- Blue Card -->
-          <div class="rounded-2xl p-5 text-white shadow-md" style="background:linear-gradient(135deg,#2563eb,#4f46e5)">
-            <div class="flex justify-between items-center text-[11px] font-bold uppercase opacity-90">
-              <span>UNITS ACHIEVED / TARGET</span>
-              <span class="w-7 h-7 rounded-lg bg-white/20 grid place-items-center">📦</span>
-            </div>
-            <div class="text-2xl font-bold mt-2"><span id="saAchieved">0</span> <span class="text-sm font-normal opacity-80">/ <span id="saTarget">0</span></span></div>
-            <div class="text-[11px] opacity-85 mt-1">AI Office වෙතින් ආවරණය කළ මුළු ප්‍රමාණය</div>
+      <!-- DEVELOPMENT DASHBOARD SECTION (6 BOXES + MORE + 3 FILTERS) -->
+      <div class="card space-y-4 border-t-4 border-t-emerald-600">
+        <div class="flex flex-wrap justify-between items-start gap-3">
+          <div>
+            <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold uppercase">🏗️ DEVELOPMENT TARGET & PROGRESS</span>
+            <h2 class="text-lg md:text-xl font-bold text-slate-900 mt-1">Development AI Range Boxes (<span id="devBoxCount">0</span>)</h2>
           </div>
-
-          <!-- Green Card -->
-          <div class="rounded-2xl p-5 text-white shadow-md" style="background:linear-gradient(135deg,#059669,#10b981)">
-            <div class="flex justify-between items-center text-[11px] font-bold uppercase opacity-90">
-              <span>OVERALL COMPLETION RATE</span>
-              <span class="w-7 h-7 rounded-lg bg-white/20 grid place-items-center">📈</span>
-            </div>
-            <div class="text-2xl font-bold mt-2"><span id="saPct">0%</span></div>
-            <div class="text-[11px] opacity-85 mt-1">සමස්ත ඉලක්ක සපුරාලීමේ ප්‍රතිශතය</div>
-          </div>
-
-          <!-- Orange Card -->
-          <div class="rounded-2xl p-5 text-white shadow-md" style="background:linear-gradient(135deg,#d97706,#f59e0b)">
-            <div class="flex justify-between items-center text-[11px] font-bold uppercase opacity-90">
-              <span>PENDING TARGET UNITS</span>
-              <span class="w-7 h-7 rounded-lg bg-white/20 grid place-items-center">⏳</span>
-            </div>
-            <div class="text-2xl font-bold mt-2"><span id="saPending">0</span> Units</div>
-            <div class="text-[11px] opacity-85 mt-1">සම්පූර්ණ කිරීමට ඉතිරිව ඇති ප්‍රමාණය</div>
-          </div>
-
-          <!-- Red Card -->
-          <div class="rounded-2xl p-5 text-white shadow-md" style="background:linear-gradient(135deg,#dc2626,#e11d48)">
-            <div class="flex justify-between items-center text-[11px] font-bold uppercase opacity-90">
-              <span>NO DATA ENTERED</span>
-              <span class="w-7 h-7 rounded-lg bg-white/20 grid place-items-center">⚠️</span>
-            </div>
-            <div class="text-2xl font-bold mt-2"><span id="saNoDataCount">0</span> <span class="text-sm font-normal opacity-80">/ <span id="saTotalAiCount">0</span> Offices</span></div>
-            <div class="text-[11px] opacity-85 mt-1">තවමත් දත්ත ඇතුළත් කර නොමැති AI Office ගණන</div>
+          <div class="text-right bg-emerald-50 px-3.5 py-2 rounded-2xl border border-emerald-200">
+            <div class="text-[10px] font-bold text-emerald-700 uppercase">DEVELOPMENT PROGRESS</div>
+            <div class="text-base font-extrabold text-emerald-950"><span id="devSumCov">0</span> / <span id="devSumTgt">0</span> (<span id="devSumPct">0%</span>)</div>
           </div>
         </div>
 
-        <!-- SEGMENT HEADER & AI OFFICE GRID (MATCHING IMAGE DESIGN) -->
-        <div class="mt-6 rounded-2xl overflow-hidden border border-slate-200 bg-slate-50">
-          <div class="p-4 text-white flex flex-wrap justify-between items-center gap-3" style="background:linear-gradient(90deg,#047857,#065f46)">
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="px-2.5 py-0.5 rounded-full bg-white/20 text-[11px] font-bold" id="saSegmentBadge">AD Office Segment</span>
-                <span class="px-2.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-100 text-[11px] font-bold">Total AI Offices: <span id="saSegAiTotal">0</span></span>
-                <span class="px-2.5 py-0.5 rounded-full bg-red-500 text-white text-[11px] font-bold"><span id="saSegNotEntered">0</span> Not Entered</span>
-              </div>
-              <h3 class="text-lg font-bold mt-1" id="saSegmentTitle">AD Office Breakdown</h3>
-            </div>
-            <div class="flex gap-5 text-right">
-              <div><div class="text-[10px] uppercase opacity-75">AD TARGET</div><div class="font-bold text-base" id="saSegTarget">0</div></div>
-              <div><div class="text-[10px] uppercase opacity-75">AI ACHIEVED</div><div class="font-bold text-base" id="saSegAchieved">0</div></div>
-              <div><div class="text-[10px] uppercase opacity-75">COMPLETION %</div><div class="font-bold text-base" id="saSegPct">0%</div></div>
-            </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-2xl border">
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">1. AI Office (Development)</label>
+            <select id="devBoxFilterAi" onchange="renderDashboardAll()" class="mt-1 bg-white text-xs">
+              <option value="">All AI Offices</option>
+            </select>
           </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">2. Program (Development)</label>
+            <select id="devBoxFilterProg" onchange="onDevBoxProgChange()" class="mt-1 bg-white text-xs">
+              <option value="">All Programs</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">3. Sub Program / Item (Dev)</label>
+            <select id="devBoxFilterSub" onchange="renderDashboardAll()" class="mt-1 bg-white text-xs">
+              <option value="">All Sub Programs / Items</option>
+            </select>
+          </div>
+        </div>
 
-          <div id="saAiCardsGrid" class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <!-- AI Office cards rendered here -->
+        <div id="devBoxGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+        <div class="flex justify-center pt-1">
+          <button id="btnMoreDevBoxes" onclick="toggleMoreDevBoxes()" class="hidden btn btn-ghost px-5 py-2 text-xs font-bold border border-emerald-200 text-emerald-700 hover:bg-emerald-50">More ↓</button>
+        </div>
+      </div>
+
+      <!-- EXTENSION TARGET TABLE (3 FILTERS + MERGED MAIN PROGRAM & SUB PROGRAM) -->
+      <div class="card space-y-4 border-l-4 border-l-blue-600">
+        <div class="flex flex-wrap justify-between items-center gap-2">
+          <div>
+            <h3 class="text-lg font-bold text-blue-950">🌾 Extension Target & Progress Table</h3>
+            <p class="text-xs text-slate-500">AI Office, Program மற்றும் Sub Program அடிப்படையில் Filter செய்து Filter செய்த தரவை மட்டும் Excel Download செய்யலாம்</p>
           </div>
+          <button onclick="downloadTargetTableExcel('extension')" class="btn btn-success text-xs px-4 py-2">⬇ Extension Target Excel</button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-2xl border">
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">1. AI Office Filter</label>
+            <select id="extTblFilterAi" onchange="renderTargetTables()" class="mt-1 bg-white text-xs">
+              <option value="">All AI Offices</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">2. Program Filter</label>
+            <select id="extTblFilterProg" onchange="onExtTblProgChange()" class="mt-1 bg-white text-xs">
+              <option value="">All Programs</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">3. Sub Program Filter</label>
+            <select id="extTblFilterSub" onchange="renderTargetTables()" class="mt-1 bg-white text-xs">
+              <option value="">All Sub Programs</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="matrix-table w-full border-collapse">
+            <thead>
+              <tr>
+                <th>Main Program</th>
+                <th>Sub Program</th>
+                <th>AI Office</th>
+                <th>Target</th>
+                <th>Progress</th>
+                <th>Remaining</th>
+                <th>%</th>
+              </tr>
+            </thead>
+            <tbody id="extTargetTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- DEVELOPMENT TARGET TABLE (3 FILTERS + MERGED MAIN PROGRAM, SUB PROGRAM & ITEM) -->
+      <div class="card space-y-4 border-l-4 border-l-emerald-600">
+        <div class="flex flex-wrap justify-between items-center gap-2">
+          <div>
+            <h3 class="text-lg font-bold text-emerald-950">🏗️ Development Target & Progress Table</h3>
+            <p class="text-xs text-slate-500">AI Office, Program மற்றும் Sub Program / Item அடிப்படையில் Filter செய்து Filter செய்த தரவை மட்டும் Excel Download செய்யலாம்</p>
+          </div>
+          <button onclick="downloadTargetTableExcel('development')" class="btn btn-success text-xs px-4 py-2">⬇ Development Target Excel</button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-2xl border">
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">1. AI Office Filter</label>
+            <select id="devTblFilterAi" onchange="renderTargetTables()" class="mt-1 bg-white text-xs">
+              <option value="">All AI Offices</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">2. Program Filter</label>
+            <select id="devTblFilterProg" onchange="onDevTblProgChange()" class="mt-1 bg-white text-xs">
+              <option value="">All Programs</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">3. Sub Program / Item Filter</label>
+            <select id="devTblFilterSub" onchange="renderTargetTables()" class="mt-1 bg-white text-xs">
+              <option value="">All Sub Programs / Items</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="matrix-table w-full border-collapse">
+            <thead>
+              <tr>
+                <th>Main Program</th>
+                <th>Sub Program</th>
+                <th>Item</th>
+                <th>AI Office</th>
+                <th>Target</th>
+                <th>Progress</th>
+                <th>Remaining</th>
+                <th>%</th>
+              </tr>
+            </thead>
+            <tbody id="devTargetTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 2. TARGET SET SECTION: UPDATE AI OFFICE TARGETS BY PROGRAM           -->
+    <!-- ===================================================================== -->
+    <div id="page-targetset" class="page hidden space-y-5">
+      <div class="card space-y-4">
+        <div>
+          <span class="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[11px] font-bold uppercase">📌 TARGET SET (READ-ONLY PROGRAMS)</span>
+          <h2 class="text-xl font-bold text-slate-900 mt-1">Set / Update AI Office Targets</h2>
+          <p class="text-xs text-slate-500">Admin உருவாக்கிய Extension / Development Program-களின் அடிப்படையில் உங்கள் AI Office-களின் Target மதிப்புகளை மட்டும் மாற்றலாம். (இங்கு மாற்றும் Target Admin மற்றும் Unit பகுதிகளிலும் தானாகப் புதுப்பிக்கப்படும்; Program / Sub Program மாற்ற முடியாது).</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50 p-3.5 rounded-2xl border">
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">1. Type</label>
+            <select id="tsType" onchange="onTargetSetTypeChange()" class="mt-1 bg-white text-xs font-semibold">
+              <option value="extension">🌾 Extension</option>
+              <option value="development">🏗️ Development</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">2. Program</label>
+            <select id="tsProg" onchange="onTargetSetProgChange()" class="mt-1 bg-white text-xs font-semibold">
+              <option value="">-- All Programs --</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">3. Sub Program</label>
+            <select id="tsSubProg" onchange="renderTargetSetList()" class="mt-1 bg-white text-xs font-semibold">
+              <option value="">-- All Sub Programs --</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">4. AI Office</label>
+            <select id="tsAiOffice" onchange="renderTargetSetList()" class="mt-1 bg-white text-xs font-semibold">
+              <option value="">-- All AI Offices --</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="matrix-table w-full border-collapse">
+            <thead id="targetSetThead"></thead>
+            <tbody id="targetSetTbody"></tbody>
+          </table>
         </div>
       </div>
     </div>
 
     <!-- ===================================================================== -->
-    <!-- DATA PAGE: FILTERED TABLE & STRICT FILTERED EXCEL DOWNLOAD            -->
+    <!-- 3. DATA SECTION: SEPARATE EXTENSION & DEVELOPMENT TABLES + EXCEL      -->
     <!-- ===================================================================== -->
-    <div id="page-data" class="page hidden">
-      <div class="card">
-        <div class="flex flex-wrap justify-between gap-2">
-          <h2 class="font-bold text-[19px]">දත්ත — බලන්න / Edit / Delete / Filtered Excel Download</h2>
-          <button onclick="downloadFilteredSubAdminExcel()" class="btn btn-success text-xs px-4">⬇ Filtered Excel Download</button>
-        </div>
-        <p class="text-xs text-slate-500 mt-1" id="dataScopeNote">Sub Admin: තමන්ට අදාළ AI Office දත්ත පමණි.</p>
-        
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4">
-          <select id="fMain" onchange="renderData()"><option value="">Main Type (All)</option><option value="extension">Extension</option><option value="development">Development</option></select>
-          <select id="fDiv" onchange="renderData()"><option value="">All AI Offices</option></select>
-          <select id="fL1" onchange="renderData()"><option value="">Season / Year (All)</option></select>
-          <input id="fSearch" placeholder="Search..." oninput="renderData()">
+    <div id="page-data" class="page hidden space-y-5">
+      <div class="card space-y-4">
+        <div class="flex flex-wrap justify-between items-center gap-2">
+          <div>
+            <h2 class="font-bold text-[19px]">දත්ත — Extension & Development Tables</h2>
+            <p class="text-xs text-slate-500" id="dataScopeNote">AI Range மற்றும் Program அடிப்படையில் Filter செய்து Filter செய்யப்பட்ட தரவை மட்டும் தனித்தனி Column-உடன் Excel Download செய்யலாம்.</p>
+          </div>
+          <button onclick="downloadFilteredSubAdminExcel()" class="btn btn-success text-xs px-4 py-2">⬇ Download Filtered Excel</button>
         </div>
 
-        <div class="table-wrap mt-4">
-          <table id="subAdminDataTable">
-            <thead><tr><th>Path</th><th>AI Office</th><th>Answers</th><th>Progress Qty</th><th>User / Date</th><th>Action</th></tr></thead>
-            <tbody id="dataTbody"></tbody>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-2xl border">
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">AI Range</label>
+            <select id="fAiRange" onchange="renderDataSection()" class="mt-1 bg-white text-xs">
+              <option value="">All AI Ranges</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">Extension Program</label>
+            <select id="fExtProg" onchange="renderDataSection()" class="mt-1 bg-white text-xs">
+              <option value="">All Extension Programs</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">Development Program</label>
+            <select id="fDevProg" onchange="renderDataSection()" class="mt-1 bg-white text-xs">
+              <option value="">All Development Programs</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">Search</label>
+            <input id="fSearch" placeholder="Search..." oninput="renderDataSection()" class="mt-1 bg-white text-xs">
+          </div>
+        </div>
+      </div>
+
+      <!-- EXTENSION RESPONSES TABLE -->
+      <div class="card space-y-3 border-l-4 border-l-blue-600">
+        <h3 class="font-bold text-base text-blue-950">🌾 Extension Data Table (<span id="extRespCount">0</span>)</h3>
+        <div class="table-wrap">
+          <table>
+            <thead id="extRespThead"></thead>
+            <tbody id="extRespTbody"></tbody>
           </table>
         </div>
+      </div>
 
-        <div id="editBox" class="hidden mt-4 border-2 border-indigo-200 rounded-2xl p-4 bg-indigo-50/50">
-          <h4 class="font-bold">✏️ Edit Response</h4>
-          <div id="editFields" class="mt-3 space-y-3"></div>
-          <div class="flex gap-2 mt-3"><button onclick="saveEdit()" class="btn btn-primary px-4">Save Edit</button><button onclick="closeEdit()" class="btn btn-ghost px-4">Cancel</button></div>
+      <!-- DEVELOPMENT RESPONSES TABLE -->
+      <div class="card space-y-3 border-l-4 border-l-emerald-600">
+        <h3 class="font-bold text-base text-emerald-950">🏗️ Development Data Table (<span id="devRespCount">0</span>)</h3>
+        <div class="table-wrap">
+          <table>
+            <thead id="devRespThead"></thead>
+            <tbody id="devRespTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- EDIT MODAL/BOX -->
+      <div id="editBox" class="hidden card border-2 border-indigo-200 bg-indigo-50/50">
+        <h4 class="font-bold text-base">✏️ Edit Response</h4>
+        <div class="mt-3">
+          <label class="text-xs font-semibold">Progress Quantity</label>
+          <input type="number" step="any" id="editProgressQty" class="mt-1 bg-white">
+        </div>
+        <div id="editFields" class="mt-3 space-y-3"></div>
+        <div class="flex gap-2 mt-4">
+          <button onclick="saveEdit()" class="btn btn-primary px-4">Save Edit</button>
+          <button onclick="closeEdit()" class="btn btn-ghost px-4">Cancel</button>
         </div>
       </div>
     </div>
@@ -197,28 +394,122 @@
 </div>
 
 <script>
-const SUPABASE_URL='https://ecpoyxjuednjixmaajux.supabase.co';
-const SUPABASE_KEY='sb_publishable_kbTMWrgN1_lRxClNYU-PQg_Qc9jpmSe';
+const SUPABASE_URL='https://fqjbnwcavcxloaqwyret.supabase.co';
+const SUPABASE_KEY='sb_publishable_O5ECn-2JZ_Fn6MTASNZsjQ_UBIPqnMA';
 const sb=(typeof supabase!=='undefined')?supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
 
-const H_KEY='fw7_hier', N_KEY='fw7_nodes', Q_KEY='fw7_qs', R_KEY='fw7_resp', T_KEY='fw7_targets';
-var mySub=localStorage.getItem('user_subOfficeId')||'sub1';
-var mySubName=localStorage.getItem('user_subOfficeName')||mySub;
+var __mRes=null;
+function showToast(m,ok){var t=document.getElementById('toast');t.textContent=m;t.className='toast show '+(ok===false?'err':ok===true?'ok':'');setTimeout(function(){t.className='toast';},2800);}
+function openModal(o){return new Promise(function(res){__mRes=res;document.getElementById('modalIcon').textContent=o.icon||'ℹ️';document.getElementById('modalTitle').textContent=o.title||'';document.getElementById('modalMsg').textContent=o.msg||'';document.getElementById('modalInputWrap').classList.toggle('hidden',!o.input);if(o.input){document.getElementById('modalInput').value=o.value||'';}document.getElementById('modalBack').classList.add('show');});}
+function closeModal(ok){document.getElementById('modalBack').classList.remove('show');if(__mRes){var r=__mRes;__mRes=null;r({ok:ok,value:document.getElementById('modalInput').value});}}
+function profConfirm(m,t){return openModal({title:t||'විශ්වාසද?',msg:m,icon:'⚠️',okText:'OK'}).then(function(r){return r.ok;});}
 
-document.getElementById('userLabel').textContent=localStorage.getItem('user')||'';
-document.getElementById('topSubBadge').textContent=mySubName;
-document.getElementById('saSegmentTitle').textContent=mySubName;
+(function verifyAuth(){
+  try{
+    var h=(location.hash||'');
+    if(h.indexOf('#fw=')===0){
+      var decoded=decodeURIComponent(escape(atob(h.slice(4))));
+      var hj=JSON.parse(decoded);
+      if(hj&&hj.user&&hj.role){
+        localStorage.setItem('fw_session',decoded);
+        localStorage.setItem('role',hj.role);
+        localStorage.setItem('user',hj.user);
+        if(hj.subOfficeId) localStorage.setItem('user_subOfficeId',hj.subOfficeId);
+        if(hj.subOfficeName) localStorage.setItem('user_subOfficeName',hj.subOfficeName);
+      }
+      history.replaceState(null,'',location.pathname);
+    }
+  }catch(e){}
+  var s=localStorage.getItem('fw_session');
+  if(!s){ window.location.replace('index.html'); return; }
+  try{
+    var j=JSON.parse(s);
+    if(j.exp && Date.now()>j.exp){ localStorage.removeItem('fw_session'); window.location.replace('index.html'); }
+  }catch(e){}
+})();
 
-var hierarchy=JSON.parse(localStorage.getItem(H_KEY)||'[]');
-var nodes=JSON.parse(localStorage.getItem(N_KEY)||'[]');
-var questions=JSON.parse(localStorage.getItem(Q_KEY)||'[]');
-var responses=JSON.parse(localStorage.getItem(R_KEY)||'[]');
-var targetsProgress=JSON.parse(localStorage.getItem(T_KEY)||'[]');
-var currentStatusFilter = 'all';
-var editingId = null;
+var mySubId = localStorage.getItem('user_subOfficeId') || '';
+var mySubName = localStorage.getItem('user_subOfficeName') || mySubId || 'AD Office';
+var myUser = localStorage.getItem('user') || '';
 
-function openSidebar(){var sb=document.getElementById('sidebar');sb.style.transform='translateX(0)';sb.style.left='0';sb.style.display='flex';document.getElementById('sidebarOverlay').classList.remove('hidden');}
-function closeSidebar(){var sb=document.getElementById('sidebar');if(window.innerWidth<1024){sb.style.transform='translateX(-110%)';}document.getElementById('sidebarOverlay').classList.add('hidden');}
+document.getElementById('userLabel').textContent = myUser;
+document.getElementById('topSubBadge').textContent = mySubName;
+document.getElementById('adOfficeCardTitle').textContent = mySubName;
+
+const AD_AI_MAP = {
+  'sub1': ['Dambagahapitiya','Kalunthenna','Nugethenna','Morayaya','Ulpathagama','Namadagala','Theldeniya','Udispaththuwa','Wendaruwa','Digana','Gunnepana','Manikhinna','Wavinna','Medamahanuwara'],
+  'sub2': ['Waththegama','Huluganga','Bowala','Ketawalaleula','Galaha','Marassana','Thalathuoya'],
+  'sub3': ['Edaduwawe','Giragama','Manikdiwella','Alapalawala','Ambanwala','Imbuldeniya','Pethiyagoda','Thalawathura','Medapitiya','Mulgama','Delpitiya','Gampola','Kuruduwaththa','Rambukpitiya'],
+  'sub4': ['Aludeniya','Galagedara','Welivita','Ankumbura','Batugoda','Wawala','Alawathugoda','Medawala','Yatiwawala','Hatharaliyadda']
+};
+
+const BOX_COLORS = [
+  { border: 'border-indigo-300', bg: 'bg-indigo-50/70', badge: 'bg-indigo-600 text-white', bar: 'bg-indigo-600', title: 'text-indigo-950' },
+  { border: 'border-emerald-300', bg: 'bg-emerald-50/70', badge: 'bg-emerald-600 text-white', bar: 'bg-emerald-600', title: 'text-emerald-950' },
+  { border: 'border-amber-300', bg: 'bg-amber-50/70', badge: 'bg-amber-600 text-white', bar: 'bg-amber-500', title: 'text-amber-950' },
+  { border: 'border-rose-300', bg: 'bg-rose-50/70', badge: 'bg-rose-600 text-white', bar: 'bg-rose-600', title: 'text-rose-950' },
+  { border: 'border-cyan-300', bg: 'bg-cyan-50/70', badge: 'bg-cyan-700 text-white', bar: 'bg-cyan-600', title: 'text-cyan-950' },
+  { border: 'border-violet-300', bg: 'bg-violet-50/70', badge: 'bg-violet-600 text-white', bar: 'bg-violet-600', title: 'text-violet-950' },
+  { border: 'border-teal-300', bg: 'bg-teal-50/70', badge: 'bg-teal-700 text-white', bar: 'bg-teal-600', title: 'text-teal-950' },
+  { border: 'border-orange-300', bg: 'bg-orange-50/70', badge: 'bg-orange-600 text-white', bar: 'bg-orange-500', title: 'text-orange-950' }
+];
+
+var nodes=[], questions=[], responses=[], targetRecords=[], profiles=[];
+var showAllExtBoxes=false, showAllDevBoxes=false, editingId=null;
+
+function norm(s){ return String(s||'').trim().toLowerCase(); }
+
+function getMyAiOffices(){
+  var set = new Set();
+  if(AD_AI_MAP[mySubId]){
+    AD_AI_MAP[mySubId].forEach(x => set.add(x));
+  }
+  (profiles||[]).forEach(p => {
+    var sameAd = (mySubId && norm(p.sub_office_id) === norm(mySubId)) || (mySubName && norm(p.sub_office_name) === norm(mySubName));
+    if(sameAd && p.division) set.add(p.division);
+  });
+  return Array.from(set);
+}
+
+function isUnderMyAd(divisionName, officeName){
+  var aiList = getMyAiOffices().map(norm);
+  if(divisionName && aiList.includes(norm(divisionName))) return true;
+  if(officeName){
+    var cleanOff = norm(officeName).replace(/\s*\(unit\)/gi, '');
+    if(aiList.some(a => cleanOff === a || cleanOff.includes(a))) return true;
+  }
+  return false;
+}
+
+function getProgressedQty(r){
+  if(r && r.answers && r.answers.__progress_qty !== undefined && r.answers.__progress_qty !== null && !isNaN(Number(r.answers.__progress_qty))) {
+    return Number(r.answers.__progress_qty);
+  }
+  return 0;
+}
+
+function getItemName(r){
+  if(r && r.answers && r.answers.__item_name) return String(r.answers.__item_name);
+  return '';
+}
+
+function getMyResponses(){
+  return (responses||[]).filter(r => isUnderMyAd(r.division, r.office));
+}
+
+function openSidebar(){
+  var sbEl=document.getElementById('sidebar');
+  sbEl.style.transform='translateX(0)';
+  sbEl.style.left='0';
+  sbEl.style.display='flex';
+  document.getElementById('sidebarOverlay').classList.remove('hidden');
+}
+function closeSidebar(){
+  var sbEl=document.getElementById('sidebar');
+  if(window.innerWidth<1024){ sbEl.style.transform='translateX(-110%)'; }
+  document.getElementById('sidebarOverlay').classList.add('hidden');
+}
+
 function goNav(p){
   closeSidebar();
   document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));
@@ -226,225 +517,806 @@ function goNav(p){
   document.querySelectorAll('.nav-btn').forEach(b=>b.className='nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10');
   var btn=document.querySelector('[data-nav="'+p+'"]');
   if(btn)btn.className='nav-btn w-full text-left px-4 py-3 rounded-xl bg-white text-slate-900 font-semibold';
-  document.getElementById('pageTitle').textContent=p==='dashboard'?'Target & Progress Monitor':'දත්ත (Data & Excel)';
-  if(p==='dashboard') renderSubAdminMonitor();
-  if(p==='data') renderData();
+
+  if(p==='dashboard'){
+    document.getElementById('pageTitle').textContent='Dashboard & Target Sheet';
+    renderDashboardAll();
+  } else if(p==='targetset'){
+    document.getElementById('pageTitle').textContent='Target Set - AI Office Targets';
+    renderTargetSetFilters();
+    renderTargetSetList();
+  } else if(p==='data'){
+    document.getElementById('pageTitle').textContent='දත්ත (Data & Excel)';
+    populateDataFilters();
+    renderDataSection();
+  }
 }
 
-function setStatusFilter(st){
-  currentStatusFilter = st;
-  ['pillAll','pillComp','pillPart','pillNo'].forEach(id => {
-    var el = document.getElementById(id);
-    if(el) el.classList.remove('ring-2','ring-offset-1','ring-indigo-500');
-  });
-  var activeId = st==='all'?'pillAll':st==='completed'?'pillComp':st==='partial'?'pillPart':'pillNo';
-  document.getElementById(activeId).classList.add('ring-2','ring-offset-1','ring-indigo-500');
-  renderSubAdminMonitor();
-}
-
-function renderSubAdminMonitor(){
-  var fMain = document.getElementById('saFilterMain').value;
-  var fNode = document.getElementById('saFilterNode').value;
-  var search = (document.getElementById('saSearchAi').value || '').toLowerCase();
-
-  // Find AI offices under this AD Office
-  var adObj = hierarchy.find(h => String(h.id) === String(mySub));
-  var aiList = adObj ? adObj.divisions.map(d => d.name) : [];
-
-  // Filter targets for this AD Office
-  var adTargets = targetsProgress.filter(t => String(t.ad_office_id) === String(mySub));
-  if(fMain) adTargets = adTargets.filter(t => t.main_type === fMain);
-
-  // Populate Sub-Program dropdown
-  var nodeSel = document.getElementById('saFilterNode');
-  var curNode = nodeSel.value;
-  var uniqueNodes = [...new Set(adTargets.map(t => t.node_id))];
-  nodeSel.innerHTML = '<option value="">All Sub-Programs & Items (සියලුම අයිතම)</option>' + uniqueNodes.map(nid => {
-    var nObj = nodes.find(x => x.id === nid);
-    return '<option value="'+nid+'">'+(nObj ? nObj.title : nid)+'</option>';
-  }).join('');
-  nodeSel.value = curNode;
-
-  if(fNode) adTargets = adTargets.filter(t => t.node_id === fNode);
-
-  var totalTarget = 0, totalAchieved = 0;
-  var cntComp = 0, cntPart = 0, cntNo = 0;
-
-  var cardsHtml = '';
-  aiList.forEach(aiName => {
-    if(search && !aiName.toLowerCase().includes(search)) return;
-
-    var aiRecords = adTargets.filter(t => String(t.ai_office_id).toLowerCase() === aiName.toLowerCase());
-    var aiTgt = 0, aiAch = 0;
-    aiRecords.forEach(r => {
-      aiTgt += Number(r.target_units || 0);
-      aiAch += Number(r.progress_units || 0);
-    });
-
-    totalTarget += aiTgt;
-    totalAchieved += aiAch;
-
-    var status = 'nodata';
-    if(aiAch > 0 && aiAch >= aiTgt && aiTgt > 0) { status = 'completed'; cntComp++; }
-    else if(aiAch > 0) { status = 'partial'; cntPart++; }
-    else { status = 'nodata'; cntNo++; }
-
-    if(currentStatusFilter !== 'all' && currentStatusFilter !== status) return;
-
-    var pct = aiTgt > 0 ? Math.min(100, Math.round((aiAch / aiTgt) * 100)) : 0;
-    var badge = '', border = 'border-slate-200', bar = 'bg-indigo-600';
-    if(status === 'completed'){
-      badge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">COMPLETED ✓</span>';
-      border = 'border-emerald-300'; bar = 'bg-emerald-500';
-    } else if(status === 'partial'){
-      badge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700">PARTIAL</span>';
-      border = 'border-amber-300'; bar = 'bg-amber-500';
-    } else {
-      badge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700">NO DATA</span>';
-      border = 'border-red-200';
+/* ========================================================================= */
+/* ROWSPAN MERGE HELPER FOR TABLES                                           */
+/* ========================================================================= */
+function computeRowSpans(rows, keyFn){
+  var spans = new Array(rows.length).fill(1);
+  var i = 0;
+  while(i < rows.length){
+    var k = norm(keyFn(rows[i]));
+    if(!k){ i++; continue; }
+    var j = i + 1;
+    while(j < rows.length && norm(keyFn(rows[j])) === k){
+      spans[j] = 0;
+      j++;
     }
-
-    cardsHtml += '<div class="rounded-2xl border-2 '+border+' bg-white p-4 shadow-sm flex flex-col justify-between">'+
-                 '<div>'+
-                   '<div class="flex justify-between items-center"><span class="font-bold text-sm text-slate-900">'+aiName+'</span>'+badge+'</div>'+
-                   (status === 'nodata' ?
-                     '<div class="py-6 text-center text-xs text-red-500 font-medium">දත්ත ඇතුළත් කර නොමැත<br><span class="text-[10px] text-slate-400">Awaiting AI Office Entry</span></div>' :
-                     '<div class="mt-3 pt-2 border-t border-slate-100 space-y-1 text-xs">'+
-                       '<div class="flex justify-between"><span class="text-slate-500">ලබා දුන් ඉලක්කය:</span><span class="font-bold">'+aiTgt+' Units</span></div>'+
-                       '<div class="flex justify-between"><span class="text-slate-500">ආවරණය කළ ප්‍රමාණය:</span><span class="font-bold text-emerald-600">'+aiAch+' Units</span></div>'+
-                     '</div>'
-                   )+
-                 '</div>'+
-                 '<div class="mt-2">'+
-                   '<div class="flex justify-between text-[10px] font-semibold text-slate-500 mb-1"><span>Progress: '+aiAch+'/'+aiTgt+'</span><span>'+pct+'%</span></div>'+
-                   '<div class="w-full h-2 rounded-full bg-slate-100 overflow-hidden"><div class="h-full '+bar+'" style="width:'+pct+'%"></div></div>'+
-                 '</div>'+
-                 '</div>';
-  });
-
-  var overallPct = totalTarget > 0 ? Math.round((totalAchieved / totalTarget) * 100) : 0;
-  document.getElementById('saAchieved').textContent = totalAchieved.toLocaleString();
-  document.getElementById('saTarget').textContent = totalTarget.toLocaleString();
-  document.getElementById('saPct').textContent = overallPct + '%';
-  document.getElementById('saPending').textContent = Math.max(0, totalTarget - totalAchieved).toLocaleString();
-  document.getElementById('saNoDataCount').textContent = cntNo;
-  document.getElementById('saTotalAiCount').textContent = aiList.length;
-
-  document.getElementById('cntAll').textContent = aiList.length;
-  document.getElementById('cntComp').textContent = cntComp;
-  document.getElementById('cntPart').textContent = cntPart;
-  document.getElementById('cntNo').textContent = cntNo;
-
-  document.getElementById('saSegAiTotal').textContent = aiList.length;
-  document.getElementById('saSegNotEntered').textContent = cntNo;
-  document.getElementById('saSegTarget').textContent = totalTarget.toLocaleString();
-  document.getElementById('saSegAchieved').textContent = totalAchieved.toLocaleString();
-  document.getElementById('saSegPct').textContent = overallPct + '%';
-
-  document.getElementById('saAiCardsGrid').innerHTML = cardsHtml || '<div class="col-span-full text-center py-6 text-slate-400 text-sm">No matching AI Offices found</div>';
+    spans[i] = j - i;
+    i = j;
+  }
+  return spans;
 }
 
 /* ========================================================================= */
-/* DATA FILTERING & STRICT FILTERED EXCEL DOWNLOAD                           */
+/* BUILD TARGET + PROGRESS ROWS IN ADMIN'S EXACT NODE ORDER                */
 /* ========================================================================= */
-function renderData(){
-  var list = responses.filter(r => String(r.subOfficeId) === String(mySub));
-  
-  // Populate AI office filter
-  var adObj = hierarchy.find(h => String(h.id) === String(mySub));
-  var fDivSel = document.getElementById('fDiv');
-  var curDiv = fDivSel.value;
-  if(adObj){
-    fDivSel.innerHTML = '<option value="">All AI Offices</option>' + adObj.divisions.map(d => '<option>'+d.name+'</option>').join('');
-    fDivSel.value = curDiv;
+function getAdminNodeOrderMap(){
+  var map = new Map();
+  var idx = 0;
+  var l1Nodes = (nodes||[]).filter(n => n.level === 1).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  l1Nodes.forEach(n1 => {
+    var l2Nodes = (nodes||[]).filter(n => n.level === 2 && n.parent_id === n1.id).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+    l2Nodes.forEach(n2 => {
+      var k2 = [n1.main_type, n2.title, '', ''].map(norm).join('|');
+      if(!map.has(k2)) map.set(k2, idx++);
+
+      var l3Nodes = (nodes||[]).filter(n => n.level === 3 && n.parent_id === n2.id).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+      l3Nodes.forEach(n3 => {
+        var k3 = [n1.main_type, n2.title, n3.title, ''].map(norm).join('|');
+        if(!map.has(k3)) map.set(k3, idx++);
+
+        var l4Nodes = (nodes||[]).filter(n => n.level === 4 && n.parent_id === n3.id).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+        l4Nodes.forEach(n4 => {
+          var k4 = [n1.main_type, n2.title, n3.title, n4.title].map(norm).join('|');
+          if(!map.has(k4)) map.set(k4, idx++);
+        });
+      });
+    });
+  });
+  return map;
+}
+
+function getRowAdminRank(r, orderMap){
+  var fullKey = [r.main_type, r.level2, r.level3||'', r.item_name||''].map(norm).join('|');
+  if(orderMap.has(fullKey)) return orderMap.get(fullKey);
+  var subKey = [r.main_type, r.level2, r.level3||'', ''].map(norm).join('|');
+  if(orderMap.has(subKey)) return orderMap.get(subKey) + 0.1;
+  var progKey = [r.main_type, r.level2, '', ''].map(norm).join('|');
+  if(orderMap.has(progKey)) return orderMap.get(progKey) + 0.2;
+  return 999999;
+}
+
+function buildAdTargetRows(){
+  var aiOffices = getMyAiOffices();
+  var myResps = getMyResponses();
+  var myTgts = (targetRecords||[]).filter(t => isUnderMyAd(t.division, t.office));
+  var orderMap = getAdminNodeOrderMap();
+
+  var rows = [];
+  var seen = new Set();
+
+  myTgts.forEach((t, idx) => {
+    var matchedAi = aiOffices.find(a => norm(a) === norm(t.division)) || t.division || 'AI Office';
+    var key = [matchedAi, t.main_type, t.level1, t.level2, t.level3||'', t.item_name||''].map(norm).join('|');
+    seen.add(key);
+
+    var cov = myResps.filter(r => {
+      if(norm(r.division) !== norm(matchedAi)) return false;
+      if(norm(r.main_type) !== norm(t.main_type)) return false;
+      if(t.level1 && norm(r.level1) !== norm(t.level1)) return false;
+      if(t.level2 && norm(r.level2) !== norm(t.level2)) return false;
+      if(t.level3 && norm(r.level3) !== norm(t.level3)) return false;
+      if(t.item_name && norm(getItemName(r)) !== norm(t.item_name)) return false;
+      return true;
+    }).reduce((s, r) => s + getProgressedQty(r), 0);
+
+    rows.push({
+      target_id: t.id,
+      ai_office: matchedAi,
+      main_type: t.main_type || 'extension',
+      level1: t.level1 || '',
+      level2: t.level2 || '',
+      level3: t.level3 || '',
+      item_name: t.item_name || '',
+      target: Number(t.target_value || 0),
+      covered: cov,
+      orderIndex: idx
+    });
+  });
+
+  var l1Nodes = (nodes||[]).filter(n => n.level === 1 && n.is_published).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  aiOffices.forEach(aiName => {
+    l1Nodes.forEach(n1 => {
+      var l2Nodes = (nodes||[]).filter(n => n.level === 2 && n.parent_id === n1.id && n.is_published).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+      l2Nodes.forEach(n2 => {
+        var l3Nodes = (nodes||[]).filter(n => n.level === 3 && n.parent_id === n2.id && n.is_published).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+        if(!l3Nodes.length){
+          var k0 = [aiName, n1.main_type, n1.title, n2.title, '', ''].map(norm).join('|');
+          if(!seen.has(k0)){
+            seen.add(k0);
+            var cov0 = myResps.filter(r => norm(r.division)===norm(aiName) && norm(r.main_type)===norm(n1.main_type) && norm(r.level1)===norm(n1.title) && norm(r.level2)===norm(n2.title)).reduce((s,r)=>s+getProgressedQty(r),0);
+            rows.push({ target_id: null, ai_office: aiName, main_type: n1.main_type, level1: n1.title, level2: n2.title, level3: '', item_name: '', target: 0, covered: cov0, orderIndex: rows.length + 1000 });
+          }
+        } else {
+          l3Nodes.forEach(n3 => {
+            var l4Nodes = (nodes||[]).filter(n => n.level === 4 && n.parent_id === n3.id && n.is_published).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+            if(n1.main_type === 'development' && l4Nodes.length){
+              l4Nodes.forEach(n4 => {
+                var k4 = [aiName, n1.main_type, n1.title, n2.title, n3.title, n4.title].map(norm).join('|');
+                if(!seen.has(k4)){
+                  seen.add(k4);
+                  var cov4 = myResps.filter(r => norm(r.division)===norm(aiName) && norm(r.main_type)===norm(n1.main_type) && norm(r.level1)===norm(n1.title) && norm(r.level2)===norm(n2.title) && norm(r.level3)===norm(n3.title) && norm(getItemName(r))===norm(n4.title)).reduce((s,r)=>s+getProgressedQty(r),0);
+                  rows.push({ target_id: null, ai_office: aiName, main_type: n1.main_type, level1: n1.title, level2: n2.title, level3: n3.title, item_name: n4.title, target: 0, covered: cov4, orderIndex: rows.length + 1000 });
+                }
+              });
+            } else {
+              var k3 = [aiName, n1.main_type, n1.title, n2.title, n3.title, ''].map(norm).join('|');
+              if(!seen.has(k3)){
+                seen.add(k3);
+                var cov3 = myResps.filter(r => norm(r.division)===norm(aiName) && norm(r.main_type)===norm(n1.main_type) && norm(r.level1)===norm(n1.title) && norm(r.level2)===norm(n2.title) && norm(r.level3)===norm(n3.title)).reduce((s,r)=>s+getProgressedQty(r),0);
+                rows.push({ target_id: null, ai_office: aiName, main_type: n1.main_type, level1: n1.title, level2: n2.title, level3: n3.title, item_name: '', target: 0, covered: cov3, orderIndex: rows.length + 1000 });
+              }
+            }
+          });
+        }
+      });
+    });
+  });
+
+  // Sort strictly by Admin's node hierarchy order so identical Program/Sub Program group together
+  rows.sort((a,b) => {
+    var ra = getRowAdminRank(a, orderMap);
+    var rb = getRowAdminRank(b, orderMap);
+    if(ra !== rb) return ra - rb;
+    var aiA = aiOffices.indexOf(a.ai_office);
+    var aiB = aiOffices.indexOf(b.ai_office);
+    if(aiA !== -1 && aiB !== -1 && aiA !== aiB) return aiA - aiB;
+    return a.orderIndex - b.orderIndex;
+  });
+
+  return rows;
+}
+
+function populateSelectPreserve(selId, optionsArr, defaultLabel){
+  var sel = document.getElementById(selId);
+  if(!sel) return;
+  var prev = sel.value;
+  sel.innerHTML = '<option value="">' + defaultLabel + '</option>' + optionsArr.map(v => '<option value="' + v + '">' + v + '</option>').join('');
+  if(optionsArr.includes(prev)) sel.value = prev;
+  else sel.value = '';
+}
+
+function toggleMoreExtBoxes(){ showAllExtBoxes = !showAllExtBoxes; renderDashboardAll(); }
+function toggleMoreDevBoxes(){ showAllDevBoxes = !showAllDevBoxes; renderDashboardAll(); }
+
+function onExtBoxProgChange(){
+  document.getElementById('extBoxFilterSub').value = '';
+  renderDashboardAll();
+}
+
+function onDevBoxProgChange(){
+  document.getElementById('devBoxFilterSub').value = '';
+  renderDashboardAll();
+}
+
+function onExtTblProgChange(){
+  document.getElementById('extTblFilterSub').value = '';
+  renderTargetTables();
+}
+
+function onDevTblProgChange(){
+  document.getElementById('devTblFilterSub').value = '';
+  renderTargetTables();
+}
+
+function renderColorBoxes(rows, gridId, btnId, showAll, limit){
+  var grid = document.getElementById(gridId);
+  var btn = document.getElementById(btnId);
+  if(!rows.length){
+    grid.innerHTML = '<div class="col-span-full text-center py-5 text-slate-400 text-xs">தரவுகள் இல்லை</div>';
+    if(btn) btn.classList.add('hidden');
+    return;
   }
 
-  var fMain = document.getElementById('fMain').value;
-  var fDiv = fDivSel.value;
-  var fL1 = document.getElementById('fL1').value;
-  var search = (document.getElementById('fSearch').value || '').toLowerCase();
+  if(btn){
+    if(rows.length > limit){
+      btn.classList.remove('hidden');
+      btn.textContent = showAll ? 'Show Less ↑' : ('More (' + (rows.length - limit) + '+) ↓');
+    } else {
+      btn.classList.add('hidden');
+    }
+  }
 
-  var l1s = [...new Set(list.map(r => r.level1).filter(Boolean))];
-  var fL1Sel = document.getElementById('fL1');
-  fL1Sel.innerHTML = '<option value="">Season / Year (All)</option>' + l1s.map(x => '<option>'+x+'</option>').join('');
-  fL1Sel.value = fL1;
+  var visible = showAll ? rows : rows.slice(0, limit);
+  grid.innerHTML = visible.map((r, idx) => {
+    var th = BOX_COLORS[idx % BOX_COLORS.length];
+    var p = r.target > 0 ? Math.min(100, Math.round((r.covered / r.target) * 100)) : (r.covered > 0 ? 100 : 0);
+    var title = [r.level2, r.level3, r.item_name].filter(Boolean).join(' — ') || 'Program';
+    var badge = r.covered >= r.target && r.target > 0 ? 'COMPLETED ✓' : (r.covered > 0 ? 'IN PROGRESS' : 'PENDING');
 
-  if(fMain) list = list.filter(r => r.main_type === fMain);
-  if(fDiv) list = list.filter(r => r.division === fDiv);
-  if(fL1) list = list.filter(r => r.level1 === fL1);
-  if(search) list = list.filter(r => (JSON.stringify(r.answers) + (r.node_path||'') + (r.division||'')).toLowerCase().includes(search));
+    return '<div class="rounded-2xl border-2 ' + th.border + ' ' + th.bg + ' p-4 shadow-sm flex flex-col justify-between">' +
+      '<div>' +
+        '<div class="flex justify-between items-start gap-2">' +
+          '<div>' +
+            '<span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-white/80 text-slate-700 border border-black/10">' + r.ai_office + '</span>' +
+            '<div class="font-bold text-sm ' + th.title + ' mt-1.5">' + title + '</div>' +
+            '<div class="text-[11px] text-slate-500">' + (r.level1 || '') + '</div>' +
+          '</div>' +
+          '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold ' + th.badge + '">' + badge + '</span>' +
+        '</div>' +
+        '<div class="mt-3 pt-2 border-t border-black/10 grid grid-cols-2 gap-2 text-xs">' +
+          '<div><span class="text-slate-500">Target:</span> <b class="text-slate-900">' + r.target + '</b></div>' +
+          '<div class="text-right"><span class="text-slate-500">Progress:</span> <b class="text-emerald-700">' + r.covered + '</b></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="mt-3">' +
+        '<div class="flex justify-between text-[10px] font-bold text-slate-600 mb-1"><span>' + r.covered + ' / ' + r.target + '</span><span>' + p + '%</span></div>' +
+        '<div class="w-full h-2.5 rounded-full bg-white/80 overflow-hidden border border-black/5"><div class="h-full ' + th.bar + '" style="width:' + p + '%"></div></div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
 
-  // Save filtered subset globally for Excel Download
-  window.currentFilteredSubAdminData = list;
+function renderDashboardAll(){
+  var allRows = buildAdTargetRows();
+  var aiOffices = getMyAiOffices();
 
-  document.getElementById('dataScopeNote').textContent = 'Sub Admin ('+mySubName+') • Filtered Records: ' + list.length;
+  var extAll = allRows.filter(r => r.main_type === 'extension');
+  var devAll = allRows.filter(r => r.main_type === 'development');
 
-  var h = '';
-  list.forEach(r => {
-    var qs = questions.filter(q => String(q.node_id) === String(r.node_id));
-    var ansHtml = qs.length ? qs.map(q => r.answers[q.id] ? '<div><b>'+q.question_text+':</b> '+r.answers[q.id]+'</div>' : '').join('') : JSON.stringify(r.answers);
-    h += '<tr>'+
-         '<td class="text-xs"><b>'+r.node_path+'</b><br><span class="text-slate-400">'+r.main_type+'</span></td>'+
-         '<td class="text-xs font-bold">'+r.division+'</td>'+
-         '<td class="text-xs">'+ansHtml+'</td>'+
-         '<td class="text-xs font-bold text-indigo-700">'+(r.progress_qty || 0)+' Units</td>'+
-         '<td class="text-xs">'+(r.submittedName||'')+'<br>'+new Date(r.created_at).toLocaleDateString()+'</td>'+
-         '<td><button onclick="editData(''+r.id+'')" class="btn btn-ghost px-2 py-1 text-xs">Edit</button> <button onclick="delData(''+r.id+'')" class="text-red-500 text-xs px-2">Delete</button></td>'+
-         '</tr>';
+  // Extension Box Filters (AI Office, Program, Sub Program / Item)
+  populateSelectPreserve('extBoxFilterAi', aiOffices, 'All AI Offices');
+  populateSelectPreserve('extBoxFilterProg', [...new Set(extAll.map(r=>r.level2).filter(Boolean))], 'All Programs');
+  var eAi = document.getElementById('extBoxFilterAi').value;
+  var ePr = document.getElementById('extBoxFilterProg').value;
+  var extSubSource = extAll.filter(r => (!ePr || norm(r.level2)===norm(ePr)));
+  var extSubItems = [...new Set(extSubSource.map(r => [r.level3, r.item_name].filter(Boolean).join(' — ')).filter(Boolean))];
+  populateSelectPreserve('extBoxFilterSub', extSubItems, 'All Sub Programs / Items');
+  var eSub = document.getElementById('extBoxFilterSub').value;
+
+  var extBoxes = extAll.filter(r => {
+    var subLbl = [r.level3, r.item_name].filter(Boolean).join(' — ');
+    return (!eAi || norm(r.ai_office)===norm(eAi)) &&
+           (!ePr || norm(r.level2)===norm(ePr)) &&
+           (!eSub || norm(subLbl)===norm(eSub));
   });
-  document.getElementById('dataTbody').innerHTML = h || '<tr><td colspan="6" class="text-center py-6 text-slate-400">දත්ත නැත</td></tr>';
+
+  var eTgt = extBoxes.reduce((s,r)=>s+r.target,0);
+  var eCov = extBoxes.reduce((s,r)=>s+r.covered,0);
+  var ePct = eTgt > 0 ? Math.min(100, Math.round((eCov/eTgt)*100)) : (eCov > 0 ? 100 : 0);
+  document.getElementById('extBoxCount').textContent = extBoxes.length;
+  document.getElementById('extSumTgt').textContent = eTgt.toLocaleString();
+  document.getElementById('extSumCov').textContent = eCov.toLocaleString();
+  document.getElementById('extSumPct').textContent = ePct + '%';
+  renderColorBoxes(extBoxes, 'extBoxGrid', 'btnMoreExtBoxes', showAllExtBoxes, 6);
+
+  // Development Box Filters (AI Office, Program, Sub Program / Item)
+  populateSelectPreserve('devBoxFilterAi', aiOffices, 'All AI Offices');
+  populateSelectPreserve('devBoxFilterProg', [...new Set(devAll.map(r=>r.level2).filter(Boolean))], 'All Programs');
+  var dAi = document.getElementById('devBoxFilterAi').value;
+  var dPr = document.getElementById('devBoxFilterProg').value;
+  var devSubSource = devAll.filter(r => (!dPr || norm(r.level2)===norm(dPr)));
+  var devSubItems = [...new Set(devSubSource.map(r => [r.level3, r.item_name].filter(Boolean).join(' — ')).filter(Boolean))];
+  populateSelectPreserve('devBoxFilterSub', devSubItems, 'All Sub Programs / Items');
+  var dSub = document.getElementById('devBoxFilterSub').value;
+
+  var devBoxes = devAll.filter(r => {
+    var subLbl = [r.level3, r.item_name].filter(Boolean).join(' — ');
+    return (!dAi || norm(r.ai_office)===norm(dAi)) &&
+           (!dPr || norm(r.level2)===norm(dPr)) &&
+           (!dSub || norm(subLbl)===norm(dSub));
+  });
+
+  var dTgt = devBoxes.reduce((s,r)=>s+r.target,0);
+  var dCov = devBoxes.reduce((s,r)=>s+r.covered,0);
+  var dPct = dTgt > 0 ? Math.min(100, Math.round((dCov/dTgt)*100)) : (dCov > 0 ? 100 : 0);
+  document.getElementById('devBoxCount').textContent = devBoxes.length;
+  document.getElementById('devSumTgt').textContent = dTgt.toLocaleString();
+  document.getElementById('devSumCov').textContent = dCov.toLocaleString();
+  document.getElementById('devSumPct').textContent = dPct + '%';
+  renderColorBoxes(devBoxes, 'devBoxGrid', 'btnMoreDevBoxes', showAllDevBoxes, 6);
+
+  // Table filter dropdowns (AI Office, Program, Sub Program)
+  populateSelectPreserve('extTblFilterAi', aiOffices, 'All AI Offices');
+  populateSelectPreserve('extTblFilterProg', [...new Set(extAll.map(r=>r.level2).filter(Boolean))], 'All Programs');
+  var etPr = document.getElementById('extTblFilterProg').value;
+  populateSelectPreserve('extTblFilterSub', [...new Set(extAll.filter(r => !etPr || norm(r.level2)===norm(etPr)).map(r=>r.level3).filter(Boolean))], 'All Sub Programs');
+
+  populateSelectPreserve('devTblFilterAi', aiOffices, 'All AI Offices');
+  populateSelectPreserve('devTblFilterProg', [...new Set(devAll.map(r=>r.level2).filter(Boolean))], 'All Programs');
+  var dtPr = document.getElementById('devTblFilterProg').value;
+  var devTblSubItems = [...new Set(devAll.filter(r => !dtPr || norm(r.level2)===norm(dtPr)).map(r => [r.level3, r.item_name].filter(Boolean).join(' — ')).filter(Boolean))];
+  populateSelectPreserve('devTblFilterSub', devTblSubItems, 'All Sub Programs / Items');
+
+  renderTargetTables();
+}
+
+function renderTargetTables(){
+  var allRows = buildAdTargetRows();
+
+  // Populate sub-program dropdowns dynamically when program changes
+  var extAll = allRows.filter(r => r.main_type === 'extension');
+  var etPr = document.getElementById('extTblFilterProg').value;
+  populateSelectPreserve('extTblFilterSub', [...new Set(extAll.filter(r => !etPr || norm(r.level2)===norm(etPr)).map(r=>r.level3).filter(Boolean))], 'All Sub Programs');
+
+  var devAll = allRows.filter(r => r.main_type === 'development');
+  var dtPr = document.getElementById('devTblFilterProg').value;
+  var devTblSubItems = [...new Set(devAll.filter(r => !dtPr || norm(r.level2)===norm(dtPr)).map(r => [r.level3, r.item_name].filter(Boolean).join(' — ')).filter(Boolean))];
+  populateSelectPreserve('devTblFilterSub', devTblSubItems, 'All Sub Programs / Items');
+
+  // 1. Extension Table (3 Filters + Merged Main Program & Sub Program)
+  var eAi = document.getElementById('extTblFilterAi').value;
+  var ePr = document.getElementById('extTblFilterProg').value;
+  var eSub = document.getElementById('extTblFilterSub').value;
+  var extRows = extAll.filter(r =>
+    (!eAi || norm(r.ai_office)===norm(eAi)) &&
+    (!ePr || norm(r.level2)===norm(ePr)) &&
+    (!eSub || norm(r.level3)===norm(eSub))
+  );
+  window.currentExtTargetRows = extRows;
+
+  var eMainSpans = computeRowSpans(extRows, r => r.level2 || '-');
+  var eSubSpans  = computeRowSpans(extRows, r => (r.level2 || '-') + '||' + (r.level3 || '-'));
+
+  document.getElementById('extTargetTbody').innerHTML = extRows.length ? extRows.map((it, i) => {
+    var rem = Math.max(0, it.target - it.covered);
+    var pct = it.target > 0 ? Math.min(100, Math.round((it.covered/it.target)*100)) : (it.covered > 0 ? 100 : 0);
+    var mainTd = eMainSpans[i] > 0 ? '<td rowspan="' + eMainSpans[i] + '" class="matrix-main-cell text-xs">' + (it.level2 || '-') + '</td>' : '';
+    var subTd  = eSubSpans[i] > 0  ? '<td rowspan="' + eSubSpans[i] + '" class="matrix-sub-cell text-xs">' + (it.level3 || '-') + '</td>' : '';
+
+    return '<tr>' +
+      mainTd +
+      subTd +
+      '<td class="font-bold text-xs">' + it.ai_office + '</td>' +
+      '<td class="text-center font-bold">' + it.target + '</td>' +
+      '<td class="text-center font-bold text-emerald-700">' + it.covered + '</td>' +
+      '<td class="text-center font-semibold text-amber-700">' + rem + '</td>' +
+      '<td class="text-center font-bold text-indigo-700">' + pct + '%</td>' +
+    '</tr>';
+  }).join('') : '<tr><td colspan="7" class="text-center py-5 text-slate-400 text-xs">Extension Target தரவுகள் இல்லை</td></tr>';
+
+  // 2. Development Table (3 Filters + Merged Main Program, Sub Program & Item)
+  var dAi = document.getElementById('devTblFilterAi').value;
+  var dPr = document.getElementById('devTblFilterProg').value;
+  var dSub = document.getElementById('devTblFilterSub').value;
+  var devRows = devAll.filter(r => {
+    var subLbl = [r.level3, r.item_name].filter(Boolean).join(' — ');
+    return (!dAi || norm(r.ai_office)===norm(dAi)) &&
+           (!dPr || norm(r.level2)===norm(dPr)) &&
+           (!dSub || norm(subLbl)===norm(dSub));
+  });
+  window.currentDevTargetRows = devRows;
+
+  var dMainSpans = computeRowSpans(devRows, r => r.level2 || '-');
+  var dSubSpans  = computeRowSpans(devRows, r => (r.level2 || '-') + '||' + (r.level3 || '-'));
+  var dItemSpans = computeRowSpans(devRows, r => (r.level2 || '-') + '||' + (r.level3 || '-') + '||' + (r.item_name || '-'));
+
+  document.getElementById('devTargetTbody').innerHTML = devRows.length ? devRows.map((it, i) => {
+    var rem = Math.max(0, it.target - it.covered);
+    var pct = it.target > 0 ? Math.min(100, Math.round((it.covered/it.target)*100)) : (it.covered > 0 ? 100 : 0);
+    var mainTd = dMainSpans[i] > 0 ? '<td rowspan="' + dMainSpans[i] + '" class="matrix-main-cell text-xs">' + (it.level2 || '-') + '</td>' : '';
+    var subTd  = dSubSpans[i] > 0  ? '<td rowspan="' + dSubSpans[i] + '" class="matrix-sub-cell text-xs">' + (it.level3 || '-') + '</td>' : '';
+    var itemTd = dItemSpans[i] > 0 ? '<td rowspan="' + dItemSpans[i] + '" class="matrix-item-cell text-xs">' + (it.item_name || '-') + '</td>' : '';
+
+    return '<tr>' +
+      mainTd +
+      subTd +
+      itemTd +
+      '<td class="font-bold text-xs">' + it.ai_office + '</td>' +
+      '<td class="text-center font-bold">' + it.target + '</td>' +
+      '<td class="text-center font-bold text-emerald-700">' + it.covered + '</td>' +
+      '<td class="text-center font-semibold text-amber-700">' + rem + '</td>' +
+      '<td class="text-center font-bold text-indigo-700">' + pct + '%</td>' +
+    '</tr>';
+  }).join('') : '<tr><td colspan="8" class="text-center py-5 text-slate-400 text-xs">Development Target தரவுகள் இல்லை</td></tr>';
+}
+
+function downloadTargetTableExcel(type){
+  var rows = type === 'development' ? (window.currentDevTargetRows || []) : (window.currentExtTargetRows || []);
+  if(!rows.length) return showToast('Download செய்ய Filter செய்யப்பட்ட Target தரவுகள் இல்லை', false);
+
+  var exportData = rows.map(it => {
+    var rem = Math.max(0, it.target - it.covered);
+    var pct = it.target > 0 ? Math.min(100, Math.round((it.covered/it.target)*100)) : (it.covered > 0 ? 100 : 0);
+    if(type === 'development'){
+      return {
+        'AD Office': mySubName,
+        'Main Program': it.level2 || '-',
+        'Sub Program': it.level3 || '-',
+        'Item': it.item_name || '-',
+        'AI Office': it.ai_office,
+        'Target': it.target,
+        'Progress': it.covered,
+        'Remaining': rem,
+        'Progress %': pct + '%'
+      };
+    }
+    return {
+      'AD Office': mySubName,
+      'Main Program': it.level2 || '-',
+      'Sub Program': it.level3 || '-',
+      'AI Office': it.ai_office,
+      'Target': it.target,
+      'Progress': it.covered,
+      'Remaining': rem,
+      'Progress %': pct + '%'
+    };
+  });
+
+  var label = type === 'development' ? 'Development' : 'Extension';
+  var ws = XLSX.utils.json_to_sheet(exportData);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, label + '_Targets');
+  XLSX.writeFile(wb, mySubName.replace(/\s+/g,'_') + '_' + label + '_Filtered_Targets.xlsx');
+}
+
+/* ========================================================================= */
+/* TARGET SET SECTION: 4 FILTERS + ROWSPAN MERGE                           */
+/* ========================================================================= */
+function renderTargetSetFilters(){
+  var t = document.getElementById('tsType').value;
+  var allRows = buildAdTargetRows().filter(r => r.main_type === t);
+  var progs = [...new Set(allRows.map(r => r.level2).filter(Boolean))];
+  populateSelectPreserve('tsProg', progs, '-- All Programs --');
+
+  var curProg = document.getElementById('tsProg').value;
+  var subSource = curProg ? allRows.filter(r => norm(r.level2) === norm(curProg)) : allRows;
+  var subs = [...new Set(subSource.map(r => r.level3).filter(Boolean))];
+  populateSelectPreserve('tsSubProg', subs, '-- All Sub Programs --');
+
+  populateSelectPreserve('tsAiOffice', getMyAiOffices(), '-- All AI Offices --');
+}
+
+function onTargetSetTypeChange(){
+  document.getElementById('tsProg').value = '';
+  document.getElementById('tsSubProg').value = '';
+  renderTargetSetFilters();
+  renderTargetSetList();
+}
+
+function onTargetSetProgChange(){
+  document.getElementById('tsSubProg').value = '';
+  renderTargetSetFilters();
+  renderTargetSetList();
+}
+
+function renderTargetSetList(){
+  var t = document.getElementById('tsType').value;
+  var prog = document.getElementById('tsProg').value;
+  var subProg = document.getElementById('tsSubProg').value;
+  var aiOff = document.getElementById('tsAiOffice').value;
+
+  var rows = buildAdTargetRows().filter(r =>
+    r.main_type === t &&
+    (!prog || norm(r.level2) === norm(prog)) &&
+    (!subProg || norm(r.level3) === norm(subProg)) &&
+    (!aiOff || norm(r.ai_office) === norm(aiOff))
+  );
+
+  var thead = document.getElementById('targetSetThead');
+  var tbody = document.getElementById('targetSetTbody');
+
+  if(t === 'development'){
+    thead.innerHTML = '<tr>' +
+      '<th>Main Program</th>' +
+      '<th>Sub Program</th>' +
+      '<th>Items</th>' +
+      '<th>AI Range</th>' +
+      '<th>Progress</th>' +
+      '<th>Target</th>' +
+      '<th>Action</th>' +
+    '</tr>';
+  } else {
+    thead.innerHTML = '<tr>' +
+      '<th>Program</th>' +
+      '<th>Sub Program</th>' +
+      '<th>AI Range</th>' +
+      '<th>Progress</th>' +
+      '<th>Target</th>' +
+      '<th>Action</th>' +
+    '</tr>';
+  }
+
+  var colCount = t === 'development' ? 7 : 6;
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="' + colCount + '" class="text-center py-6 text-slate-400 text-xs">Programs இல்லை</td></tr>';
+    window.currentTargetSetRows = [];
+    return;
+  }
+
+  var progSpans = computeRowSpans(rows, r => r.level2 || '-');
+  var subSpans  = computeRowSpans(rows, r => (r.level2 || '-') + '||' + (r.level3 || '-'));
+  var itemSpans = computeRowSpans(rows, r => (r.level2 || '-') + '||' + (r.level3 || '-') + '||' + (r.item_name || '-'));
+
+  tbody.innerHTML = rows.map((r, idx) => {
+    var inpId = 'tsVal_' + idx;
+    var progCell = progSpans[idx] > 0 ? '<td rowspan="' + progSpans[idx] + '" class="matrix-main-cell text-xs">' + (r.level2 || '-') + '</td>' : '';
+    var subCell  = subSpans[idx] > 0  ? '<td rowspan="' + subSpans[idx] + '" class="matrix-sub-cell text-xs">' + (r.level3 || '-') + '</td>' : '';
+    var itemCell = '';
+    if(t === 'development'){
+      itemCell = itemSpans[idx] > 0 ? '<td rowspan="' + itemSpans[idx] + '" class="matrix-item-cell text-xs">' + (r.item_name || '-') + '</td>' : '';
+    }
+    var aiCell   = '<td class="font-bold text-xs">' + r.ai_office + '</td>';
+    var covCell  = '<td class="text-center font-bold text-emerald-700">' + r.covered + '</td>';
+    var tgtCell  = '<td class="text-center"><input type="number" step="any" min="0" id="' + inpId + '" value="' + r.target + '" class="!w-28 text-center font-bold bg-white"></td>';
+    var actCell  = '<td class="text-center"><button onclick="saveSingleAiTarget(' + idx + ')" class="btn btn-primary px-3 py-1.5 text-xs">Save Target</button></td>';
+
+    return '<tr>' + progCell + subCell + itemCell + aiCell + covCell + tgtCell + actCell + '</tr>';
+  }).join('');
+
+  window.currentTargetSetRows = rows;
+}
+
+async function saveSingleAiTarget(idx){
+  var rows = window.currentTargetSetRows || [];
+  var r = rows[idx];
+  if(!r) return;
+
+  var valEl = document.getElementById('tsVal_' + idx);
+  var newTarget = parseFloat(valEl.value);
+  if(isNaN(newTarget) || newTarget < 0) return showToast('சரியான Target மதிப்பை உள்ளிடவும்', false);
+
+  var payload = {
+    main_type: r.main_type,
+    level1: r.level1 || '',
+    level2: r.level2 || '',
+    level3: r.level3 || '',
+    item_name: r.item_name || '',
+    division: r.ai_office,
+    office: r.ai_office + ' (Unit)',
+    target_value: newTarget
+  };
+
+  if(sb){
+    if(r.target_id){
+      var up = await sb.from('targets').update({ target_value: newTarget }).eq('id', r.target_id);
+      if(up.error) return showToast('Update Error: ' + up.error.message, false);
+    } else {
+      payload.id = 't_' + Date.now() + '_' + idx;
+      var ins = await sb.from('targets').insert(payload);
+      if(ins.error) return showToast('Insert Error: ' + ins.error.message, false);
+      r.target_id = payload.id;
+    }
+  }
+
+  var existingLocal = targetRecords.find(x =>
+    (r.target_id && String(x.id) === String(r.target_id)) ||
+    (norm(x.division)===norm(r.ai_office) && norm(x.main_type)===norm(r.main_type) && norm(x.level2)===norm(r.level2) && norm(x.level3||'')===norm(r.level3||'') && norm(x.item_name||'')===norm(r.item_name||''))
+  );
+  if(existingLocal){
+    existingLocal.target_value = newTarget;
+  } else {
+    targetRecords.push(payload);
+  }
+
+  r.target = newTarget;
+  renderDashboardAll();
+  showToast(r.ai_office + ' Target (' + newTarget + ') Save ஆனது ✓', true);
+}
+
+/* ========================================================================= */
+/* DATA SECTION: SEPARATE EXTENSION & DEVELOPMENT TABLES + SEPARATE COLUMNS  */
+/* ========================================================================= */
+function populateDataFilters(){
+  var mine = getMyResponses();
+  populateSelectPreserve('fAiRange', getMyAiOffices(), 'All AI Ranges');
+  populateSelectPreserve('fExtProg', [...new Set(mine.filter(r=>norm(r.main_type)==='extension').map(r=>r.level2).filter(Boolean))], 'All Extension Programs');
+  populateSelectPreserve('fDevProg', [...new Set(mine.filter(r=>norm(r.main_type)==='development').map(r=>r.level2).filter(Boolean))], 'All Development Programs');
+}
+
+function buildQuestionColumns(list){
+  var qMap = new Map();
+  list.forEach(r => {
+    var qs = (questions||[]).filter(q => String(q.node_id) === String(r.node_id)).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
+    qs.forEach(q => {
+      if(!qMap.has(q.question_text)) qMap.set(q.question_text, []);
+      if(!qMap.get(q.question_text).includes(q.id)) qMap.get(q.question_text).push(q.id);
+    });
+  });
+  return qMap;
+}
+
+function renderResponseCategoryTable(list, theadId, tbodyId, countId){
+  if(countId) document.getElementById(countId).textContent = list.length;
+  var qMap = buildQuestionColumns(list);
+  var headers = Array.from(qMap.keys());
+
+  document.getElementById(theadId).innerHTML = '<tr>' +
+    '<th>Date</th>' +
+    '<th>AI Range</th>' +
+    '<th>Program</th>' +
+    '<th>Sub Program / Item</th>' +
+    '<th>Progress Qty</th>' +
+    headers.map(h => '<th>' + h + '</th>').join('') +
+    '<th>Action</th>' +
+  '</tr>';
+
+  if(!list.length){
+    document.getElementById(tbodyId).innerHTML = '<tr><td colspan="' + (6 + headers.length) + '" class="text-center py-5 text-slate-400 text-xs">தரவுகள் இல்லை</td></tr>';
+    return { headers, qMap };
+  }
+
+  document.getElementById(tbodyId).innerHTML = list.map(r => {
+    var qty = getProgressedQty(r);
+    var itemN = getItemName(r);
+    var subItem = [r.level3, itemN].filter(Boolean).join(' — ') || '-';
+
+    var ansCells = headers.map(hText => {
+      var ids = qMap.get(hText) || [];
+      var val = '';
+      for(var i=0; i<ids.length; i++){
+        if(r.answers && r.answers[ids[i]] !== undefined && r.answers[ids[i]] !== ''){
+          var raw = r.answers[ids[i]];
+          val = Array.isArray(raw) ? raw.join(', ') : raw;
+          break;
+        }
+      }
+      return '<td class="text-xs">' + (val !== '' ? val : '-') + '</td>';
+    }).join('');
+
+    return '<tr>' +
+      '<td class="text-xs whitespace-nowrap">' + (r.created_at ? new Date(r.created_at).toLocaleDateString() : '') + '</td>' +
+      '<td class="text-xs font-bold">' + (r.division || '-') + '</td>' +
+      '<td class="text-xs font-semibold">' + (r.level2 || '-') + '</td>' +
+      '<td class="text-xs">' + subItem + '</td>' +
+      '<td class="text-xs font-bold text-emerald-700 text-center">' + qty + '</td>' +
+      ansCells +
+      '<td class="whitespace-nowrap">' +
+        '<button onclick="editResponse(\'' + r.id + '\')" class="btn btn-ghost px-2 py-1 text-xs">Edit</button> ' +
+        '<button onclick="delResponse(\'' + r.id + '\')" class="text-red-500 text-xs px-2">Delete</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+
+  return { headers, qMap };
+}
+
+function renderDataSection(){
+  var fAi = document.getElementById('fAiRange').value;
+  var fExtPr = document.getElementById('fExtProg').value;
+  var fDevPr = document.getElementById('fDevProg').value;
+  var search = norm(document.getElementById('fSearch').value);
+
+  var mine = getMyResponses();
+  if(fAi) mine = mine.filter(r => norm(r.division) === norm(fAi));
+  if(search) mine = mine.filter(r => (JSON.stringify(r.answers||'') + (r.node_path||'') + (r.division||'') + (r.level2||'')).toLowerCase().includes(search));
+
+  var extList = mine.filter(r => norm(r.main_type) === 'extension' && (!fExtPr || norm(r.level2) === norm(fExtPr)));
+  var devList = mine.filter(r => norm(r.main_type) === 'development' && (!fDevPr || norm(r.level2) === norm(fDevPr)));
+
+  window.saExtMeta = renderResponseCategoryTable(extList, 'extRespThead', 'extRespTbody', 'extRespCount');
+  window.saDevMeta = renderResponseCategoryTable(devList, 'devRespThead', 'devRespTbody', 'devRespCount');
+  window.saExtRows = extList;
+  window.saDevRows = devList;
+  document.getElementById('dataScopeNote').textContent = mySubName + ' • Extension: ' + extList.length + ' | Development: ' + devList.length;
+}
+
+function mapRowsWithSeparateCols(list, meta){
+  var headers = (meta && meta.headers) || [];
+  var qMap = (meta && meta.qMap) || new Map();
+  return list.map(r => {
+    var rowObj = {
+      'Date': r.created_at ? new Date(r.created_at).toLocaleString() : '',
+      'AD Office': mySubName,
+      'AI Range': r.division || '',
+      'Season / Year': r.level1 || '',
+      'Program': r.level2 || '',
+      'Sub Program': r.level3 || '',
+      'Item': getItemName(r),
+      'Progress Qty': getProgressedQty(r)
+    };
+    headers.forEach(hText => {
+      var ids = qMap.get(hText) || [];
+      var val = '';
+      for(var i=0; i<ids.length; i++){
+        if(r.answers && r.answers[ids[i]] !== undefined && r.answers[ids[i]] !== ''){
+          var raw = r.answers[ids[i]];
+          val = Array.isArray(raw) ? raw.join(', ') : raw;
+          break;
+        }
+      }
+      rowObj[hText] = val;
+    });
+    return rowObj;
+  });
 }
 
 function downloadFilteredSubAdminExcel(){
-  var list = window.currentFilteredSubAdminData || [];
-  if(!list.length){ alert('Filter කළ දත්ත නැත'); return; }
-  
-  var rows = list.map(r => {
-    var obj = {
-      'Date': new Date(r.created_at).toLocaleString(),
-      'Main Type': r.main_type,
-      'Path': r.node_path,
-      'AD Office': r.subOfficeName,
-      'AI Office': r.division,
-      'Progress Qty': r.progress_qty || 0,
-      'Submitted By': r.submittedName || ''
-    };
-    var qs = questions.filter(q => String(q.node_id) === String(r.node_id));
-    qs.forEach(q => {
-      obj[q.question_text] = r.answers[q.id] || '';
-    });
-    return obj;
-  });
+  var extExport = mapRowsWithSeparateCols(window.saExtRows || [], window.saExtMeta);
+  var devExport = mapRowsWithSeparateCols(window.saDevRows || [], window.saDevMeta);
+  if(!extExport.length && !devExport.length) return showToast('Download செய்ய Filter செய்யப்பட்ட தரவுகள் இல்லை', false);
 
-  var ws = XLSX.utils.json_to_sheet(rows);
   var wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "FilteredReport");
-  XLSX.writeFile(wb, "SubAdmin_Filtered_Data_" + mySubName + ".xlsx");
+  if(extExport.length){
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(extExport), 'Extension_Data');
+  }
+  if(devExport.length){
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(devExport), 'Development_Data');
+  }
+  XLSX.writeFile(wb, mySubName.replace(/\s+/g,'_') + '_Filtered_Data.xlsx');
 }
 
-function editData(id){
-  var r=responses.find(x=>x.id===id); if(!r) return; editingId=id;
+function editResponse(id){
+  var r = responses.find(x => String(x.id) === String(id));
+  if(!r) return;
+  editingId = id;
   document.getElementById('editBox').classList.remove('hidden');
-  var qs=questions.filter(q=>q.node_id===r.node_id);
-  document.getElementById('editFields').innerHTML=qs.map(q=>'<div><label class="text-xs font-semibold">'+q.question_text+'</label><input data-edit-qid="'+q.id+'" value="'+(r.answers[q.id]||'')+'"></div>').join('');
+  document.getElementById('editProgressQty').value = getProgressedQty(r);
+  var qs = (questions||[]).filter(q => String(q.node_id) === String(r.node_id)).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
+  document.getElementById('editFields').innerHTML = qs.map(q =>
+    '<div><label class="text-xs font-semibold">' + q.question_text + '</label><input data-edit-qid="' + q.id + '" value="' + (r.answers && r.answers[q.id] ? r.answers[q.id] : '') + '" class="mt-1 bg-white"></div>'
+  ).join('');
 }
-function saveEdit(){
-  var r=responses.find(x=>x.id===editingId); if(!r) return;
-  var na={}; document.querySelectorAll('[data-edit-qid]').forEach(el=>{ na[el.dataset.editQid]=el.value; });
-  r.answers=na; localStorage.setItem(R_KEY, JSON.stringify(responses));
-  document.getElementById('editBox').classList.add('hidden'); renderData();
+
+async function saveEdit(){
+  var r = responses.find(x => String(x.id) === String(editingId));
+  if(!r) return;
+  var newQty = parseFloat(document.getElementById('editProgressQty').value) || 0;
+  var na = Object.assign({}, r.answers || {});
+  document.querySelectorAll('[data-edit-qid]').forEach(el => { na[el.dataset.editQid] = el.value; });
+  na.__progress_qty = newQty;
+  r.answers = na;
+
+  if(sb){
+    var up = await sb.from('responses').update({ answers: na }).eq('id', r.id);
+    if(up.error) return showToast('Edit Error: ' + up.error.message, false);
+  }
+  closeEdit();
+  renderDataSection();
+  renderDashboardAll();
+  showToast('தரவு திருத்தப்பட்டது ✓', true);
 }
-function closeEdit(){ editingId=null; document.getElementById('editBox').classList.add('hidden'); }
-function delData(id){
-  if(!confirm('Delete record?')) return;
-  responses=responses.filter(x=>x.id!==id); localStorage.setItem(R_KEY, JSON.stringify(responses)); renderData();
+
+function closeEdit(){ editingId = null; document.getElementById('editBox').classList.add('hidden'); }
+
+async function delResponse(id){
+  if(!(await profConfirm('இந்தத் தரவை Delete செய்ய வேண்டுமா?'))) return;
+  responses = responses.filter(x => String(x.id) !== String(id));
+  if(sb) await sb.from('responses').delete().eq('id', id);
+  renderDataSection();
+  renderDashboardAll();
+  showToast('Delete செய்யப்பட்டது ✓', true);
 }
+
 async function logout(){
   try{ if(sb) await sb.auth.signOut(); }catch(e){}
   ['role','user','user_name','user_subOfficeId','user_subOfficeName','user_division','user_office','user_officer_name','fw_session'].forEach(k=>localStorage.removeItem(k));
-  location.href='index.html';
+  window.location.replace('index.html');
 }
 
-renderSubAdminMonitor();
+async function sbSyncAll(){
+  var st = document.getElementById('sbStatus');
+  if(!sb){ if(st) st.textContent='Offline'; return; }
+  try{
+    if(st) st.textContent='Syncing...';
+    var [nRes, qRes, rRes, tRes, pRes] = await Promise.all([
+      sb.from('nodes').select('*').order('sort_order'),
+      sb.from('questions').select('*').order('order_index'),
+      sb.from('responses').select('*').order('created_at', { ascending: false }),
+      sb.from('targets').select('*'),
+      sb.from('profiles').select('*')
+    ]);
+    if(Array.isArray(nRes.data)) nodes = nRes.data;
+    if(Array.isArray(qRes.data)) questions = qRes.data;
+    if(Array.isArray(rRes.data)) responses = rRes.data;
+    if(Array.isArray(tRes.data)) targetRecords = tRes.data;
+    if(Array.isArray(pRes.data)) profiles = pRes.data;
+    if(st) st.textContent='Connected ✓';
+  }catch(e){
+    if(st) st.textContent='Sync Error';
+  }
+  renderDashboardAll();
+  renderTargetSetFilters();
+  renderTargetSetList();
+  populateDataFilters();
+  renderDataSection();
+}
+
+sbSyncAll();
 </script>
 </body></html>
