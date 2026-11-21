@@ -20,6 +20,7 @@
 .matrix-main-cell { background-color: #fff7ed; font-weight: 700; color: #1e293b; vertical-align: middle; }
 .matrix-sub-cell { background-color: #f8fafc; font-weight: 600; color: #334155; vertical-align: middle; }
 .matrix-item-cell { background-color: #ffffff; font-weight: 500; color: #334155; vertical-align: middle; }
+.matrix-action-cell { background-color: #f8fafc; vertical-align: middle; text-align: center; }
 .matrix-all-row td { background-color: #eef2ff !important; font-weight: 800 !important; color: #1e1b4b !important; border-top: 2px solid #6366f1 !important; border-bottom: 2px solid #6366f1 !important; }
 </style>
 </head>
@@ -338,18 +339,6 @@
           </div>
         </div>
 
-        <!-- BULK / ONE-SHOT SAVE BAR FOR SUB PROGRAM OR ITEM -->
-        <div class="flex flex-wrap items-center justify-between gap-3 bg-indigo-50/80 border border-indigo-200 rounded-2xl p-3.5">
-          <div class="text-xs text-indigo-950 font-semibold" id="bulkSaveHint">
-            Extension: Sub Program-க்கு Target அமைத்து Save All செய்யலாம் | Development: Sub Program / Item-க்கு Target அமைத்து Save All செய்யலாம்
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <input type="number" step="any" min="0" id="bulkTargetInput" placeholder="Common Target..." class="!w-36 bg-white text-xs font-bold">
-            <button onclick="applyBulkTargetToVisible()" class="btn btn-ghost px-3 py-2 text-xs font-bold border border-indigo-300 text-indigo-800 bg-white">Apply to All Rows</button>
-            <button onclick="saveAllVisibleTargets()" class="btn btn-success px-4 py-2 text-xs font-bold">💾 Save All Targets</button>
-          </div>
-        </div>
-
         <div class="table-wrap">
           <table class="matrix-table w-full border-collapse">
             <thead id="targetSetThead"></thead>
@@ -642,6 +631,14 @@ function getGroupKey(r){
   return [r.main_type, r.level1||'', r.level2||'', r.level3||'', r.item_name||''].map(norm).join('|');
 }
 
+// Button/Action group key: for development with items, per Item; otherwise per Sub Program
+function getSaveButtonGroupKey(r){
+  if(r.main_type === 'development' && r.item_name){
+    return [r.main_type, r.level1||'', r.level2||'', r.level3||'', r.item_name||''].map(norm).join('|');
+  }
+  return [r.main_type, r.level1||'', r.level2||'', r.level3||''].map(norm).join('|');
+}
+
 function buildAdTargetRows(){
   var aiOffices = getMyAiOffices();
   var myResps = getMyResponses();
@@ -917,14 +914,14 @@ function renderDashboardAll(){
   document.getElementById('devSumPct').textContent = dPct + '%';
   renderColorBoxes(devBoxes, 'devBoxGrid', 'btnMoreDevBoxes', showAllDevBoxes, 6);
 
-  // Extension Table filter dropdowns (Season, AI Office, Program, Sub Program)
+  // Extension Table filter dropdowns
   populateSelectPreserve('extTblFilterSeason', [...new Set(extAiOnly.map(r=>r.level1).filter(Boolean))], 'All Seasons');
   populateSelectPreserve('extTblFilterAi', aiOffices, 'All AI Offices');
   populateSelectPreserve('extTblFilterProg', [...new Set(extAiOnly.map(r=>r.level2).filter(Boolean))], 'All Programs');
   var etPr = document.getElementById('extTblFilterProg').value;
   populateSelectPreserve('extTblFilterSub', [...new Set(extAiOnly.filter(r => !etPr || norm(r.level2)===norm(etPr)).map(r=>r.level3).filter(Boolean))], 'All Sub Programs');
 
-  // Development Table filter dropdowns (Year, AI Office, Program, Sub Program / Item)
+  // Development Table filter dropdowns
   populateSelectPreserve('devTblFilterYear', [...new Set(devAiOnly.map(r=>r.level1).filter(Boolean))], 'All Years');
   populateSelectPreserve('devTblFilterAi', aiOffices, 'All AI Offices');
   populateSelectPreserve('devTblFilterProg', [...new Set(devAiOnly.map(r=>r.level2).filter(Boolean))], 'All Programs');
@@ -1121,7 +1118,7 @@ function downloadTargetTableExcel(type){
 }
 
 /* ========================================================================= */
-/* TARGET SET SECTION: SEASON/YEAR + 5 FILTERS FOR DEV + BULK SAVE ALL      */
+/* TARGET SET SECTION: ONE SAVE TARGET BUTTON PER SUB PROGRAM OR ITEM        */
 /* ========================================================================= */
 function renderTargetSetFilters(){
   var t = document.getElementById('tsType').value;
@@ -1231,12 +1228,23 @@ function renderTargetSetList(){
   if(!rows.length){
     tbody.innerHTML = '<tr><td colspan="' + colCount + '" class="text-center py-6 text-slate-400 text-xs">Programs இல்லை</td></tr>';
     window.currentTargetSetRows = [];
+    window.tsBtnGroupMap = new Map();
     return;
   }
+
+  // Group indices by save-button group (Sub Program for Extension; Item or Sub Program for Development)
+  var btnGroupIndices = new Map();
+  rows.forEach((r, idx) => {
+    var bgk = getSaveButtonGroupKey(r);
+    if(!btnGroupIndices.has(bgk)) btnGroupIndices.set(bgk, []);
+    btnGroupIndices.get(bgk).push(idx);
+  });
+  window.tsBtnGroupMap = btnGroupIndices;
 
   var progSpans = computeRowSpans(rows, r => r.level2 || '-');
   var subSpans  = computeRowSpans(rows, r => (r.level2 || '-') + '||' + (r.level3 || '-'));
   var itemSpans = computeRowSpans(rows, r => (r.level2 || '-') + '||' + (r.level3 || '-') + '||' + (r.item_name || '-'));
+  var actSpans  = computeRowSpans(rows, r => getSaveButtonGroupKey(r));
 
   tbody.innerHTML = rows.map((r, idx) => {
     var inpId = 'tsVal_' + idx;
@@ -1249,6 +1257,14 @@ function renderTargetSetList(){
     var aiCell = '<td class="font-bold text-xs">' + r.ai_office + '</td>';
     var covCell = '<td class="text-center font-bold text-emerald-700">' + r.covered + '</td>';
 
+    var actCell = '';
+    if(actSpans[idx] > 0){
+      var encodedKey = encodeURIComponent(getSaveButtonGroupKey(r));
+      actCell = '<td rowspan="' + actSpans[idx] + '" class="matrix-action-cell">' +
+        '<button onclick="saveGroupTargets(\'' + encodedKey + '\')" class="btn btn-primary px-3.5 py-2 text-xs font-bold">Save Target</button>' +
+      '</td>';
+    }
+
     if(r.is_all_row){
       return '<tr class="matrix-all-row">' +
         progCell +
@@ -1257,35 +1273,16 @@ function renderTargetSetList(){
         aiCell +
         covCell +
         '<td class="text-center font-extrabold text-indigo-950">' + r.target + '</td>' +
-        '<td class="text-center text-[11px] text-indigo-800">Total All AI</td>' +
+        actCell +
       '</tr>';
     }
 
     var tgtCell = '<td class="text-center"><input type="number" step="any" min="0" id="' + inpId + '" value="' + r.target + '" class="!w-28 text-center font-bold bg-white"></td>';
-    var actCell = '<td class="text-center"><button onclick="saveSingleAiTarget(' + idx + ')" class="btn btn-primary px-3 py-1.5 text-xs">Save Target</button></td>';
 
     return '<tr>' + progCell + subCell + itemCell + aiCell + covCell + tgtCell + actCell + '</tr>';
   }).join('');
 
   window.currentTargetSetRows = rows;
-}
-
-function applyBulkTargetToVisible(){
-  var bulkVal = parseFloat(document.getElementById('bulkTargetInput').value);
-  if(isNaN(bulkVal) || bulkVal < 0) return showToast('சரியான Common Target மதிப்பை உள்ளிடவும்', false);
-
-  var rows = window.currentTargetSetRows || [];
-  var appliedCount = 0;
-  rows.forEach((r, idx) => {
-    if(!r.is_all_row){
-      var el = document.getElementById('tsVal_' + idx);
-      if(el){
-        el.value = bulkVal;
-        appliedCount++;
-      }
-    }
-  });
-  showToast(appliedCount + ' AI Range-களுக்கும் Target (' + bulkVal + ') அமைக்கப்பட்டது. Save All Targets அழுத்தவும்.', true);
 }
 
 async function persistSingleTargetRow(r, newTarget, idx){
@@ -1324,49 +1321,35 @@ async function persistSingleTargetRow(r, newTarget, idx){
   r.target = newTarget;
 }
 
-async function saveSingleAiTarget(idx){
+async function saveGroupTargets(encodedKey){
+  var bgk = decodeURIComponent(encodedKey);
   var rows = window.currentTargetSetRows || [];
-  var r = rows[idx];
-  if(!r || r.is_all_row) return;
+  var indices = (window.tsBtnGroupMap && window.tsBtnGroupMap.get(bgk)) || [];
 
-  var valEl = document.getElementById('tsVal_' + idx);
-  var newTarget = parseFloat(valEl.value);
-  if(isNaN(newTarget) || newTarget < 0) return showToast('சரியான Target மதிப்பை உள்ளிடவும்', false);
+  var toSave = [];
+  for(var k = 0; k < indices.length; k++){
+    var idx = indices[k];
+    var r = rows[idx];
+    if(r && !r.is_all_row){
+      var el = document.getElementById('tsVal_' + idx);
+      var val = el ? parseFloat(el.value) : r.target;
+      if(isNaN(val) || val < 0) return showToast(r.ai_office + ' Target மதிப்பு சரியில்லை', false);
+      toSave.push({ row: r, val: val, idx: idx });
+    }
+  }
+
+  if(!toSave.length) return showToast('Save செய்ய AI Range Target-கள் இல்லை', false);
 
   try{
-    await persistSingleTargetRow(r, newTarget, idx);
+    for(var i = 0; i < toSave.length; i++){
+      await persistSingleTargetRow(toSave[i].row, toSave[i].val, toSave[i].idx);
+    }
     renderDashboardAll();
     renderTargetSetList();
-    showToast(r.ai_office + ' Target (' + newTarget + ') Save ஆனது ✓', true);
+    var lbl = toSave[0].row.item_name || toSave[0].row.level3 || toSave[0].row.level2 || 'Sub Program';
+    showToast(lbl + ' — அனைத்து AI Range (' + toSave.length + ') Target-களும் Save ஆயின ✓', true);
   }catch(e){
     showToast('Save Error: ' + e.message, false);
-  }
-}
-
-async function saveAllVisibleTargets(){
-  var rows = window.currentTargetSetRows || [];
-  var editableItems = [];
-  for(var i = 0; i < rows.length; i++){
-    var r = rows[i];
-    if(r && !r.is_all_row){
-      var el = document.getElementById('tsVal_' + i);
-      var val = el ? parseFloat(el.value) : r.target;
-      if(isNaN(val) || val < 0) return showToast('வரிசை ' + (i+1) + '-இல் சரியான Target மதிப்பை உள்ளிடவும்', false);
-      editableItems.push({ row: r, val: val, idx: i });
-    }
-  }
-  if(!editableItems.length) return showToast('Save செய்ய Target வரிசைகள் இல்லை', false);
-
-  try{
-    for(var j = 0; j < editableItems.length; j++){
-      var item = editableItems[j];
-      await persistSingleTargetRow(item.row, item.val, item.idx);
-    }
-    renderDashboardAll();
-    renderTargetSetList();
-    showToast(editableItems.length + ' AI Office Target மதிப்புகள் ஒரே தடவையில் Save ஆயின ✓', true);
-  }catch(e){
-    showToast('Bulk Save Error: ' + e.message, false);
   }
 }
 
