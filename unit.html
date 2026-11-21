@@ -36,7 +36,7 @@
     <div class="w-10 h-10 rounded-xl bg-indigo-600 grid place-items-center text-white font-bold">AI</div>
     <div>
       <div class="font-bold">ක්ෂේත්‍ර ඒකකය - Data Entry <span class="text-[10px] px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold whitespace-nowrap">DD Kandy</span></div>
-      <div class="text-xs text-slate-500" id="sbSyncStatus">Supabase Syncing...</div>
+      <div class="text-xs text-slate-500" id="sbSyncStatus">Data Syncing...</div>
     </div>
   </div>
   <div class="flex gap-2">
@@ -50,7 +50,7 @@
   <div class="text-[11px] text-slate-400">LOCKED - AI Range Profile</div>
   <div class="grid md:grid-cols-3 gap-4 mt-3">
     <div class="rounded-xl bg-white/10 p-3"><div class="text-[11px] text-slate-400">1. AD Office</div><div class="font-bold text-sm mt-1" id="lockSub">-</div></div>
-    <div class="rounded-xl bg-white/10 p-3"><div class="text-[11px] text-slate-400">2. AI Office (Range)</div><div class="font-bold text-sm mt-1 text-emerald-300" id="lockDiv">-</div></div>
+    <div class="rounded-xl bg-white/10 p-3"><div class="text-[11px] text-slate-400">2. AI Office</div><div class="font-bold text-sm mt-1 text-emerald-300" id="lockDiv">-</div></div>
     <div class="rounded-xl bg-white/10 p-3"><div class="text-[11px] text-slate-400">Officer</div><div class="font-bold text-sm mt-1" id="lockUser">-</div></div>
   </div>
 </div>
@@ -59,15 +59,15 @@
 <div class="grid md:grid-cols-3 gap-4 mt-5">
   <button onclick="showSection('targets')" id="btnTargets" class="text-left rounded-2xl border-2 border-indigo-600 bg-indigo-600 text-white p-4">
     <div class="font-bold text-base">🎯 1. Targets & Progress</div>
-    <div class="text-xs opacity-90 mt-1">Extension (6) & Development (6) Boxes + Sheet</div>
+    <div class="text-xs opacity-90 mt-1">Extension & Development Boxes + Sheet</div>
   </button>
   <button onclick="showSection('form')" id="btnForm" class="text-left rounded-2xl border p-4 bg-white">
     <div class="font-bold text-base">📝 2. Data Entry - දත්ත ඇතුළත් කරන්න</div>
-    <div class="text-xs text-slate-500 mt-1">வினாக்களுக்குப் பதிலளித்தல் & Progress Update</div>
+    <div class="text-xs text-slate-500 mt-1">Data & Progress Update</div>
   </button>
   <button onclick="showSection('mydata')" id="btnMy" class="text-left rounded-2xl border p-4 bg-white">
     <div class="font-bold text-base">📊 3. My Data - මගේ දත්ත</div>
-    <div class="text-xs text-slate-500 mt-1">Extension & Development தனித்தனி Tables + Excel</div>
+    <div class="text-xs text-slate-500 mt-1">Extension & Development Tables + Excel</div>
   </button>
 </div>
 
@@ -116,7 +116,7 @@
   <!-- SEARCH FILTER -->
   <div class="card !py-3">
     <div class="flex flex-wrap justify-between items-center gap-3">
-      <div class="text-sm font-bold text-slate-800">🎨 AI Range Target & Progress Boxes (Extension 6 + Development 6)</div>
+      <div class="text-sm font-bold text-slate-800">🎨 AI Range Target & Progress Boxes (Extension + Development)</div>
       <input id="tSearch" placeholder="Search program / sub-program / item..." oninput="renderUnitTargets()" class="!w-full sm:!w-72 text-xs">
     </div>
   </div>
@@ -126,7 +126,7 @@
     <div class="flex justify-between items-center gap-2">
       <div>
         <h3 class="text-lg font-bold text-blue-900">🌾 Extension Target & Progress Boxes (<span id="extTotalCount">0</span>)</h3>
-        <p class="text-xs text-slate-500">முதல் 6 பெட்டிகள் காட்டப்படுகின்றன — அனைத்தையும் பார்க்க More அழுத்தவும்</p>
+        <p class="text-xs text-slate-500">To view all click More</p>
       </div>
       <button id="btnMoreExt" onclick="toggleMoreExt()" class="hidden btn btn-ghost px-4 py-2 text-xs font-bold border border-blue-200 text-blue-700 hover:bg-blue-50">More ↓</button>
     </div>
@@ -138,7 +138,7 @@
     <div class="flex justify-between items-center gap-2">
       <div>
         <h3 class="text-lg font-bold text-emerald-900">🏗️ Development Target & Progress Boxes (<span id="devTotalCount">0</span>)</h3>
-        <p class="text-xs text-slate-500">முதல் 6 பெட்டிகள் காட்டப்படுகின்றன — அனைத்தையும் பார்க்க More அழுத்தவும்</p>
+        <p class="text-xs text-slate-500">To view all click More</p>
       </div>
       <button id="btnMoreDev" onclick="toggleMoreDev()" class="hidden btn btn-ghost px-4 py-2 text-xs font-bold border border-emerald-200 text-emerald-700 hover:bg-emerald-50">More ↓</button>
     </div>
@@ -150,7 +150,7 @@
     <div>
       <div class="text-[11px] font-bold text-indigo-600 uppercase">📋 PHYSICAL TARGET & PROGRESS SHEET</div>
       <h3 class="text-lg font-bold text-slate-900">Main Program / Sub Program / Item — Target & Progress</h3>
-      <p class="text-xs text-slate-500">Admin Target Setup உருவாக்கிய/மாற்றிய அதே வரிசையில் காட்டப்படும் (Target 0 இருந்தாலும் காட்டும்)</p>
+      <p class="text-xs text-slate-500">Target</p>
     </div>
 
     <!-- MAIN PROGRAM & SUB PROGRAM FILTERS FOR TARGET TABLES -->
@@ -226,7 +226,7 @@
   <div class="flex flex-wrap justify-between items-center gap-2">
     <div>
       <h2 class="font-bold text-[20px]">Data Entry - දත්ත ඇතුළත් කරන්න</h2>
-      <p class="text-xs text-slate-500">தலைப்புகளை மாற்றாமலேயே ஒரே பிரிவின் கீழ் பல முறை தரவுகளை Update செய்யலாம்.</p>
+      <p class="text-xs text-slate-500">You can update data multiple times under the same category without changing the headings..</p>
     </div>
     <button type="button" onclick="resetFormInputsOnly()" class="btn btn-ghost text-xs px-3 py-1.5">↺ Clear Answers Only</button>
   </div>
@@ -274,7 +274,7 @@
   </div>
 
   <div id="uFormWrap" class="mt-5"></div>
-  <div id="uEmpty" class="hidden rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm mt-4">මේ කොටසට Admin තවම ප්‍රශ්න (Questions) සකස් කර නැත.</div>
+  <div id="uEmpty" class="hidden rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm mt-4">මේ කොටසට තවම ප්‍රශ්න (Questions) සකස් කර නැත.</div>
 </div>
 
 <!-- ========================================================================= -->
@@ -285,7 +285,7 @@
     <div class="flex flex-wrap justify-between items-center gap-2">
       <div>
         <h2 class="font-bold text-[20px]">My Data - මම Update කළ දත්ත</h2>
-        <p class="text-xs text-slate-500">Extension மற்றும் Development ஆகியவை தனித்தனி Table-களாகத் தனித்தனி தலைப்புகளுடன் காட்டப்படுகின்றன.</p>
+        <p class="text-xs text-slate-500">Extension & Development - Tables</p>
       </div>
       <button onclick="downloadFilteredMyExcel()" class="btn btn-success text-xs px-4 py-2">⬇ Download Filtered Excel</button>
     </div>
@@ -972,7 +972,7 @@ async function submitUForm(e){
   var progressQty = parseFloat(qtyEl.value);
   if(isNaN(progressQty) || progressQty <= 0){
     qtyEl.focus();
-    return showToast('ஆවරණය කළ ප්‍රමාණය (Progress Quantity) ඇතුළත් කරන්න', false);
+    return showToast('Progress Quantity ඇතුළත් කරන්න', false);
   }
 
   var ans=collectAns();
@@ -1239,7 +1239,7 @@ async function sbSyncAll(){
     if(Array.isArray(rRes.data)) responses = rRes.data;
     if(Array.isArray(tRes.data)) targetRecords = tRes.data;
     if(Array.isArray(pRes.data)) itemPrices = pRes.data;
-    if(st) st.textContent='Supabase Connected ✓ (' + myDiv + ')';
+    if(st) st.textContent='Data Connected ✓ (' + myDiv + ')';
   }catch(e){
     if(st) st.textContent='Sync Error';
   }
