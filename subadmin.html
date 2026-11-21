@@ -166,31 +166,37 @@
         </div>
       </div>
 
-      <!-- EXTENSION TARGET TABLE (3 FILTERS + MERGED MAIN PROGRAM & SUB PROGRAM + ALL TOTAL) -->
+      <!-- EXTENSION TARGET TABLE (SEASON + AI OFFICE + PROGRAM + SUB PROGRAM + FIRST MAIN PROGRAM + MORE) -->
       <div class="card space-y-4 border-l-4 border-l-blue-600">
         <div class="flex flex-wrap justify-between items-center gap-2">
           <div>
             <h3 class="text-lg font-bold text-blue-950">🌾 Extension Target & Progress Table</h3>
-            <p class="text-xs text-slate-500">AI Office, Program மற்றும் Sub Program அடிப்படையில் Filter செய்து Filter செய்த தரவை மட்டும் Excel Download செய்யலாம்</p>
+            <p class="text-xs text-slate-500">Season, AI Office, Program மற்றும் Sub Program அடிப்படையில் Filter செய்து Filter செய்த தரவை மட்டும் Excel Download செய்யலாம்</p>
           </div>
           <button onclick="downloadTargetTableExcel('extension')" class="btn btn-success text-xs px-4 py-2">⬇ Extension Target Excel</button>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-2xl border">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-2xl border">
           <div>
-            <label class="text-[11px] font-bold text-slate-600 uppercase">1. AI Office Filter</label>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">1. Season Filter</label>
+            <select id="extTblFilterSeason" onchange="renderTargetTables()" class="mt-1 bg-white text-xs">
+              <option value="">All Seasons</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">2. AI Office Filter</label>
             <select id="extTblFilterAi" onchange="renderTargetTables()" class="mt-1 bg-white text-xs">
               <option value="">All AI Offices</option>
             </select>
           </div>
           <div>
-            <label class="text-[11px] font-bold text-slate-600 uppercase">2. Program Filter</label>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">3. Program Filter</label>
             <select id="extTblFilterProg" onchange="onExtTblProgChange()" class="mt-1 bg-white text-xs">
               <option value="">All Programs</option>
             </select>
           </div>
           <div>
-            <label class="text-[11px] font-bold text-slate-600 uppercase">3. Sub Program Filter</label>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">4. Sub Program Filter</label>
             <select id="extTblFilterSub" onchange="renderTargetTables()" class="mt-1 bg-white text-xs">
               <option value="">All Sub Programs</option>
             </select>
@@ -213,33 +219,43 @@
             <tbody id="extTargetTbody"></tbody>
           </table>
         </div>
+
+        <div class="flex justify-center pt-1">
+          <button id="btnMoreExtTbl" onclick="toggleMoreExtTbl()" class="hidden btn btn-ghost px-5 py-2 text-xs font-bold border border-blue-200 text-blue-700 hover:bg-blue-50">More ↓</button>
+        </div>
       </div>
 
-      <!-- DEVELOPMENT TARGET TABLE (3 FILTERS + MERGED MAIN PROGRAM, SUB PROGRAM & ITEM + ALL TOTAL) -->
+      <!-- DEVELOPMENT TARGET TABLE (YEAR + AI OFFICE + PROGRAM + SUB PROGRAM / ITEM + FIRST MAIN PROGRAM + MORE) -->
       <div class="card space-y-4 border-l-4 border-l-emerald-600">
         <div class="flex flex-wrap justify-between items-center gap-2">
           <div>
             <h3 class="text-lg font-bold text-emerald-950">🏗️ Development Target & Progress Table</h3>
-            <p class="text-xs text-slate-500">AI Office, Program மற்றும் Sub Program / Item அடிப்படையில் Filter செய்து Filter செய்த தரவை மட்டும் Excel Download செய்யலாம்</p>
+            <p class="text-xs text-slate-500">Year, AI Office, Program மற்றும் Sub Program / Item அடிப்படையில் Filter செய்து Filter செய்த தரவை மட்டும் Excel Download செய்யலாம்</p>
           </div>
           <button onclick="downloadTargetTableExcel('development')" class="btn btn-success text-xs px-4 py-2">⬇ Development Target Excel</button>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-2xl border">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-2xl border">
           <div>
-            <label class="text-[11px] font-bold text-slate-600 uppercase">1. AI Office Filter</label>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">1. Year Filter</label>
+            <select id="devTblFilterYear" onchange="renderTargetTables()" class="mt-1 bg-white text-xs">
+              <option value="">All Years</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">2. AI Office Filter</label>
             <select id="devTblFilterAi" onchange="renderTargetTables()" class="mt-1 bg-white text-xs">
               <option value="">All AI Offices</option>
             </select>
           </div>
           <div>
-            <label class="text-[11px] font-bold text-slate-600 uppercase">2. Program Filter</label>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">3. Program Filter</label>
             <select id="devTblFilterProg" onchange="onDevTblProgChange()" class="mt-1 bg-white text-xs">
               <option value="">All Programs</option>
             </select>
           </div>
           <div>
-            <label class="text-[11px] font-bold text-slate-600 uppercase">3. Sub Program / Item Filter</label>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">4. Sub Program / Item Filter</label>
             <select id="devTblFilterSub" onchange="renderTargetTables()" class="mt-1 bg-white text-xs">
               <option value="">All Sub Programs / Items</option>
             </select>
@@ -263,6 +279,10 @@
             <tbody id="devTargetTbody"></tbody>
           </table>
         </div>
+
+        <div class="flex justify-center pt-1">
+          <button id="btnMoreDevTbl" onclick="toggleMoreDevTbl()" class="hidden btn btn-ghost px-5 py-2 text-xs font-bold border border-emerald-200 text-emerald-700 hover:bg-emerald-50">More ↓</button>
+        </div>
       </div>
 
     </div>
@@ -278,7 +298,7 @@
           <p class="text-xs text-slate-500">Admin உருவாக்கிய Extension / Development Program-களின் அடிப்படையில் உங்கள் AI Office-களின் Target மதிப்புகளை மட்டும் மாற்றலாம். (இங்கு மாற்றும் Target Admin மற்றும் Unit பகுதிகளிலும் தானாகப் புதுப்பிக்கப்படும்; Program / Sub Program மாற்ற முடியாது).</p>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50 p-3.5 rounded-2xl border">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 bg-slate-50 p-3.5 rounded-2xl border">
           <div>
             <label class="text-[11px] font-bold text-slate-600 uppercase">1. Type</label>
             <select id="tsType" onchange="onTargetSetTypeChange()" class="mt-1 bg-white text-xs font-semibold">
@@ -287,22 +307,46 @@
             </select>
           </div>
           <div>
-            <label class="text-[11px] font-bold text-slate-600 uppercase">2. Program</label>
+            <label id="tsPeriodLabel" class="text-[11px] font-bold text-slate-600 uppercase">2. Season</label>
+            <select id="tsPeriod" onchange="onTargetSetPeriodChange()" class="mt-1 bg-white text-xs font-semibold">
+              <option value="">-- All Seasons --</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 uppercase">3. Program</label>
             <select id="tsProg" onchange="onTargetSetProgChange()" class="mt-1 bg-white text-xs font-semibold">
               <option value="">-- All Programs --</option>
             </select>
           </div>
           <div>
-            <label class="text-[11px] font-bold text-slate-600 uppercase">3. Sub Program</label>
-            <select id="tsSubProg" onchange="renderTargetSetList()" class="mt-1 bg-white text-xs font-semibold">
+            <label class="text-[11px] font-bold text-slate-600 uppercase">4. Sub Program</label>
+            <select id="tsSubProg" onchange="onTargetSetSubChange()" class="mt-1 bg-white text-xs font-semibold">
               <option value="">-- All Sub Programs --</option>
             </select>
           </div>
-          <div>
-            <label class="text-[11px] font-bold text-slate-600 uppercase">4. AI Office</label>
+          <div id="tsItemFilterWrap" class="hidden">
+            <label class="text-[11px] font-bold text-slate-600 uppercase">5. Items</label>
+            <select id="tsItem" onchange="renderTargetSetList()" class="mt-1 bg-white text-xs font-semibold">
+              <option value="">-- All Items --</option>
+            </select>
+          </div>
+          <div id="tsAiFilterWrap">
+            <label id="tsAiFilterLabel" class="text-[11px] font-bold text-slate-600 uppercase">5. AI Office</label>
             <select id="tsAiOffice" onchange="renderTargetSetList()" class="mt-1 bg-white text-xs font-semibold">
               <option value="">-- All AI Offices --</option>
             </select>
+          </div>
+        </div>
+
+        <!-- BULK / ONE-SHOT SAVE BAR FOR SUB PROGRAM OR ITEM -->
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-indigo-50/80 border border-indigo-200 rounded-2xl p-3.5">
+          <div class="text-xs text-indigo-950 font-semibold" id="bulkSaveHint">
+            Extension: Sub Program-க்கு Target அமைத்து Save All செய்யலாம் | Development: Sub Program / Item-க்கு Target அமைத்து Save All செய்யலாம்
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <input type="number" step="any" min="0" id="bulkTargetInput" placeholder="Common Target..." class="!w-36 bg-white text-xs font-bold">
+            <button onclick="applyBulkTargetToVisible()" class="btn btn-ghost px-3 py-2 text-xs font-bold border border-indigo-300 text-indigo-800 bg-white">Apply to All Rows</button>
+            <button onclick="saveAllVisibleTargets()" class="btn btn-success px-4 py-2 text-xs font-bold">💾 Save All Targets</button>
           </div>
         </div>
 
@@ -456,7 +500,7 @@ const BOX_COLORS = [
 ];
 
 var nodes=[], questions=[], responses=[], targetRecords=[], profiles=[];
-var showAllExtBoxes=false, showAllDevBoxes=false, editingId=null;
+var showAllExtBoxes=false, showAllDevBoxes=false, showAllExtTbl=false, showAllDevTbl=false, editingId=null;
 
 function norm(s){ return String(s||'').trim().toLowerCase(); }
 function isAllLabel(s){ return norm(s) === 'all'; }
@@ -609,7 +653,7 @@ function buildAdTargetRows(){
 
   myTgts.forEach((t, idx) => {
     var matchedAi = aiOffices.find(a => norm(a) === norm(t.division)) || t.division || 'AI Office';
-    var key = [matchedAi, t.main_type, t.level1, t.level2, t.level3||'', t.item_name||''].map(norm).join('|');
+    var key = [matchedAi, t.main_type, t.level1||'', t.level2||'', t.level3||'', t.item_name||''].map(norm).join('|');
     seen.add(key);
 
     var cov = myResps.filter(r => {
@@ -676,7 +720,6 @@ function buildAdTargetRows(){
     });
   });
 
-  // Group AI rows by (main_type, level1, level2, level3, item_name) and attach sum "ALL" row to each group
   var groups = new Map();
   aiRows.forEach(r => {
     var gk = getGroupKey(r);
@@ -715,7 +758,6 @@ function buildAdTargetRows(){
     });
     g.items.forEach(it => finalRows.push(it));
 
-    // Append ALL summary row for this group with total Target & Progress across all AI offices
     finalRows.push({
       target_id: null,
       ai_office: 'ALL',
@@ -745,6 +787,8 @@ function populateSelectPreserve(selId, optionsArr, defaultLabel){
 
 function toggleMoreExtBoxes(){ showAllExtBoxes = !showAllExtBoxes; renderDashboardAll(); }
 function toggleMoreDevBoxes(){ showAllDevBoxes = !showAllDevBoxes; renderDashboardAll(); }
+function toggleMoreExtTbl(){ showAllExtTbl = !showAllExtTbl; renderTargetTables(); }
+function toggleMoreDevTbl(){ showAllDevTbl = !showAllDevTbl; renderTargetTables(); }
 
 function onExtBoxProgChange(){
   document.getElementById('extBoxFilterSub').value = '';
@@ -818,11 +862,10 @@ function renderDashboardAll(){
   var allRows = buildAdTargetRows();
   var aiOffices = getMyAiOffices();
 
-  // For KPI cards and boxes, use individual AI office rows (not duplicate ALL rows)
   var extAiOnly = allRows.filter(r => r.main_type === 'extension' && !r.is_all_row);
   var devAiOnly = allRows.filter(r => r.main_type === 'development' && !r.is_all_row);
 
-  // Extension Box Filters (AI Office, Program, Sub Program / Item)
+  // Extension Box Filters
   populateSelectPreserve('extBoxFilterAi', aiOffices, 'All AI Offices');
   populateSelectPreserve('extBoxFilterProg', [...new Set(extAiOnly.map(r=>r.level2).filter(Boolean))], 'All Programs');
   var eAi = document.getElementById('extBoxFilterAi').value;
@@ -848,7 +891,7 @@ function renderDashboardAll(){
   document.getElementById('extSumPct').textContent = ePct + '%';
   renderColorBoxes(extBoxes, 'extBoxGrid', 'btnMoreExtBoxes', showAllExtBoxes, 6);
 
-  // Development Box Filters (AI Office, Program, Sub Program / Item)
+  // Development Box Filters
   populateSelectPreserve('devBoxFilterAi', aiOffices, 'All AI Offices');
   populateSelectPreserve('devBoxFilterProg', [...new Set(devAiOnly.map(r=>r.level2).filter(Boolean))], 'All Programs');
   var dAi = document.getElementById('devBoxFilterAi').value;
@@ -874,12 +917,15 @@ function renderDashboardAll(){
   document.getElementById('devSumPct').textContent = dPct + '%';
   renderColorBoxes(devBoxes, 'devBoxGrid', 'btnMoreDevBoxes', showAllDevBoxes, 6);
 
-  // Table filter dropdowns (AI Office, Program, Sub Program)
+  // Extension Table filter dropdowns (Season, AI Office, Program, Sub Program)
+  populateSelectPreserve('extTblFilterSeason', [...new Set(extAiOnly.map(r=>r.level1).filter(Boolean))], 'All Seasons');
   populateSelectPreserve('extTblFilterAi', aiOffices, 'All AI Offices');
   populateSelectPreserve('extTblFilterProg', [...new Set(extAiOnly.map(r=>r.level2).filter(Boolean))], 'All Programs');
   var etPr = document.getElementById('extTblFilterProg').value;
   populateSelectPreserve('extTblFilterSub', [...new Set(extAiOnly.filter(r => !etPr || norm(r.level2)===norm(etPr)).map(r=>r.level3).filter(Boolean))], 'All Sub Programs');
 
+  // Development Table filter dropdowns (Year, AI Office, Program, Sub Program / Item)
+  populateSelectPreserve('devTblFilterYear', [...new Set(devAiOnly.map(r=>r.level1).filter(Boolean))], 'All Years');
   populateSelectPreserve('devTblFilterAi', aiOffices, 'All AI Offices');
   populateSelectPreserve('devTblFilterProg', [...new Set(devAiOnly.map(r=>r.level2).filter(Boolean))], 'All Programs');
   var dtPr = document.getElementById('devTblFilterProg').value;
@@ -890,7 +936,6 @@ function renderDashboardAll(){
 }
 
 function recalculateAllRowsForFilteredView(rows){
-  // When AI Office filter is applied, recompute ALL row sums from matching AI rows in the filtered list
   var groupTotals = new Map();
   rows.forEach(r => {
     if(!r.is_all_row){
@@ -911,6 +956,12 @@ function recalculateAllRowsForFilteredView(rows){
   });
 }
 
+function limitRowsToFirstMainProgramIfNeeded(rows, showAll, hasExplicitProgOrSubFilter){
+  if(showAll || hasExplicitProgOrSubFilter || !rows.length) return rows;
+  var firstMain = norm(rows[0].level2 || '');
+  return rows.filter(r => norm(r.level2 || '') === firstMain);
+}
+
 function renderTargetTables(){
   var allRows = buildAdTargetRows();
 
@@ -924,15 +975,32 @@ function renderTargetTables(){
   populateSelectPreserve('devTblFilterSub', devTblSubItems, 'All Sub Programs / Items');
 
   // 1. Extension Table
+  var eSea = document.getElementById('extTblFilterSeason').value;
   var eAi = document.getElementById('extTblFilterAi').value;
   var ePr = document.getElementById('extTblFilterProg').value;
   var eSub = document.getElementById('extTblFilterSub').value;
-  var extRows = extAll.filter(r =>
+
+  var extFiltered = extAll.filter(r =>
+    (!eSea || norm(r.level1)===norm(eSea)) &&
     (!ePr || norm(r.level2)===norm(ePr)) &&
     (!eSub || norm(r.level3)===norm(eSub)) &&
     (r.is_all_row || !eAi || norm(r.ai_office)===norm(eAi))
   );
-  extRows = recalculateAllRowsForFilteredView(extRows);
+  extFiltered = recalculateAllRowsForFilteredView(extFiltered);
+
+  var extMainCount = new Set(extFiltered.map(r => norm(r.level2 || '-'))).size;
+  var btnMoreExtTbl = document.getElementById('btnMoreExtTbl');
+  var hasExtProgFilter = Boolean(ePr || eSub);
+  if(btnMoreExtTbl){
+    if(!hasExtProgFilter && extMainCount > 1){
+      btnMoreExtTbl.classList.remove('hidden');
+      btnMoreExtTbl.textContent = showAllExtTbl ? 'Show First Main Program Only ↑' : ('More Main Programs (' + (extMainCount - 1) + '+) ↓');
+    } else {
+      btnMoreExtTbl.classList.add('hidden');
+    }
+  }
+
+  var extRows = limitRowsToFirstMainProgramIfNeeded(extFiltered, showAllExtTbl, hasExtProgFilter);
   window.currentExtTargetRows = extRows;
 
   var eMainSpans = computeRowSpans(extRows, r => r.level2 || '-');
@@ -957,16 +1025,33 @@ function renderTargetTables(){
   }).join('') : '<tr><td colspan="7" class="text-center py-5 text-slate-400 text-xs">Extension Target தரவுகள் இல்லை</td></tr>';
 
   // 2. Development Table
+  var dYr = document.getElementById('devTblFilterYear').value;
   var dAi = document.getElementById('devTblFilterAi').value;
   var dPr = document.getElementById('devTblFilterProg').value;
   var dSub = document.getElementById('devTblFilterSub').value;
-  var devRows = devAll.filter(r => {
+
+  var devFiltered = devAll.filter(r => {
     var subLbl = [r.level3, r.item_name].filter(Boolean).join(' — ');
-    return (!dPr || norm(r.level2)===norm(dPr)) &&
+    return (!dYr || norm(r.level1)===norm(dYr)) &&
+           (!dPr || norm(r.level2)===norm(dPr)) &&
            (!dSub || norm(subLbl)===norm(dSub)) &&
            (r.is_all_row || !dAi || norm(r.ai_office)===norm(dAi));
   });
-  devRows = recalculateAllRowsForFilteredView(devRows);
+  devFiltered = recalculateAllRowsForFilteredView(devFiltered);
+
+  var devMainCount = new Set(devFiltered.map(r => norm(r.level2 || '-'))).size;
+  var btnMoreDevTbl = document.getElementById('btnMoreDevTbl');
+  var hasDevProgFilter = Boolean(dPr || dSub);
+  if(btnMoreDevTbl){
+    if(!hasDevProgFilter && devMainCount > 1){
+      btnMoreDevTbl.classList.remove('hidden');
+      btnMoreDevTbl.textContent = showAllDevTbl ? 'Show First Main Program Only ↑' : ('More Main Programs (' + (devMainCount - 1) + '+) ↓');
+    } else {
+      btnMoreDevTbl.classList.add('hidden');
+    }
+  }
+
+  var devRows = limitRowsToFirstMainProgramIfNeeded(devFiltered, showAllDevTbl, hasDevProgFilter);
   window.currentDevTargetRows = devRows;
 
   var dMainSpans = computeRowSpans(devRows, r => r.level2 || '-');
@@ -1004,6 +1089,7 @@ function downloadTargetTableExcel(type){
     if(type === 'development'){
       return {
         'AD Office': mySubName,
+        'Year': it.level1 || '-',
         'Main Program': it.level2 || '-',
         'Sub Program': it.level3 || '-',
         'Item': it.item_name || '-',
@@ -1016,6 +1102,7 @@ function downloadTargetTableExcel(type){
     }
     return {
       'AD Office': mySubName,
+      'Season': it.level1 || '-',
       'Main Program': it.level2 || '-',
       'Sub Program': it.level3 || '-',
       'AI Office': it.ai_office,
@@ -1034,45 +1121,84 @@ function downloadTargetTableExcel(type){
 }
 
 /* ========================================================================= */
-/* TARGET SET SECTION: 4 FILTERS + ROWSPAN MERGE + ALL TOTAL ROW           */
+/* TARGET SET SECTION: SEASON/YEAR + 5 FILTERS FOR DEV + BULK SAVE ALL      */
 /* ========================================================================= */
 function renderTargetSetFilters(){
   var t = document.getElementById('tsType').value;
   var allRows = buildAdTargetRows().filter(r => r.main_type === t && !r.is_all_row);
-  var progs = [...new Set(allRows.map(r => r.level2).filter(Boolean))];
+
+  var isDev = (t === 'development');
+  document.getElementById('tsPeriodLabel').textContent = isDev ? '2. Year' : '2. Season';
+  document.getElementById('tsItemFilterWrap').classList.toggle('hidden', !isDev);
+  document.getElementById('tsAiFilterLabel').textContent = isDev ? '6. AI Office' : '5. AI Office';
+
+  var periods = [...new Set(allRows.map(r => r.level1).filter(Boolean))];
+  populateSelectPreserve('tsPeriod', periods, isDev ? '-- All Years --' : '-- All Seasons --');
+
+  var curPeriod = document.getElementById('tsPeriod').value;
+  var progSource = curPeriod ? allRows.filter(r => norm(r.level1) === norm(curPeriod)) : allRows;
+  var progs = [...new Set(progSource.map(r => r.level2).filter(Boolean))];
   populateSelectPreserve('tsProg', progs, '-- All Programs --');
 
   var curProg = document.getElementById('tsProg').value;
-  var subSource = curProg ? allRows.filter(r => norm(r.level2) === norm(curProg)) : allRows;
+  var subSource = progSource.filter(r => (!curProg || norm(r.level2) === norm(curProg)));
   var subs = [...new Set(subSource.map(r => r.level3).filter(Boolean))];
   populateSelectPreserve('tsSubProg', subs, '-- All Sub Programs --');
+
+  if(isDev){
+    var curSub = document.getElementById('tsSubProg').value;
+    var itemSource = subSource.filter(r => (!curSub || norm(r.level3) === norm(curSub)));
+    var items = [...new Set(itemSource.map(r => r.item_name).filter(Boolean))];
+    populateSelectPreserve('tsItem', items, '-- All Items --');
+  }
 
   populateSelectPreserve('tsAiOffice', getMyAiOffices(), '-- All AI Offices --');
 }
 
 function onTargetSetTypeChange(){
+  document.getElementById('tsPeriod').value = '';
   document.getElementById('tsProg').value = '';
   document.getElementById('tsSubProg').value = '';
+  if(document.getElementById('tsItem')) document.getElementById('tsItem').value = '';
+  renderTargetSetFilters();
+  renderTargetSetList();
+}
+
+function onTargetSetPeriodChange(){
+  document.getElementById('tsProg').value = '';
+  document.getElementById('tsSubProg').value = '';
+  if(document.getElementById('tsItem')) document.getElementById('tsItem').value = '';
   renderTargetSetFilters();
   renderTargetSetList();
 }
 
 function onTargetSetProgChange(){
   document.getElementById('tsSubProg').value = '';
+  if(document.getElementById('tsItem')) document.getElementById('tsItem').value = '';
+  renderTargetSetFilters();
+  renderTargetSetList();
+}
+
+function onTargetSetSubChange(){
+  if(document.getElementById('tsItem')) document.getElementById('tsItem').value = '';
   renderTargetSetFilters();
   renderTargetSetList();
 }
 
 function renderTargetSetList(){
   var t = document.getElementById('tsType').value;
+  var period = document.getElementById('tsPeriod').value;
   var prog = document.getElementById('tsProg').value;
   var subProg = document.getElementById('tsSubProg').value;
+  var itemSel = document.getElementById('tsItem') ? document.getElementById('tsItem').value : '';
   var aiOff = document.getElementById('tsAiOffice').value;
 
   var rows = buildAdTargetRows().filter(r =>
     r.main_type === t &&
+    (!period || norm(r.level1) === norm(period)) &&
     (!prog || norm(r.level2) === norm(prog)) &&
     (!subProg || norm(r.level3) === norm(subProg)) &&
+    (t !== 'development' || !itemSel || norm(r.item_name) === norm(itemSel)) &&
     (r.is_all_row || !aiOff || norm(r.ai_office) === norm(aiOff))
   );
   rows = recalculateAllRowsForFilteredView(rows);
@@ -1144,15 +1270,25 @@ function renderTargetSetList(){
   window.currentTargetSetRows = rows;
 }
 
-async function saveSingleAiTarget(idx){
+function applyBulkTargetToVisible(){
+  var bulkVal = parseFloat(document.getElementById('bulkTargetInput').value);
+  if(isNaN(bulkVal) || bulkVal < 0) return showToast('சரியான Common Target மதிப்பை உள்ளிடவும்', false);
+
   var rows = window.currentTargetSetRows || [];
-  var r = rows[idx];
-  if(!r || r.is_all_row) return;
+  var appliedCount = 0;
+  rows.forEach((r, idx) => {
+    if(!r.is_all_row){
+      var el = document.getElementById('tsVal_' + idx);
+      if(el){
+        el.value = bulkVal;
+        appliedCount++;
+      }
+    }
+  });
+  showToast(appliedCount + ' AI Range-களுக்கும் Target (' + bulkVal + ') அமைக்கப்பட்டது. Save All Targets அழுத்தவும்.', true);
+}
 
-  var valEl = document.getElementById('tsVal_' + idx);
-  var newTarget = parseFloat(valEl.value);
-  if(isNaN(newTarget) || newTarget < 0) return showToast('சரியான Target மதிப்பை உள்ளிடவும்', false);
-
+async function persistSingleTargetRow(r, newTarget, idx){
   var payload = {
     main_type: r.main_type,
     level1: r.level1 || '',
@@ -1167,29 +1303,71 @@ async function saveSingleAiTarget(idx){
   if(sb){
     if(r.target_id){
       var up = await sb.from('targets').update({ target_value: newTarget }).eq('id', r.target_id);
-      if(up.error) return showToast('Update Error: ' + up.error.message, false);
+      if(up.error) throw new Error(up.error.message);
     } else {
-      payload.id = 't_' + Date.now() + '_' + idx;
+      payload.id = 't_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).slice(2,6);
       var ins = await sb.from('targets').insert(payload);
-      if(ins.error) return showToast('Insert Error: ' + ins.error.message, false);
+      if(ins.error) throw new Error(ins.error.message);
       r.target_id = payload.id;
     }
   }
 
   var existingLocal = targetRecords.find(x =>
     (r.target_id && String(x.id) === String(r.target_id)) ||
-    (norm(x.division)===norm(r.ai_office) && norm(x.main_type)===norm(r.main_type) && norm(x.level2)===norm(r.level2) && norm(x.level3||'')===norm(r.level3||'') && norm(x.item_name||'')===norm(r.item_name||''))
+    (norm(x.division)===norm(r.ai_office) && norm(x.main_type)===norm(r.main_type) && norm(x.level1||'')===norm(r.level1||'') && norm(x.level2)===norm(r.level2) && norm(x.level3||'')===norm(r.level3||'') && norm(x.item_name||'')===norm(r.item_name||''))
   );
   if(existingLocal){
     existingLocal.target_value = newTarget;
   } else {
     targetRecords.push(payload);
   }
-
   r.target = newTarget;
-  renderDashboardAll();
-  renderTargetSetList();
-  showToast(r.ai_office + ' Target (' + newTarget + ') Save ஆனது ✓', true);
+}
+
+async function saveSingleAiTarget(idx){
+  var rows = window.currentTargetSetRows || [];
+  var r = rows[idx];
+  if(!r || r.is_all_row) return;
+
+  var valEl = document.getElementById('tsVal_' + idx);
+  var newTarget = parseFloat(valEl.value);
+  if(isNaN(newTarget) || newTarget < 0) return showToast('சரியான Target மதிப்பை உள்ளிடவும்', false);
+
+  try{
+    await persistSingleTargetRow(r, newTarget, idx);
+    renderDashboardAll();
+    renderTargetSetList();
+    showToast(r.ai_office + ' Target (' + newTarget + ') Save ஆனது ✓', true);
+  }catch(e){
+    showToast('Save Error: ' + e.message, false);
+  }
+}
+
+async function saveAllVisibleTargets(){
+  var rows = window.currentTargetSetRows || [];
+  var editableItems = [];
+  for(var i = 0; i < rows.length; i++){
+    var r = rows[i];
+    if(r && !r.is_all_row){
+      var el = document.getElementById('tsVal_' + i);
+      var val = el ? parseFloat(el.value) : r.target;
+      if(isNaN(val) || val < 0) return showToast('வரிசை ' + (i+1) + '-இல் சரியான Target மதிப்பை உள்ளிடவும்', false);
+      editableItems.push({ row: r, val: val, idx: i });
+    }
+  }
+  if(!editableItems.length) return showToast('Save செய்ய Target வரிசைகள் இல்லை', false);
+
+  try{
+    for(var j = 0; j < editableItems.length; j++){
+      var item = editableItems[j];
+      await persistSingleTargetRow(item.row, item.val, item.idx);
+    }
+    renderDashboardAll();
+    renderTargetSetList();
+    showToast(editableItems.length + ' AI Office Target மதிப்புகள் ஒரே தடவையில் Save ஆயின ✓', true);
+  }catch(e){
+    showToast('Bulk Save Error: ' + e.message, false);
+  }
 }
 
 /* ========================================================================= */
