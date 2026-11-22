@@ -188,7 +188,7 @@ select, input, textarea { -webkit-appearance: none; appearance: none; }
       </div>
     </div>
 
-    <!-- EXTENSION TARGET TABLE -->
+    <!-- EXTENSION TARGET TABLE (NO ITEM COLUMN) -->
     <div class="space-y-3 border rounded-2xl p-4 bg-white">
       <div class="flex flex-wrap justify-between items-center gap-2">
         <h4 class="text-base font-bold text-blue-900">🌾 Extension Target & Progress Table</h4>
@@ -200,7 +200,6 @@ select, input, textarea { -webkit-appearance: none; appearance: none; }
             <tr>
               <th>Main Program<br><span class="text-[11px] font-normal">(ප්‍රධාන ක්‍රියාකාරකම)</span></th>
               <th>Sub Program<br><span class="text-[11px] font-normal">(උප වැඩසටහන)</span></th>
-              <th>Item<br><span class="text-[11px] font-normal">(භාණ්ඩය / Item)</span></th>
               <th>Target<br><span class="text-[11px] font-normal">(ඉලක්කය)</span></th>
               <th>Progress<br><span class="text-[11px] font-normal">(ප්‍රගතිය)</span></th>
               <th>Remaining<br><span class="text-[11px] font-normal">(ඉතිරි)</span></th>
@@ -212,7 +211,7 @@ select, input, textarea { -webkit-appearance: none; appearance: none; }
       </div>
     </div>
 
-    <!-- DEVELOPMENT TARGET TABLE -->
+    <!-- DEVELOPMENT TARGET TABLE (WITH ITEM COLUMN) -->
     <div class="space-y-3 border rounded-2xl p-4 bg-white">
       <div class="flex flex-wrap justify-between items-center gap-2">
         <h4 class="text-base font-bold text-emerald-900">🏗️ Development Target & Progress Table</h4>
@@ -427,6 +426,10 @@ var myOfficer=localStorage.getItem('user_officer_name')||'';
 
 function norm(s){ return String(s||'').trim().toLowerCase(); }
 
+function getActiveOfficerName(){
+  return (myOfficer || myName || myUser || '').trim();
+}
+
 function refreshOfficerProfileDisplay(){
   mySubId=localStorage.getItem('user_subOfficeId')||mySubId;
   mySubName=localStorage.getItem('user_subOfficeName')||mySubId||mySubName;
@@ -438,7 +441,7 @@ function refreshOfficerProfileDisplay(){
 
   document.getElementById('lockSub').textContent=mySubName||'-';
   document.getElementById('lockDiv').textContent=myDiv||'-';
-  document.getElementById('lockUser').textContent=myOfficer || myName || myUser || '-';
+  document.getElementById('lockUser').textContent=getActiveOfficerName() || '-';
 }
 
 refreshOfficerProfileDisplay();
@@ -494,6 +497,12 @@ function getItemNameForEntry(r){
   if(r && r.answers && r.answers.__item_name) return String(r.answers.__item_name);
   if(r && r.item_name) return String(r.item_name);
   return '';
+}
+
+function getOfficerForEntry(r){
+  if(r && r.answers && r.answers.__officer_name) return String(r.answers.__officer_name);
+  if(r && r.answers && r.answers.__user) return String(r.answers.__user);
+  return '-';
 }
 
 function getNodeSortRank(mainType, level, title, parentTitle){
@@ -757,17 +766,12 @@ function sortByAdminOrder(rows){
   });
 }
 
-function renderSingleCategoryMatrix(rows, tbodyId){
-  var tbody = document.getElementById(tbodyId);
-  if(!rows.length){
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-400">Target දත්ත නොමැත</td></tr>';
-    return [];
-  }
-
+// Build structured merge spans matching the exact visual hierarchy of the table
+function buildMergedMatrixGroups(rows, includeItem){
   var sorted = sortByAdminOrder(rows);
-
-  var html = '';
+  var items = [];
   var i = 0;
+
   while(i < sorted.length){
     var r = sorted[i];
     var mainSpan = 1;
@@ -787,27 +791,56 @@ function renderSingleCategoryMatrix(rows, tbodyId){
         var it = sorted[i + j + k];
         var rem = Math.max(0, it.target - it.covered);
         var pct = it.target > 0 ? Math.min(100, Math.round((it.covered / it.target) * 100)) : (it.covered > 0 ? 100 : 0);
-
-        html += '<tr>';
-        if((j + k) === 0){
-          html += '<td rowspan="' + mainSpan + '" class="matrix-main-cell">' + (it.level2 || '-') + '</td>';
-        }
-        if(k === 0){
-          html += '<td rowspan="' + subSpan + '" class="matrix-sub-cell">' + (it.level3 || '-') + '</td>';
-        }
-        html += '<td class="text-slate-900 font-medium">' + (it.item_name || '-') + '</td>' +
-                '<td class="text-center font-bold text-slate-900">' + it.target + '</td>' +
-                '<td class="text-center font-bold text-emerald-700">' + it.covered + '</td>' +
-                '<td class="text-center font-semibold text-amber-700">' + rem + '</td>' +
-                '<td class="text-center font-bold text-indigo-700">' + pct + '%</td>' +
-                '</tr>';
+        items.push({
+          row: it,
+          rem: rem,
+          pct: pct,
+          showMain: (j + k) === 0,
+          mainSpan: mainSpan,
+          showSub: k === 0,
+          subSpan: subSpan
+        });
       }
       j += subSpan;
     }
     i += mainSpan;
   }
+
+  return { sorted, items, includeItem };
+}
+
+function renderSingleCategoryMatrix(rows, tbodyId, includeItem){
+  var tbody = document.getElementById(tbodyId);
+  var colCount = includeItem ? 7 : 6;
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="' + colCount + '" class="text-center py-6 text-slate-400">Target දත්ත නොමැත</td></tr>';
+    return { sorted: [], items: [], includeItem };
+  }
+
+  var built = buildMergedMatrixGroups(rows, includeItem);
+  var html = '';
+
+  built.items.forEach(entry => {
+    var it = entry.row;
+    html += '<tr>';
+    if(entry.showMain){
+      html += '<td rowspan="' + entry.mainSpan + '" class="matrix-main-cell">' + (it.level2 || '-') + '</td>';
+    }
+    if(entry.showSub){
+      html += '<td rowspan="' + entry.subSpan + '" class="matrix-sub-cell">' + (it.level3 || '-') + '</td>';
+    }
+    if(includeItem){
+      html += '<td class="text-slate-900 font-medium">' + (it.item_name || '-') + '</td>';
+    }
+    html += '<td class="text-center font-bold text-slate-900">' + it.target + '</td>' +
+            '<td class="text-center font-bold text-emerald-700">' + it.covered + '</td>' +
+            '<td class="text-center font-semibold text-amber-700">' + entry.rem + '</td>' +
+            '<td class="text-center font-bold text-indigo-700">' + entry.pct + '%</td>' +
+            '</tr>';
+  });
+
   tbody.innerHTML = html;
-  return sorted;
+  return built;
 }
 
 function renderTargetSheets(){
@@ -824,31 +857,77 @@ function renderTargetSheets(){
   var extRows = filtered.filter(r => r.main_type === 'extension');
   var devRows = filtered.filter(r => r.main_type === 'development');
 
-  window.currentExtSheetRows = renderSingleCategoryMatrix(extRows, 'extTargetMatrixBody');
-  window.currentDevSheetRows = renderSingleCategoryMatrix(devRows, 'devTargetMatrixBody');
+  window.currentExtSheetMeta = renderSingleCategoryMatrix(extRows, 'extTargetMatrixBody', false);
+  window.currentDevSheetMeta = renderSingleCategoryMatrix(devRows, 'devTargetMatrixBody', true);
 }
 
 function downloadTargetSheetExcel(type){
-  var rows = type === 'development' ? (window.currentDevSheetRows || []) : (window.currentExtSheetRows || []);
-  if(!rows.length) return showToast('Download කිරීමට Target දත්ත නැත', false);
+  if(typeof XLSX === 'undefined') return showToast('Excel library load ஆகவில்லை', false);
+  var isDev = type === 'development';
+  var meta = isDev ? window.currentDevSheetMeta : window.currentExtSheetMeta;
+  if(!meta || !meta.items || !meta.items.length) return showToast('Download කිරීමට Target දත්ත නැත', false);
 
-  var exportRows = rows.map(it => {
-    var rem = Math.max(0, it.target - it.covered);
-    var pct = it.target > 0 ? Math.min(100, Math.round((it.covered / it.target) * 100)) : (it.covered > 0 ? 100 : 0);
-    return {
-      'Season / Year': it.level1 || '',
-      'Main Program': it.level2 || '',
-      'Sub Program': it.level3 || '',
-      'Item': it.item_name || '',
-      'Target': it.target,
-      'Progress': it.covered,
-      'Remaining': rem,
-      'Progress %': pct + '%'
-    };
+  var headers = isDev
+    ? ['Main Program', 'Sub Program', 'Item', 'Target', 'Progress', 'Remaining', '%']
+    : ['Main Program', 'Sub Program', 'Target', 'Progress', 'Remaining', '%'];
+
+  var sheetData = [headers];
+  var merges = [];
+
+  // Data starts at row index 1 (row 0 is header)
+  var dataStartRow = 1;
+
+  meta.items.forEach((entry, idx) => {
+    var excelRowIdx = dataStartRow + idx;
+    var it = entry.row;
+    var mainVal = entry.showMain ? (it.level2 || '-') : '';
+    var subVal  = entry.showSub  ? (it.level3 || '-') : '';
+
+    if(isDev){
+      sheetData.push([
+        mainVal,
+        subVal,
+        it.item_name || '-',
+        it.target,
+        it.covered,
+        entry.rem,
+        entry.pct + '%'
+      ]);
+    } else {
+      sheetData.push([
+        mainVal,
+        subVal,
+        it.target,
+        it.covered,
+        entry.rem,
+        entry.pct + '%'
+      ]);
+    }
+
+    // Column 0 = Main Program
+    if(entry.showMain && entry.mainSpan > 1){
+      merges.push({
+        s: { r: excelRowIdx, c: 0 },
+        e: { r: excelRowIdx + entry.mainSpan - 1, c: 0 }
+      });
+    }
+
+    // Column 1 = Sub Program
+    if(entry.showSub && entry.subSpan > 1){
+      merges.push({
+        s: { r: excelRowIdx, c: 1 },
+        e: { r: excelRowIdx + entry.subSpan - 1, c: 1 }
+      });
+    }
   });
 
-  var label = type === 'development' ? 'Development' : 'Extension';
-  var ws = XLSX.utils.json_to_sheet(exportRows);
+  var ws = XLSX.utils.aoa_to_sheet(sheetData);
+  ws['!merges'] = merges;
+  ws['!cols'] = isDev
+    ? [{ wch: 28 }, { wch: 28 }, { wch: 26 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 10 }]
+    : [{ wch: 28 }, { wch: 30 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 10 }];
+
+  var label = isDev ? 'Development' : 'Extension';
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, label + '_Targets');
   XLSX.writeFile(wb, label + '_Target_Chart_' + (myDiv || 'Unit') + '.xlsx');
@@ -997,12 +1076,13 @@ function renderUForm(){
   }
   empty.classList.add('hidden');
   
-  var html='<div class="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-[12px]">Auto Fill: <b>'+mySubName+' | '+myDiv+' | '+nodePath()+'</b></div>';
+  var offLabel = getActiveOfficerName() || '-';
+  var html='<div class="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-[12px]">Auto Fill: <b>'+mySubName+' | '+myDiv+' | Officer: '+offLabel+' | '+nodePath()+'</b></div>';
   html+='<form id="dynForm" class="mt-4 space-y-4" onsubmit="return submitUForm(event)">';
   qs.forEach((q, idx) => {
     html+='<div class="rounded-xl border p-4 bg-white"><label class="text-[14px] font-semibold">'+(idx+1)+'. '+q.question_text+' '+(q.is_required?'<span class="text-red-500">*</span>':'')+'</label><div class="mt-2">'+renderField(q)+'</div></div>';
   });
-  html+='<div class="flex gap-2"><button type="submit" class="btn btn-primary flex-1 py-3.5">💾 Submit & Update Progress (தொடர்ந்து Update செய்யலாம்)</button><button type="button" onclick="resetFormInputsOnly()" class="btn btn-ghost px-4">Clear</button></div></form>';
+  html+='<div class="flex gap-2"><button type="submit" class="btn btn-primary flex-1 py-3.5">💾 Submit & Update Progress</button><button type="button" onclick="resetFormInputsOnly()" class="btn btn-ghost px-4">Clear</button></div></form>';
   wrap.innerHTML=html;
 }
 
@@ -1047,9 +1127,11 @@ async function submitUForm(e){
     : (curSub ? (nodes.find(x=>x.id===curSub)||{}).title || '' : '');
   var itemTitle = curItem ? (nodes.find(x=>x.id===curItem)||{}).title || '' : '';
 
+  var activeOff = getActiveOfficerName();
   ans.__progress_qty = progressQty;
   if(itemTitle) ans.__item_name = itemTitle;
   if(myUser) ans.__user = myUser;
+  if(activeOff) ans.__officer_name = activeOff;
 
   var dbPayload = {
     id: 'r_' + Date.now(),
@@ -1106,6 +1188,7 @@ function buildDynamicSubTable(list, theadId, tbodyId, countId){
   var headers = Array.from(qColMap.keys());
   document.getElementById(theadId).innerHTML = '<tr>' +
     '<th>Date</th>' +
+    '<th>Officer</th>' +
     '<th>Main Program</th>' +
     '<th>Sub Program / Item</th>' +
     '<th>Progress Qty</th>' +
@@ -1114,13 +1197,14 @@ function buildDynamicSubTable(list, theadId, tbodyId, countId){
     '</tr>';
 
   if(!list.length){
-    document.getElementById(tbodyId).innerHTML = '<tr><td colspan="' + (5 + headers.length) + '" class="text-center py-5 text-slate-400 text-xs">දත්ත නොමැත</td></tr>';
+    document.getElementById(tbodyId).innerHTML = '<tr><td colspan="' + (6 + headers.length) + '" class="text-center py-5 text-slate-400 text-xs">දත්ත නොමැත</td></tr>';
     return { headers, qColMap };
   }
 
   document.getElementById(tbodyId).innerHTML = list.map(r => {
     var qty = getProgressedQtyForEntry(r);
     var itemN = getItemNameForEntry(r);
+    var offN = getOfficerForEntry(r);
     var subLabel = [r.level3, itemN].filter(Boolean).join(' — ') || r.node_path || '';
 
     var cells = headers.map(hText => {
@@ -1138,6 +1222,7 @@ function buildDynamicSubTable(list, theadId, tbodyId, countId){
 
     return '<tr>' +
       '<td class="text-xs whitespace-nowrap">' + (r.created_at ? new Date(r.created_at).toLocaleDateString() : '') + '</td>' +
+      '<td class="text-xs font-semibold text-indigo-900">' + offN + '</td>' +
       '<td class="text-xs font-bold">' + (r.level2 || '-') + '</td>' +
       '<td class="text-xs">' + subLabel + '</td>' +
       '<td class="text-xs font-bold text-emerald-700 text-center">' + qty + '</td>' +
@@ -1200,6 +1285,7 @@ function formatRowsForExcel(list, meta){
   return list.map(r => {
     var obj = {
       'Date': r.created_at ? new Date(r.created_at).toLocaleString() : '',
+      'Officer': getOfficerForEntry(r),
       'Type': (r.main_type || '').toUpperCase(),
       'Season / Year': r.level1 || '',
       'Main Program': r.level2 || '',
@@ -1255,6 +1341,8 @@ async function saveMyEdit(){
   var na = Object.assign({}, r.answers || {});
   document.querySelectorAll('[data-my-qid]').forEach(el=>{ na[el.dataset.myQid]=el.value; });
   na.__progress_qty = newQty;
+  var activeOff = getActiveOfficerName();
+  if(activeOff && !na.__officer_name) na.__officer_name = activeOff;
   r.answers = na;
 
   if(sb){
