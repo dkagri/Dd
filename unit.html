@@ -287,34 +287,32 @@ select, input, textarea { -webkit-appearance: none; appearance: none; }
     <div id="uL2Wrap"><label class="text-xs font-semibold" id="uL2Label">3. Main Program තෝරන්න *</label><select id="uL2" onchange="uPickL2()"></select></div>
     <div id="uL3Wrap" class="hidden"><label class="text-xs font-semibold">4. Sub Program තෝරන්න *</label><select id="uL3" onchange="uPickL3()"></select></div>
     <div id="uSubWrap" class="hidden"><label class="text-xs font-semibold">4. Sub Program / උප අංශය තෝරන්න *</label><select id="uSub" onchange="uPickSub()"></select></div>
-    <div id="uItemWrap" class="hidden"><label class="text-xs font-semibold">5. Item Name තෝරන්න *</label><select id="uItemSelect" onchange="uPickItem()"></select></div>
+
+    <!-- MULTI-SELECT ITEMS BOX FOR DEVELOPMENT -->
+    <div id="uItemWrap" class="hidden">
+      <div class="flex flex-wrap justify-between items-center gap-2">
+        <label class="text-xs font-semibold">5. Item Name තෝරන්න (ஒன்று அல்லது பல Items தெரிவு செய்யலாம்) *</label>
+        <div class="flex gap-2">
+          <button type="button" onclick="uSelectAllItems(true)" class="btn btn-ghost px-2.5 py-1 text-[11px] font-semibold">Select All</button>
+          <button type="button" onclick="uSelectAllItems(false)" class="btn btn-ghost px-2.5 py-1 text-[11px]">Clear</button>
+        </div>
+      </div>
+      <div id="uItemMultiBox" class="mt-2 rounded-2xl border-2 border-emerald-200 bg-emerald-50/40 p-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2"></div>
+      <div class="text-[11px] text-slate-500 mt-1">தேர்ந்தெடுக்கப்பட்ட Items: <b id="uSelectedItemsSummary" class="text-emerald-800">எதுவும் இல்லை</b></div>
+    </div>
   </div>
 
-  <!-- TARGET & LIVE PROGRESS DISPLAY INSIDE DATA ENTRY -->
+  <!-- TARGET & LIVE PROGRESS DISPLAY INSIDE DATA ENTRY (PER-ITEM BOXES) -->
   <div id="uTargetProgressBox" class="hidden mt-5 rounded-2xl border-2 border-indigo-200 bg-indigo-50/70 p-4">
-    <div class="flex flex-wrap justify-between items-center gap-3">
+    <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
       <div>
         <div class="text-xs font-bold text-indigo-800 uppercase">🎯 මෙම අංශයට අදාළ AI Office Target & Progress</div>
         <div class="text-xs text-slate-600 mt-0.5" id="uTargetPathLabel">-</div>
       </div>
-      <div class="flex flex-wrap gap-2">
-        <span class="px-3 py-1.5 rounded-xl bg-white border border-indigo-200 text-xs font-bold text-indigo-800">Target: <span id="uFormTargetVal">0</span></span>
-        <span class="px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-bold">Completed: <span id="uFormCoveredVal">0</span></span>
-        <span class="px-3 py-1.5 rounded-xl bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold">Remaining: <span id="uFormRemVal">0</span></span>
-      </div>
+      <span class="px-2.5 py-1 rounded-full bg-indigo-600 text-white text-[11px] font-bold" id="uTargetBoxCountBadge">1 Box</span>
     </div>
 
-    <div id="uPriceAutoInfo" class="hidden mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs bg-white p-2.5 rounded-xl border">
-      <div><span class="text-slate-400">Unit Price:</span> <b id="uAutoUnit">Rs. 0</b></div>
-      <div><span class="text-slate-400">Subsidy:</span> <b id="uAutoSub">0%</b></div>
-      <div><span class="text-slate-400">Gov Price:</span> <b id="uAutoGov">Rs. 0</b></div>
-      <div><span class="text-slate-400">Farmer Price:</span> <b class="text-emerald-700" id="uAutoFarmer">Rs. 0</b></div>
-    </div>
-
-    <div class="mt-3">
-      <label class="text-xs font-bold text-slate-800">මෙම යාවත්කාලීන කිරීමේදී ආවරණය කළ ප්‍රමාණය (Progress Quantity) *</label>
-      <input type="number" step="any" min="0" id="uProgressQtyInput" required placeholder="උදා: 5 (ප්‍රමාණය ඇතුළත් කරන්න)" class="mt-1 bg-white border-indigo-300 font-bold text-indigo-900">
-    </div>
+    <div id="uPerItemTargetCards" class="space-y-3"></div>
   </div>
 
   <div id="uFormWrap" class="mt-5"></div>
@@ -637,7 +635,7 @@ function refreshOfficerProfileDisplay(){
 refreshOfficerProfileDisplay();
 
 var nodes=[], questions=[], responses=[], itemPrices=[], targetRecords=[], pivRecords=[];
-var curMain='extension', curL1=null, curL2=null, curL3=null, curSub=null, curItem=null, editingId=null, editingPivId=null;
+var curMain='extension', curL1=null, curL2=null, curL3=null, curSub=null, curItem=null, curSelectedItems=[], editingId=null, editingPivId=null;
 var showAllExtBoxes=false, showAllDevBoxes=false;
 var PIV_STORAGE_KEY = 'fw_piv_submissions_v1';
 
@@ -689,7 +687,13 @@ function getMyResponses(){
   });
 }
 
-function getProgressedQtyForEntry(r){
+function getProgressedQtyForEntry(r, itemFilterName){
+  if(itemFilterName && r && r.answers && r.answers.__per_item_qty && typeof r.answers.__per_item_qty === 'object'){
+    var matchKey = Object.keys(r.answers.__per_item_qty).find(k => norm(k) === norm(itemFilterName));
+    if(matchKey !== undefined && r.answers.__per_item_qty[matchKey] !== undefined && !isNaN(Number(r.answers.__per_item_qty[matchKey]))){
+      return Number(r.answers.__per_item_qty[matchKey]);
+    }
+  }
   if(r && r.answers && r.answers.__progress_qty !== undefined && r.answers.__progress_qty !== null && !isNaN(Number(r.answers.__progress_qty))) {
     return Number(r.answers.__progress_qty);
   }
@@ -700,7 +704,12 @@ function getProgressedQtyForEntry(r){
 }
 
 function getItemNameForEntry(r){
-  if(r && r.answers && r.answers.__item_name) return String(r.answers.__item_name);
+  if(r && r.answers){
+    if(Array.isArray(r.answers.__selected_items) && r.answers.__selected_items.length > 1){
+      return r.answers.__selected_items.join(', ');
+    }
+    if(r.answers.__item_name) return String(r.answers.__item_name);
+  }
   if(r && r.item_name) return String(r.item_name);
   return '';
 }
@@ -753,11 +762,21 @@ function buildAiTargetRows(){
       if(t.level1 && norm(r.level1) !== norm(t.level1)) return false;
       if(t.level2 && norm(r.level2) !== norm(t.level2)) return false;
       if(t.level3 && norm(r.level3) !== norm(t.level3)) return false;
-      if(t.item_name && norm(getItemNameForEntry(r)) !== norm(t.item_name)) return false;
+      if(t.item_name){
+        var selList = (r.answers && Array.isArray(r.answers.__selected_items) && r.answers.__selected_items.length)
+          ? r.answers.__selected_items.map(norm)
+          : [norm(getItemNameForEntry(r))];
+        if(!selList.includes(norm(t.item_name))) return false;
+      }
       return true;
     });
 
-    var covered = matchedResp.reduce((sum, r) => sum + getProgressedQtyForEntry(r), 0);
+    var covered = matchedResp.reduce((sum, r) => {
+      if(t.item_name){
+        return sum + getProgressedQtyForEntry(r, t.item_name);
+      }
+      return sum + getProgressedQtyForEntry(r);
+    }, 0);
     var mainRank = getNodeSortRank(t.main_type, 2, t.level2, t.level1);
     var subRank = getNodeSortRank(t.main_type, 3, t.level3, t.level2);
     var itemRank = getNodeSortRank(t.main_type, 4, t.item_name, t.level3);
@@ -800,7 +819,13 @@ function buildAiTargetRows(){
               var k4 = [n1.main_type, n1.title, n2.title, n3.title, n4.title].map(norm).join('|');
               if(!seenKeys.has(k4)){
                 seenKeys.add(k4);
-                var cov4 = myMine.filter(r => norm(r.main_type)===norm(n1.main_type) && norm(r.level1)===norm(n1.title) && norm(r.level2)===norm(n2.title) && norm(r.level3)===norm(n3.title) && norm(getItemNameForEntry(r))===norm(n4.title)).reduce((s,r)=>s+getProgressedQtyForEntry(r),0);
+                var cov4 = myMine.filter(r => {
+                  if(norm(r.main_type)!==norm(n1.main_type) || norm(r.level1)!==norm(n1.title) || norm(r.level2)!==norm(n2.title) || norm(r.level3)!==norm(n3.title)) return false;
+                  var selList = (r.answers && Array.isArray(r.answers.__selected_items) && r.answers.__selected_items.length)
+                    ? r.answers.__selected_items.map(norm)
+                    : [norm(getItemNameForEntry(r))];
+                  return selList.includes(norm(n4.title));
+                }).reduce((s,r)=>s+getProgressedQtyForEntry(r, n4.title),0);
                 rows.push({ main_type: n1.main_type, level1: n1.title, level2: n2.title, level3: n3.title, item_name: n4.title, target: 0, covered: cov4, mainRank: mRank, subRank: sRank, itemRank: iRank, orderIndex: rows.length + 1000 });
               }
             });
@@ -1177,10 +1202,10 @@ function downloadTargetSheetExcel(type){
 }
 
 /* ========================================================================= */
-/* SECTION 2: DATA ENTRY FORM                                                */
+/* SECTION 2: DATA ENTRY FORM (MULTI-ITEM PER-BOX TARGETS + ITEM QUESTIONS)  */
 /* ========================================================================= */
 function uSelectMain(m){
-  curMain=m; curL1=null; curL2=null; curL3=null; curSub=null; curItem=null;
+  curMain=m; curL1=null; curL2=null; curL3=null; curSub=null; curItem=null; curSelectedItems=[];
   document.getElementById('uExt').className= m==='extension'?'py-3 rounded-xl font-semibold bg-indigo-600 text-white':'py-3 rounded-xl font-semibold bg-slate-100';
   document.getElementById('uDev').className= m==='development'?'py-3 rounded-xl font-semibold bg-emerald-600 text-white':'py-3 rounded-xl font-semibold bg-slate-100';
   document.getElementById('uL3Wrap').classList.toggle('hidden', m!=='development');
@@ -1193,6 +1218,75 @@ function publishedChildren(parentId, level){
   return (nodes||[]).filter(function(n){
     return n.main_type===curMain && n.level===level && (parentId? n.parent_id===parentId : !n.parent_id) && n.is_published;
   }).sort(function(a,b){return (a.sort_order||0)-(b.sort_order||0);});
+}
+
+function renderMultiItemCheckboxes(l4List){
+  var box = document.getElementById('uItemMultiBox');
+  if(!box) return;
+  if(!l4List || !l4List.length){
+    box.innerHTML = '<div class="col-span-full text-xs text-slate-400">Items නොමැත (Sub Program மட்டும் பயன்படுத்தலாம்)</div>';
+    updateSelectedItemsSummary(l4List);
+    return;
+  }
+
+  curSelectedItems = curSelectedItems.filter(id => l4List.some(it => String(it.id) === String(id)));
+  if(!curSelectedItems.length && curItem && l4List.some(it => String(it.id) === String(curItem))){
+    curSelectedItems = [String(curItem)];
+  }
+
+  box.innerHTML = l4List.map(it => {
+    var checked = curSelectedItems.includes(String(it.id)) ? 'checked' : '';
+    var activeCls = checked ? 'border-emerald-600 bg-emerald-100/80 text-emerald-950' : 'border-slate-200 bg-white text-slate-800';
+    return '<label class="flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold cursor-pointer transition ' + activeCls + '">' +
+      '<input type="checkbox" value="' + it.id + '" ' + checked + ' onchange="onMultiItemToggle(this.value, this.checked)" class="!w-4 !h-4 accent-emerald-600 shrink-0">' +
+      '<span class="leading-snug">' + it.title + '</span>' +
+    '</label>';
+  }).join('');
+
+  updateSelectedItemsSummary(l4List);
+}
+
+function updateSelectedItemsSummary(l4List){
+  var sumEl = document.getElementById('uSelectedItemsSummary');
+  if(!sumEl) return;
+  var list = l4List || (curL3 ? publishedChildren(curL3, 4) : []);
+  var names = curSelectedItems.map(id => {
+    var found = list.find(it => String(it.id) === String(id));
+    return found ? found.title : '';
+  }).filter(Boolean);
+  sumEl.textContent = names.length ? names.join(', ') : 'எதுவும் இல்லை';
+}
+
+function snapshotPerItemQuantities(){
+  var map = {};
+  document.querySelectorAll('[data-item-qty]').forEach(el => {
+    var iName = el.dataset.itemQty;
+    if(iName && el.value !== '') map[iName] = el.value;
+  });
+  return map;
+}
+
+function onMultiItemToggle(itemId, isChecked){
+  var prevQtyMap = snapshotPerItemQuantities();
+  var sid = String(itemId);
+  if(isChecked){
+    if(!curSelectedItems.includes(sid)) curSelectedItems.push(sid);
+  } else {
+    curSelectedItems = curSelectedItems.filter(id => id !== sid);
+  }
+  curItem = curSelectedItems.length ? curSelectedItems[0] : null;
+  var l4 = curL3 ? publishedChildren(curL3, 4) : [];
+  renderMultiItemCheckboxes(l4);
+  renderUForm(prevQtyMap);
+}
+
+function uSelectAllItems(selectAll){
+  var prevQtyMap = snapshotPerItemQuantities();
+  var l4 = curL3 ? publishedChildren(curL3, 4) : [];
+  curSelectedItems = selectAll ? l4.map(it => String(it.id)) : [];
+  curItem = curSelectedItems.length ? curSelectedItems[0] : null;
+  renderMultiItemCheckboxes(l4);
+  renderUForm(prevQtyMap);
 }
 
 function renderUSelects(){
@@ -1217,20 +1311,28 @@ function renderUSelects(){
     if(curL3) document.getElementById('uL3').value=curL3;
 
     var l4 = curL3 ? publishedChildren(curL3,4) : [];
-    document.getElementById('uItemSelect').innerHTML='<option value="">-- Item තෝරන්න (අදාළ නම්) --</option>'+l4.map(it=>'<option value="'+it.id+'">'+it.title+'</option>').join('');
-    if(curItem) document.getElementById('uItemSelect').value=curItem;
+    renderMultiItemCheckboxes(l4);
   }
   renderUForm();
 }
 
-function uPickL1(){ curL1=document.getElementById('uL1').value||null; curL2=null; curL3=null; curSub=null; curItem=null; renderUSelects(); }
-function uPickL2(){ curL2=document.getElementById('uL2').value||null; curL3=null; curSub=null; curItem=null; renderUSelects(); }
+function uPickL1(){ curL1=document.getElementById('uL1').value||null; curL2=null; curL3=null; curSub=null; curItem=null; curSelectedItems=[]; renderUSelects(); }
+function uPickL2(){ curL2=document.getElementById('uL2').value||null; curL3=null; curSub=null; curItem=null; curSelectedItems=[]; renderUSelects(); }
 function uPickSub(){ curSub=document.getElementById('uSub').value||null; renderUForm(); }
-function uPickL3(){ curL3=document.getElementById('uL3').value||null; curItem=null; renderUSelects(); }
-function uPickItem(){ curItem=document.getElementById('uItemSelect').value||null; renderUForm(); }
+function uPickL3(){ curL3=document.getElementById('uL3').value||null; curItem=null; curSelectedItems=[]; renderUSelects(); }
+
+function getSelectedItemObjects(){
+  if(curMain !== 'development' || !curL3) return [];
+  var l4 = publishedChildren(curL3, 4);
+  return l4.filter(it => curSelectedItems.includes(String(it.id)));
+}
 
 function leafId(){
-  if(curMain==='development') return curItem || curL3;
+  if(curMain==='development'){
+    var selObjs = getSelectedItemObjects();
+    if(selObjs.length) return selObjs[0].id;
+    return curItem || curL3;
+  }
   return curSub || curL2;
 }
 
@@ -1240,29 +1342,48 @@ function nodePath(){
   if(curL2){ var n2=nodes.find(x=>x.id===curL2); if(n2) parts.push(n2.title); }
   if(curL3){ var n3=nodes.find(x=>x.id===curL3); if(n3) parts.push(n3.title); }
   if(curSub){ var ns=nodes.find(x=>x.id===curSub); if(ns) parts.push(ns.title); }
-  if(curItem){ var ni=nodes.find(x=>x.id===curItem); if(ni) parts.push(ni.title); }
+  if(curMain==='development'){
+    var selObjs = getSelectedItemObjects();
+    if(selObjs.length){
+      parts.push(selObjs.map(o => o.title).join(', '));
+    } else if(curItem){
+      var ni=nodes.find(x=>x.id===curItem); if(ni) parts.push(ni.title);
+    }
+  } else if(curItem){
+    var ni2=nodes.find(x=>x.id===curItem); if(ni2) parts.push(ni2.title);
+  }
   return parts.join(' → ');
 }
 
-function renderField(q){
+function renderField(q, itemScopeName){
   var req=q.is_required?'required':'';
   var opts = Array.isArray(q.options) ? q.options : [];
-  if(q.question_type==='short_text') return '<input data-qid="'+q.id+'" '+req+' placeholder="Type කරන්න...">';
-  if(q.question_type==='paragraph') return '<textarea data-qid="'+q.id+'" rows="3" '+req+' placeholder="Type කරන්න..."></textarea>';
-  if(q.question_type==='number') return '<input type="number" step="any" data-qid="'+q.id+'" '+req+' placeholder="0">';
-  if(q.question_type==='date') return '<input type="date" data-qid="'+q.id+'" '+req+'>';
-  if(q.question_type==='yes_no') return '<div class="flex gap-2"><label class="flex-1 text-center rounded-xl border py-2 text-sm option-label cursor-pointer"><input type="radio" name="q_'+q.id+'" value="Yes" data-qid="'+q.id+'" '+req+' class="hidden"><span class="block w-full h-full p-1">Yes</span></label><label class="flex-1 text-center rounded-xl border py-2 text-sm option-label cursor-pointer"><input type="radio" name="q_'+q.id+'" value="No" data-qid="'+q.id+'" '+req+' class="hidden"><span class="block w-full h-full p-1">No</span></label></div>';
-  if(q.question_type==='multiple_choice'){ return opts.map(o=>'<label class="flex gap-2 items-center text-sm py-1.5 option-label rounded-lg px-2 cursor-pointer"><input type="radio" name="q_'+q.id+'" value="'+o+'" data-qid="'+q.id+'" '+req+' class="!w-auto mr-2"><span>'+o+'</span></label>').join(''); }
-  if(q.question_type==='checkbox'){ return opts.map(o=>'<label class="flex gap-2 items-center text-sm py-1.5 option-label rounded-lg px-2 cursor-pointer"><input type="checkbox" value="'+o+'" data-qid="'+q.id+'" data-multi="1" class="!w-auto mr-2"><span>'+o+'</span></label>').join(''); }
-  if(q.question_type==='dropdown'){ return '<select data-qid="'+q.id+'" '+req+'><option value="">-- තෝරන්න --</option>'+opts.map(o=>'<option>'+o+'</option>').join('')+'</select>'; }
-  return '<input data-qid="'+q.id+'" '+req+'>';
+  var scopeAttr = itemScopeName ? ' data-item-scope="' + encodeURIComponent(itemScopeName) + '"' : '';
+  var radioGroup = itemScopeName ? ('q_' + q.id + '_' + encodeURIComponent(itemScopeName)) : ('q_' + q.id);
+
+  if(q.question_type==='short_text') return '<input data-qid="'+q.id+'"'+scopeAttr+' '+req+' placeholder="Type කරන්න...">';
+  if(q.question_type==='paragraph') return '<textarea data-qid="'+q.id+'"'+scopeAttr+' rows="3" '+req+' placeholder="Type කරන්න..."></textarea>';
+  if(q.question_type==='number') return '<input type="number" step="any" data-qid="'+q.id+'"'+scopeAttr+' '+req+' placeholder="0">';
+  if(q.question_type==='date') return '<input type="date" data-qid="'+q.id+'"'+scopeAttr+' '+req+'>';
+  if(q.question_type==='yes_no') return '<div class="flex gap-2"><label class="flex-1 text-center rounded-xl border py-2 text-sm option-label cursor-pointer"><input type="radio" name="'+radioGroup+'" value="Yes" data-qid="'+q.id+'"'+scopeAttr+' '+req+' class="hidden"><span class="block w-full h-full p-1">Yes</span></label><label class="flex-1 text-center rounded-xl border py-2 text-sm option-label cursor-pointer"><input type="radio" name="'+radioGroup+'" value="No" data-qid="'+q.id+'"'+scopeAttr+' '+req+' class="hidden"><span class="block w-full h-full p-1">No</span></label></div>';
+  if(q.question_type==='multiple_choice'){ return opts.map(o=>'<label class="flex gap-2 items-center text-sm py-1.5 option-label rounded-lg px-2 cursor-pointer"><input type="radio" name="'+radioGroup+'" value="'+o+'" data-qid="'+q.id+'"'+scopeAttr+' '+req+' class="!w-auto mr-2"><span>'+o+'</span></label>').join(''); }
+  if(q.question_type==='checkbox'){ return opts.map(o=>'<label class="flex gap-2 items-center text-sm py-1.5 option-label rounded-lg px-2 cursor-pointer"><input type="checkbox" value="'+o+'" data-qid="'+q.id+'"'+scopeAttr+' data-multi="1" class="!w-auto mr-2"><span>'+o+'</span></label>').join(''); }
+  if(q.question_type==='dropdown'){ return '<select data-qid="'+q.id+'"'+scopeAttr+' '+req+'><option value="">-- තෝරන්න --</option>'+opts.map(o=>'<option>'+o+'</option>').join('')+'</select>'; }
+  return '<input data-qid="'+q.id+'"'+scopeAttr+' '+req+'>';
 }
 
-function renderUForm(){
+function getQuestionsForNode(nodeId){
+  return (questions||[]).filter(q => String(q.node_id) === String(nodeId)).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
+}
+
+function renderUForm(preservedQtyMap){
   var wrap=document.getElementById('uFormWrap');
   var empty=document.getElementById('uEmpty');
   var tpBox=document.getElementById('uTargetProgressBox');
+  var cardsWrap=document.getElementById('uPerItemTargetCards');
+  var badgeEl=document.getElementById('uTargetBoxCountBadge');
   var lid=leafId();
+  var prevQty = preservedQtyMap || {};
   
   if(!lid){
     wrap.innerHTML=''; empty.classList.add('hidden'); tpBox.classList.add('hidden');
@@ -1275,45 +1396,106 @@ function renderUForm(){
   var n3Title = curMain==='development'
     ? (curL3 ? (nodes.find(x=>x.id===curL3)||{}).title || '' : '')
     : (curSub ? (nodes.find(x=>x.id===curSub)||{}).title || '' : '');
-  var itemTitle = curItem ? (nodes.find(x=>x.id===curItem)||{}).title || '' : '';
 
   document.getElementById('uTargetPathLabel').textContent = nodePath();
 
   var allRows = buildAiTargetRows();
-  var matchedRow = allRows.find(r =>
-    norm(r.main_type) === norm(curMain) &&
-    norm(r.level1) === norm(n1Title) &&
-    norm(r.level2) === norm(n2Title) &&
-    norm(r.level3) === norm(n3Title) &&
-    norm(r.item_name) === norm(itemTitle)
-  );
+  var selObjs = getSelectedItemObjects();
 
-  var tVal = matchedRow ? matchedRow.target : 0;
-  var cVal = matchedRow ? matchedRow.covered : 0;
-  document.getElementById('uFormTargetVal').textContent = tVal;
-  document.getElementById('uFormCoveredVal').textContent = cVal;
-  document.getElementById('uFormRemVal').textContent = Math.max(0, tVal - cVal);
-
-  var priceBox = document.getElementById('uPriceAutoInfo');
-  if(curMain === 'development' && itemTitle){
-    var pObj = (itemPrices||[]).find(x => norm(x.item_name) === norm(itemTitle) && (!n1Title || !x.year || norm(x.year) === norm(n1Title)));
-    if(pObj){
-      priceBox.classList.remove('hidden');
-      document.getElementById('uAutoUnit').textContent = 'Rs. ' + (pObj.unit_price||0);
-      document.getElementById('uAutoSub').textContent = pObj.subsidy || '0%';
-      document.getElementById('uAutoGov').textContent = 'Rs. ' + (pObj.gov_price||0);
-      document.getElementById('uAutoFarmer').textContent = 'Rs. ' + (pObj.farmer_price||0);
-    } else { priceBox.classList.add('hidden'); }
+  // Build target box entries: one box per selected item if multiple items selected, else 1 box
+  var targetBoxEntries = [];
+  if(curMain === 'development' && selObjs.length > 0){
+    targetBoxEntries = selObjs.map(itObj => ({
+      itemId: String(itObj.id),
+      itemTitle: itObj.title,
+      key: itObj.title
+    }));
   } else {
-    priceBox.classList.add('hidden');
+    var singleItemTitle = curItem ? ((nodes.find(x=>x.id===curItem)||{}).title || '') : '';
+    targetBoxEntries = [{
+      itemId: curItem ? String(curItem) : '',
+      itemTitle: singleItemTitle,
+      key: singleItemTitle || '__default__'
+    }];
   }
 
-  var qs=(questions||[]).filter(q => String(q.node_id) === String(lid)).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
-  if(!qs.length && curMain === 'development' && curItem && curL3){
-    qs = (questions||[]).filter(q => String(q.node_id) === String(curL3)).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
+  if(badgeEl){
+    badgeEl.textContent = targetBoxEntries.length + (targetBoxEntries.length === 1 ? ' Box' : ' Boxes');
   }
 
-  if(!qs.length){
+  cardsWrap.innerHTML = targetBoxEntries.map((entry, idx) => {
+    var matchedRow = allRows.find(r =>
+      norm(r.main_type) === norm(curMain) &&
+      norm(r.level1) === norm(n1Title) &&
+      norm(r.level2) === norm(n2Title) &&
+      norm(r.level3) === norm(n3Title) &&
+      norm(r.item_name) === norm(entry.itemTitle)
+    );
+    var tVal = matchedRow ? matchedRow.target : 0;
+    var cVal = matchedRow ? matchedRow.covered : 0;
+    var remVal = Math.max(0, tVal - cVal);
+    var savedVal = prevQty[entry.key] !== undefined ? prevQty[entry.key] : '';
+
+    var priceHtml = '';
+    if(curMain === 'development' && entry.itemTitle){
+      var pObj = (itemPrices||[]).find(x => norm(x.item_name) === norm(entry.itemTitle) && (!n1Title || !x.year || norm(x.year) === norm(n1Title)));
+      if(pObj){
+        priceHtml = '<div class="mt-2.5 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs bg-slate-50 p-2 rounded-xl border">' +
+          '<div><span class="text-slate-400">Unit Price:</span> <b>Rs. ' + (pObj.unit_price||0) + '</b></div>' +
+          '<div><span class="text-slate-400">Subsidy:</span> <b>' + (pObj.subsidy || '0%') + '</b></div>' +
+          '<div><span class="text-slate-400">Gov Price:</span> <b>Rs. ' + (pObj.gov_price||0) + '</b></div>' +
+          '<div><span class="text-slate-400">Farmer Price:</span> <b class="text-emerald-700">Rs. ' + (pObj.farmer_price||0) + '</b></div>' +
+        '</div>';
+      }
+    }
+
+    var boxHeader = entry.itemTitle
+      ? '<div class="text-xs font-extrabold text-emerald-900 mb-2">📦 Item ' + (idx + 1) + ': ' + entry.itemTitle + '</div>'
+      : '<div class="text-xs font-extrabold text-indigo-900 mb-2">📌 Target & Progress</div>';
+
+    return '<div class="rounded-2xl bg-white border border-indigo-200 p-3.5 shadow-sm">' +
+      boxHeader +
+      '<div class="flex flex-wrap gap-2">' +
+        '<span class="px-3 py-1 rounded-xl bg-indigo-50 border border-indigo-200 text-xs font-bold text-indigo-800">Target: <span>' + tVal + '</span></span>' +
+        '<span class="px-3 py-1 rounded-xl bg-emerald-600 text-white text-xs font-bold">Completed: <span>' + cVal + '</span></span>' +
+        '<span class="px-3 py-1 rounded-xl bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold">Remaining: <span>' + remVal + '</span></span>' +
+      '</div>' +
+      priceHtml +
+      '<div class="mt-3">' +
+        '<label class="text-xs font-bold text-slate-800">' + (entry.itemTitle ? (entry.itemTitle + ' — ') : '') + 'මෙම යාවත්කාලීන කිරීමේදී ආවරණය කළ ප්‍රමාණය (Progress Quantity) *</label>' +
+        '<input type="number" step="any" min="0" data-item-qty="' + entry.key + '" value="' + savedVal + '" required placeholder="උදා: 5 (ප්‍රමාණය ඇතුළත් කරන්න)" class="mt-1 bg-white border-indigo-300 font-bold text-indigo-900">' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  // Collect questions: general/sub-program questions + item-specific questions for each selected item
+  var commonQs = [];
+  var perItemBlocks = [];
+
+  if(curMain === 'development' && selObjs.length > 0){
+    var subQs = curL3 ? getQuestionsForNode(curL3) : [];
+    var itemQuestionEntries = [];
+    selObjs.forEach(itObj => {
+      var iQs = getQuestionsForNode(itObj.id);
+      if(iQs.length){
+        itemQuestionEntries.push({ itemObj: itObj, qs: iQs });
+      }
+    });
+
+    if(itemQuestionEntries.length > 0){
+      commonQs = subQs;
+      perItemBlocks = itemQuestionEntries;
+    } else if(selObjs.length === 1){
+      commonQs = getQuestionsForNode(selObjs[0].id);
+      if(!commonQs.length) commonQs = subQs;
+    } else {
+      commonQs = subQs;
+    }
+  } else {
+    commonQs = getQuestionsForNode(lid);
+  }
+
+  if(!commonQs.length && !perItemBlocks.length){
     wrap.innerHTML=''; empty.classList.remove('hidden');
     return;
   }
@@ -1322,9 +1504,20 @@ function renderUForm(){
   var offLabel = getActiveOfficerName() || '-';
   var html='<div class="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-[12px]">Auto Fill: <b>'+mySubName+' | '+myDiv+' | Officer: '+offLabel+' | '+nodePath()+'</b></div>';
   html+='<form id="dynForm" class="mt-4 space-y-4" onsubmit="return submitUForm(event)">';
-  qs.forEach((q, idx) => {
-    html+='<div class="rounded-xl border p-4 bg-white"><label class="text-[14px] font-semibold">'+(idx+1)+'. '+q.question_text+' '+(q.is_required?'<span class="text-red-500">*</span>':'')+'</label><div class="mt-2">'+renderField(q)+'</div></div>';
+
+  commonQs.forEach((q, idx) => {
+    html+='<div class="rounded-xl border p-4 bg-white"><label class="text-[14px] font-semibold">'+(idx+1)+'. '+q.question_text+' '+(q.is_required?'<span class="text-red-500">*</span>':'')+'</label><div class="mt-2">'+renderField(q, '')+'</div></div>';
   });
+
+  perItemBlocks.forEach(block => {
+    html += '<div class="rounded-2xl border-2 border-emerald-200 bg-emerald-50/30 p-4 space-y-3">' +
+      '<div class="text-xs font-extrabold text-emerald-900 uppercase">📝 ' + block.itemObj.title + ' — வினாக்கள்</div>';
+    block.qs.forEach((q, qIdx) => {
+      html+='<div class="rounded-xl border p-3.5 bg-white"><label class="text-[13.5px] font-semibold">'+(qIdx+1)+'. '+q.question_text+' '+(q.is_required?'<span class="text-red-500">*</span>':'')+'</label><div class="mt-2">'+renderField(q, block.itemObj.title)+'</div></div>';
+    });
+    html += '</div>';
+  });
+
   html+='<div class="flex gap-2"><button type="submit" class="btn btn-primary flex-1 py-3.5">💾 Submit & Update Progress (தொடர்ந்து Update செய்யலாம்)</button><button type="button" onclick="resetFormInputsOnly()" class="btn btn-ghost px-4">Clear</button></div></form>';
   wrap.innerHTML=html;
 }
@@ -1332,18 +1525,48 @@ function renderUForm(){
 function resetFormInputsOnly(){
   var f = document.getElementById('dynForm');
   if(f) f.reset();
-  var qInp = document.getElementById('uProgressQtyInput');
-  if(qInp) qInp.value = '';
+  document.querySelectorAll('[data-item-qty]').forEach(el => { el.value = ''; });
 }
 
 function collectAns(){
   var ans={};
+  var perItemAns={};
   document.querySelectorAll('#uFormWrap [data-qid]').forEach(function(el){
     var id=el.dataset.qid;
-    if(el.dataset.multi==='1'){ if(el.checked){ if(!ans[id]) ans[id]=[]; ans[id].push(el.value); } }
-    else if(el.type==='radio'){ if(el.checked) ans[id]=el.value; }
-    else ans[id]=el.value;
+    var scopeEnc = el.dataset.itemScope || '';
+    var scopeName = scopeEnc ? decodeURIComponent(scopeEnc) : '';
+    var val = undefined;
+
+    if(el.dataset.multi==='1'){
+      if(el.checked){
+        if(scopeName){
+          if(!perItemAns[scopeName]) perItemAns[scopeName] = {};
+          if(!perItemAns[scopeName][id]) perItemAns[scopeName][id] = [];
+          perItemAns[scopeName][id].push(el.value);
+        } else {
+          if(!ans[id]) ans[id]=[];
+          ans[id].push(el.value);
+        }
+      }
+      return;
+    } else if(el.type==='radio'){
+      if(!el.checked) return;
+      val = el.value;
+    } else {
+      val = el.value;
+    }
+
+    if(scopeName){
+      if(!perItemAns[scopeName]) perItemAns[scopeName] = {};
+      perItemAns[scopeName][id] = val;
+    } else {
+      ans[id] = val;
+    }
   });
+
+  if(Object.keys(perItemAns).length){
+    ans.__per_item_answers = perItemAns;
+  }
   return ans;
 }
 
@@ -1351,12 +1574,21 @@ async function submitUForm(e){
   e.preventDefault();
   var f=document.getElementById('dynForm');
   if(!f.checkValidity()){ f.reportValidity(); return false; }
-  
-  var qtyEl = document.getElementById('uProgressQtyInput');
-  var progressQty = parseFloat(qtyEl.value);
-  if(isNaN(progressQty) || progressQty <= 0){
-    qtyEl.focus();
-    return showToast('Progress Quantity ඇතුළත් කරන්න', false);
+
+  var qtyInputs = Array.from(document.querySelectorAll('[data-item-qty]'));
+  var perItemQty = {};
+  var totalQty = 0;
+
+  for(var i = 0; i < qtyInputs.length; i++){
+    var inp = qtyInputs[i];
+    var qVal = parseFloat(inp.value);
+    if(isNaN(qVal) || qVal <= 0){
+      inp.focus();
+      return showToast('Progress Quantity ඇතුළත් කරන්න', false);
+    }
+    var kName = inp.dataset.itemQty || '__default__';
+    perItemQty[kName] = qVal;
+    totalQty += qVal;
   }
 
   var ans=collectAns();
@@ -1368,11 +1600,20 @@ async function submitUForm(e){
   var n3Title = curMain==='development'
     ? (curL3 ? (nodes.find(x=>x.id===curL3)||{}).title || '' : '')
     : (curSub ? (nodes.find(x=>x.id===curSub)||{}).title || '' : '');
-  var itemTitle = curItem ? (nodes.find(x=>x.id===curItem)||{}).title || '' : '';
+  var selObjs = getSelectedItemObjects();
+  var itemTitle = selObjs.length
+    ? selObjs.map(o => o.title).join(', ')
+    : (curItem ? (nodes.find(x=>x.id===curItem)||{}).title || '' : '');
 
   var activeOff = getActiveOfficerName();
-  ans.__progress_qty = progressQty;
-  if(itemTitle) ans.__item_name = itemTitle;
+  ans.__progress_qty = totalQty;
+  ans.__per_item_qty = perItemQty;
+  if(selObjs.length){
+    ans.__selected_items = selObjs.map(o => o.title);
+    ans.__item_name = itemTitle;
+  } else if(itemTitle){
+    ans.__item_name = itemTitle;
+  }
   if(myUser) ans.__user = myUser;
   if(activeOff) ans.__officer_name = activeOff;
 
@@ -1416,6 +1657,34 @@ function onMyFilterChange(){
   renderMy();
 }
 
+function getAnswerValueForHeader(r, hText, qColMap){
+  var ids = qColMap.get(hText) || [];
+  var itemNames = (r.answers && Array.isArray(r.answers.__selected_items) && r.answers.__selected_items.length)
+    ? r.answers.__selected_items
+    : (getItemNameForEntry(r) ? [getItemNameForEntry(r)] : []);
+
+  for(var i = 0; i < itemNames.length; i++){
+    var iName = itemNames[i];
+    var perMap = (r.answers && r.answers.__per_item_answers && r.answers.__per_item_answers[iName]) || null;
+    if(perMap){
+      for(var k = 0; k < ids.length; k++){
+        if(perMap[ids[k]] !== undefined && perMap[ids[k]] !== ''){
+          var rawP = perMap[ids[k]];
+          return Array.isArray(rawP) ? rawP.join(', ') : rawP;
+        }
+      }
+    }
+  }
+
+  for(var k2 = 0; k2 < ids.length; k2++){
+    if(r.answers && r.answers[ids[k2]] !== undefined && r.answers[ids[k2]] !== ''){
+      var raw = r.answers[ids[k2]];
+      return Array.isArray(raw) ? raw.join(', ') : raw;
+    }
+  }
+  return '';
+}
+
 function buildDynamicSubTable(list, theadId, tbodyId, countId){
   if(countId) document.getElementById(countId).textContent = list.length;
 
@@ -1426,6 +1695,17 @@ function buildDynamicSubTable(list, theadId, tbodyId, countId){
       if(!qColMap.has(q.question_text)) qColMap.set(q.question_text, []);
       if(!qColMap.get(q.question_text).includes(q.id)) qColMap.get(q.question_text).push(q.id);
     });
+    if(r.answers && r.answers.__per_item_answers && typeof r.answers.__per_item_answers === 'object'){
+      Object.values(r.answers.__per_item_answers).forEach(qMap => {
+        if(!qMap || typeof qMap !== 'object') return;
+        Object.keys(qMap).forEach(qid => {
+          var qObj = (questions||[]).find(q => String(q.id) === String(qid));
+          var label = qObj ? qObj.question_text : ('Question ' + qid);
+          if(!qColMap.has(label)) qColMap.set(label, []);
+          if(!qColMap.get(label).includes(qid)) qColMap.get(label).push(qid);
+        });
+      });
+    }
   });
 
   var headers = Array.from(qColMap.keys());
@@ -1451,15 +1731,7 @@ function buildDynamicSubTable(list, theadId, tbodyId, countId){
     var subLabel = [r.level3, itemN].filter(Boolean).join(' — ') || r.node_path || '';
 
     var cells = headers.map(hText => {
-      var ids = qColMap.get(hText) || [];
-      var val = '';
-      for(var k=0; k<ids.length; k++){
-        if(r.answers && r.answers[ids[k]] !== undefined && r.answers[ids[k]] !== ''){
-          var raw = r.answers[ids[k]];
-          val = Array.isArray(raw) ? raw.join(', ') : raw;
-          break;
-        }
-      }
+      var val = getAnswerValueForHeader(r, hText, qColMap);
       return '<td class="text-xs">' + (val !== '' ? val : '-') + '</td>';
     }).join('');
 
@@ -1538,16 +1810,7 @@ function formatRowsForExcel(list, meta){
       'Progress Qty': getProgressedQtyForEntry(r)
     };
     headers.forEach(hText => {
-      var ids = qColMap.get(hText) || [];
-      var val = '';
-      for(var k=0; k<ids.length; k++){
-        if(r.answers && r.answers[ids[k]] !== undefined && r.answers[ids[k]] !== ''){
-          var raw = r.answers[ids[k]];
-          val = Array.isArray(raw) ? raw.join(', ') : raw;
-          break;
-        }
-      }
-      obj[hText] = val;
+      obj[hText] = getAnswerValueForHeader(r, hText, qColMap);
     });
     return obj;
   });
@@ -1980,7 +2243,6 @@ async function submitPivEntry(e){
   if(sb){
     var ins = await sb.from('piv_submissions').insert(record);
     if(ins.error){
-      // Fallback to local storage if table isn't created yet in Supabase
       pivRecords.unshift(record);
       saveLocalPivRecords(pivRecords);
       showToast('PIV Saved (Local Sync) • Unit No: ' + autoUnitNo, true);
@@ -2029,7 +2291,7 @@ function renderPivSubmissionsTable(){
   if(!tbody) return;
 
   if(!rows.length){
-    tbody.innerHTML = '<tr><td colspan="13" class="text-center py-6 text-slate-400 text-xs">PIV பதிவுகள் எதுவும் இல்லை</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="13" class="text-center py-6 text-slate-400 text-xs">no data</td></tr>';
     return;
   }
 

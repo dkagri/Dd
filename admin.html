@@ -203,7 +203,7 @@
 
   <div id="tw5" class="card hidden">
     <h2 class="font-bold text-[19px]">Step 5 — Item තෝරන්න / එකතු කරන්න (Development)</h2>
-    <p class="text-xs text-slate-500 mt-1">Copy All (Item & AI Office Targets)</p>
+    <p class="text-xs text-slate-500 mt-1">Copy All (Item & AI Office Targets) • Item add செய்த பின் முன் தயாரிக்கப்பட்ட 7 வினாக்கள் Form Builder & Unit இல் தானாகக் காட்டப்படும்</p>
     <div class="flex gap-2 mt-4">
       <input id="tNewL4" placeholder="උදා: Paddy Seed / Urea / Water Pump">
       <button onclick="tAddNode(4)" class="btn btn-primary px-4 shrink-0">+ Add Item</button>
@@ -220,7 +220,7 @@
     <div class="flex flex-wrap justify-between items-center gap-3">
       <div>
         <h2 class="font-bold text-[19px]">🏛️ AI Office Target Update</h2>
-        <p class="text-xs text-slate-500 mt-1">AD Office → AI Office Target</p>
+        <p class="text-xs text-slate-500 mt-1">AD Office → AI Office Target (Save Targets செய்யும் போது Development வினாக்களும் Auto Save ஆகும்)</p>
       </div>
       <div class="bg-indigo-50 border border-indigo-200 px-4 py-2 rounded-xl text-right">
         <div class="text-[11px] text-indigo-600 font-semibold">මුළු Target එකතුව (Total)</div>
@@ -301,7 +301,10 @@
 
 <div id="w6" class="wizard-step">
 <div class="card"><h2 class="font-bold text-[19px]">Step 6 — Unit ප්‍රශ්න සාදන්න</h2>
-<div class="flex flex-wrap gap-2 mt-3"><button onclick="loadDevTemplate()" class="btn btn-success text-xs px-3 py-2">Development Template</button><button onclick="loadExtTemplate()" class="btn btn-ghost text-xs px-3 py-2">Extension Template</button></div>
+<div class="flex flex-wrap gap-2 mt-3"><button onclick="loadDevTemplate()" class="btn btn-success text-xs px-3 py-2">Development Template (7 Questions)</button><button onclick="loadExtTemplate()" class="btn btn-ghost text-xs px-3 py-2">Extension Template</button></div>
+<div id="devMultiItemNote" class="hidden mt-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3 text-xs text-emerald-950">
+  <b>Multi-Item & Report Rule:</b> ஒரு Sub Program-இல் ஒன்றுக்கு மேற்பட்ட Items வழங்கப்பட்டால், Unit form-இல் Items select செய்ய box / progress box கீழ் பொதுவான வினாக்கள் ஒருமுறை மட்டுமே வரும். ஏதேனும் Item-க்கு மாத்திரம் வேறுபட்ட வினா இருந்தால் இங்கே சேர்க்கலாம்; Save/Submit ஆகும் போது ஒவ்வொரு Item-க்கும் தனி வரியாக (separate row) பிரிந்து சேமிக்கப்படும்.
+</div>
 <div class="grid lg:grid-cols-[400px_1fr] gap-5 mt-4">
 <form id="qForm" class="space-y-3 border rounded-2xl p-4 h-fit bg-slate-50"><input type="hidden" id="qId">
 <div><label>ප්‍රශ්නය — Question *</label><textarea id="qText" rows="2" required class="mt-1"></textarea></div>
@@ -694,6 +697,16 @@ var nodes=[], questions=[], users=[], responses=[], targetRecords=[], plItems=[]
 var curMain=null, curL1=null, curL2=null, curL3=null, curSub=null, curItem=null, curStep=1, selHierSub='sub1', selHierDiv=null, editingId=null;
 var PIV_STORAGE_KEY = 'fw_piv_submissions_v1';
 
+const DEV_DEFAULT_QUESTIONS = [
+  { text: 'මුලකුරු සහිත නම', type: 'short_text', options: [], required: true },
+  { text: 'ලිපිනය', type: 'short_text', options: [], required: true },
+  { text: 'දුරකථන අංකය', type: 'number', options: [], required: true },
+  { text: 'ජාතික හැදුනුම්පත් අංකය', type: 'short_text', options: [], required: true },
+  { text: 'ගොවි දායකත්වය', type: 'multiple_choice', options: ['නොමිලේ', 'ගොවි දායකත්වය - 25%', 'ගොවි දායකත්වය - 50%'], required: true },
+  { text: 'වටිනාකම (රුපියල්)', type: 'short_text', options: [], required: false },
+  { text: 'සටහන්', type: 'short_text', options: [], required: false }
+];
+
 function norm(s){ return String(s||'').trim().toLowerCase(); }
 function cleanOffName(s){ return String(s||'').replace(/\s*\(unit\)/gi, '').trim(); }
 function parseNum(v){ var n = parseFloat(String(v===undefined||v===null?'':v).replace(/[^0-9.-]/g,'')); return isNaN(n) ? 0 : n; }
@@ -769,6 +782,56 @@ function renderDashboard(){
   });
   document.getElementById('publishedBox').innerHTML=html;
   document.getElementById('recentBox').innerHTML=responses.slice(0,8).map(r=>'<div class="flex justify-between gap-3 rounded-xl border p-3 text-[13px]"><div><b>'+(r.node_path||'')+'</b><div class="text-xs text-slate-500">'+(r.division||'')+' • '+(r.office||'')+'</div></div><div class="text-xs text-slate-400">'+(r.created_at?new Date(r.created_at).toLocaleDateString():'')+'</div></div>').join('')||'<div class="text-xs text-slate-400">පිළිතුරු නැත</div>';
+}
+
+/* ================= Development Default Questions Auto-Populate & Save ================= */
+function ensureDefaultDevQuestionsForNode(nodeId, forcePersist){
+  if(!nodeId) return [];
+  questions = Array.isArray(questions) ? questions : [];
+  var existing = questions.filter(q => q && String(q.node_id) === String(nodeId));
+  if(existing.length > 0) return existing;
+
+  var created = [];
+  DEV_DEFAULT_QUESTIONS.forEach((tpl, idx) => {
+    var qObj = {
+      id: 'q_dev_' + nodeId + '_' + (idx + 1),
+      node_id: nodeId,
+      question_text: tpl.text,
+      question_type: tpl.type,
+      options: Array.isArray(tpl.options) ? tpl.options.slice() : [],
+      is_required: tpl.required !== false,
+      order_index: idx + 1
+    };
+    questions.push(qObj);
+    created.push(qObj);
+  });
+
+  if(forcePersist && sb && created.length){
+    sb.from('questions').upsert(created, { onConflict: 'id' }).catch(function(){});
+  }
+  return created;
+}
+
+async function autoSaveDevQuestionsForCurrentSelection(){
+  var targetNodeIds = new Set();
+  if(tL4) targetNodeIds.add(tL4);
+  if(tL3){
+    targetNodeIds.add(tL3);
+    nodes.filter(n => n && n.main_type === 'development' && n.level === 4 && n.parent_id === tL3).forEach(it => targetNodeIds.add(it.id));
+  }
+  var toUpsert = [];
+  targetNodeIds.forEach(nid => {
+    var existing = questions.filter(q => q && String(q.node_id) === String(nid));
+    if(!existing.length){
+      var added = ensureDefaultDevQuestionsForNode(nid, false);
+      toUpsert = toUpsert.concat(added);
+    } else {
+      toUpsert = toUpsert.concat(existing);
+    }
+  });
+  if(sb && toUpsert.length){
+    await sb.from('questions').upsert(toUpsert, { onConflict: 'id' });
+  }
 }
 
 /* ================= Shared Deep Copy Helper (All Sub-Levels, Questions & Targets) ================= */
@@ -991,7 +1054,10 @@ function tSelectNode(level, id){
   if(level===1){tL1=id;tL2=null;tL3=null;tL4=null;}
   if(level===2){tL2=id;tL3=null;tL4=null;}
   if(level===3){tL3=id;tL4=null;}
-  if(level===4){tL4=id;}
+  if(level===4){
+    tL4=id;
+    if(tMain==='development') ensureDefaultDevQuestionsForNode(id, true);
+  }
   tRenderLevel(level); tUpdateCrumb();
 }
 function tAfterL3(){ if(tMain==='development')tGoto(5); else tGoto(6); }
@@ -1025,6 +1091,9 @@ async function tAddNode(level){
   var newNode={id:'n_'+Date.now(),main_type:tMain,level:level,parent_id:pid,title:val,subtitle:'',is_published:true,sort_order:tChildrenOf(pid,level).length+1};
   nodes.push(newNode); document.getElementById(inpId).value='';
   if(sb) await sb.from('nodes').upsert(newNode);
+  if(tMain==='development' && level===4){
+    ensureDefaultDevQuestionsForNode(newNode.id, true);
+  }
   tSelectNode(level, newNode.id);
   showToast('සාර්ථකයි ✓',true);
 }
@@ -1147,7 +1216,11 @@ async function saveAllTargets(){
   if(sb && upserts.length){
     await sb.from('targets').upsert(upserts,{onConflict:'id'});
   }
-  renderDashboard(); showToast('Targets updated ✓',true);
+  if(tMain === 'development'){
+    await autoSaveDevQuestionsForCurrentSelection();
+  }
+  renderDashboard();
+  showToast(tMain === 'development' ? 'Targets & Development Questions Auto-Saved ✓' : 'Targets updated ✓', true);
 }
 function tBackFromUnits(){ if(tMain==='development')tGoto(5); else tGoto(4); }
 
@@ -1348,7 +1421,11 @@ function renderItem(){
   let list=curL3?nodes.filter(n=>n && n.main_type==='development'&&n.level===4&&n.parent_id===curL3):[];
   document.getElementById('itemList').innerHTML=list.map(n=>builderSelectCard(n,curItem===n.id,'pickItem',4)).join('')||'<div class="text-xs text-slate-400">Items නැත</div>';
 }
-function pickItem(id){curItem=id;renderItem();}
+function pickItem(id){
+  curItem=id;
+  if(curMain==='development' && id) ensureDefaultDevQuestionsForNode(id, true);
+  renderItem();
+}
 
 function leafId(){
   if(curMain==='development')return curItem||curL3;
@@ -1403,18 +1480,37 @@ async function copyQuestionItem(id){
 function renderQuestions(){
   var lid=leafId(); if(!lid)return;
   questions = Array.isArray(questions) ? questions : [];
+  if(curMain === 'development'){
+    ensureDefaultDevQuestionsForNode(lid, true);
+  }
+  var noteEl = document.getElementById('devMultiItemNote');
+  if(noteEl) noteEl.classList.toggle('hidden', curMain !== 'development');
+
   var qs=questions.filter(q=>q && q.node_id===lid).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
   document.getElementById('qCount').textContent=qs.length;
   document.getElementById('qList').innerHTML=qs.map((q,i)=>'<div class="rounded-xl border p-3 bg-white flex flex-wrap justify-between gap-2"><div><b>'+(i+1)+'. '+q.question_text+'</b><div class="text-xs text-slate-400">'+q.question_type+'</div></div><div class="flex flex-wrap gap-1"><button type="button" onclick="moveQ(\''+q.id+'\',-1)" class="btn btn-ghost px-2 py-1 text-xs">↑</button><button type="button" onclick="moveQ(\''+q.id+'\',1)" class="btn btn-ghost px-2 py-1 text-xs">↓</button><button type="button" onclick="copyQuestionItem(\''+q.id+'\')" class="btn btn-ghost px-2 py-1 text-xs text-indigo-700">Copy</button><button type="button" onclick="editQ(\''+q.id+'\')" class="btn btn-ghost px-2 py-1 text-xs">Edit</button><button type="button" onclick="delQ(\''+q.id+'\')" class="text-red-500 text-xs px-2">Delete</button></div></div>').join('')||'<div class="text-xs text-slate-400">ප්‍රශ්න නැත</div>';
 
   var prevEl = document.getElementById('qPreview');
   if(prevEl){
-    prevEl.innerHTML = qs.length ? qs.map((q, i) =>
+    var siblingItems = (curMain === 'development' && curL3)
+      ? nodes.filter(n => n && n.main_type === 'development' && n.level === 4 && n.parent_id === curL3)
+      : [];
+    var multiBoxHtml = '';
+    if(curMain === 'development' && siblingItems.length > 1){
+      multiBoxHtml = '<div class="rounded-xl border-2 border-emerald-300 bg-emerald-50/60 p-3 mb-3">' +
+        '<div class="text-xs font-bold text-emerald-950">Select Items (Sub Program) + Progress Box</div>' +
+        '<div class="flex flex-wrap gap-2 mt-2">' +
+          siblingItems.map(it => '<label class="inline-flex items-center gap-1.5 bg-white border rounded-lg px-2.5 py-1 text-xs font-semibold"><input type="checkbox" '+(it.id===curItem?'checked':'')+' class="w-auto"><span>'+it.title+'</span></label>').join('') +
+        '</div>' +
+        '<div class="mt-2"><input type="number" disabled placeholder="Progress Quantity (Box)" class="bg-white text-xs"></div>' +
+      '</div>';
+    }
+    prevEl.innerHTML = multiBoxHtml + (qs.length ? qs.map((q, i) =>
       '<div class="rounded-xl border bg-white p-3">' +
         '<div class="text-xs font-bold text-slate-800">' + (i+1) + '. ' + q.question_text + (q.is_required ? ' <span class="text-red-500">*</span>' : '') + '</div>' +
         renderQuestionPreviewControl(q) +
       '</div>'
-    ).join('') : '<div class="text-xs text-slate-400">No questions to display</div>';
+    ).join('') : '<div class="text-xs text-slate-400">No questions to display</div>');
   }
 }
 async function moveQ(id, dir){
@@ -1436,7 +1532,25 @@ document.getElementById('qForm').addEventListener('submit', async function(e){
 });
 function editQ(id){var q=questions.find(x=>x.id===id);if(!q)return;document.getElementById('qId').value=q.id;document.getElementById('qText').value=q.question_text;document.getElementById('qType').value=q.question_type;document.getElementById('qReq').value=q.is_required?'1':'0';curOptions=(q.options||[]).slice();renderOpts();onQType();}
 async function delQ(id){if(!await profConfirm('Delete කරන්නද?'))return;questions=questions.filter(x=>x.id!==id);if(sb) await sb.from('questions').delete().eq('id',id);renderQuestions();}
-function loadDevTemplate(){var lid=leafId();if(!lid)return;[['නම','short_text',[]],['ප්‍රමාණය','number',[]]].forEach((t,i)=>{let q={id:'q'+Date.now()+i,node_id:lid,question_text:t[0],question_type:t[1],options:t[2],is_required:true,order_index:questions.filter(x=>x.node_id===lid).length+1};questions.push(q);if(sb)sb.from('questions').upsert(q);});renderQuestions();}
+function loadDevTemplate(){
+  var lid=leafId(); if(!lid)return;
+  questions = questions.filter(q => !(q && q.node_id === lid));
+  DEV_DEFAULT_QUESTIONS.forEach((t,i)=>{
+    let q={
+      id:'q_dev_'+lid+'_'+(i+1)+'_'+Date.now(),
+      node_id:lid,
+      question_text:t.text,
+      question_type:t.type,
+      options:(t.options||[]).slice(),
+      is_required:t.required!==false,
+      order_index:i+1
+    };
+    questions.push(q);
+    if(sb) sb.from('questions').upsert(q);
+  });
+  renderQuestions();
+  showToast('Development 7 Questions Loaded ✓', true);
+}
 function loadExtTemplate(){var lid=leafId();if(!lid)return;[['වගා ප්‍රමාණය','number',[]]].forEach((t,i)=>{let q={id:'q'+Date.now()+i,node_id:lid,question_text:t[0],question_type:t[1],options:t[2],is_required:true,order_index:questions.filter(x=>x.node_id===lid).length+1};questions.push(q);if(sb)sb.from('questions').upsert(q);});renderQuestions();}
 async function finishWizard(){ renderDashboard(); goNav('dashboard'); }
 
@@ -1666,7 +1780,7 @@ async function ddApprovePivRecord(id){
   showToast('DD Office Approved & Date (' + appDate + ') Saved ✓', true);
 }
 
-/* ================= Data View ================= */
+/* ================= Data View (Single Row Per Item Split for Development) ================= */
 const CAT_PALETTE = [
   'bg-indigo-100 text-indigo-900 border-indigo-300',
   'bg-amber-100 text-amber-900 border-amber-300',
@@ -1724,6 +1838,40 @@ function setSelectPreserve(selId, vals, defLabel){
   else el.value = '';
 }
 
+function expandDevelopmentResponseRows(r){
+  var ans = (r && r.answers && typeof r.answers === 'object') ? r.answers : {};
+  var selectedItems = Array.isArray(ans.__selected_items) ? ans.__selected_items.filter(Boolean) : [];
+  if(!selectedItems.length && ans.__item_name){
+    selectedItems = [ans.__item_name];
+  }
+  if(selectedItems.length <= 1){
+    var singleItem = selectedItems[0] || ans.__item_name || '-';
+    return [{
+      rawRecord: r,
+      itemName: singleItem,
+      answers: ans,
+      answersText: formatAnswersText(ans, singleItem)
+    }];
+  }
+  return selectedItems.map(itName => {
+    var itemSpecificMap = (ans.__item_specific && typeof ans.__item_specific === 'object') ? ans.__item_specific[itName] : null;
+    var itemQtyMap = (ans.__item_quantities && typeof ans.__item_quantities === 'object') ? ans.__item_quantities[itName] : null;
+    var mergedAns = Object.assign({}, ans, { __item_name: itName });
+    if(itemQtyMap !== undefined && itemQtyMap !== null && itemQtyMap !== ''){
+      mergedAns.__progress_qty = itemQtyMap;
+    }
+    if(itemSpecificMap && typeof itemSpecificMap === 'object'){
+      Object.keys(itemSpecificMap).forEach(sk => { mergedAns[sk] = itemSpecificMap[sk]; });
+    }
+    return {
+      rawRecord: r,
+      itemName: itName,
+      answers: mergedAns,
+      answersText: formatAnswersText(mergedAns, itName)
+    };
+  });
+}
+
 function initDataFilters(){
   responses = Array.isArray(responses) ? responses : [];
   var extRes = responses.filter(r => norm(r.main_type) === 'extension');
@@ -1742,8 +1890,11 @@ function initDataFilters(){
   var dProg = document.getElementById('devF_MainProg').value;
   setSelectPreserve('devF_SubProg', [...new Set(devRes.filter(r => !dProg || norm(r.level2)===norm(dProg)).map(r => r.level3).filter(Boolean))], 'All Sub Programs');
   var dSub = document.getElementById('devF_SubProg').value;
-  var devItems = [...new Set(devRes.filter(r => (!dProg || norm(r.level2)===norm(dProg)) && (!dSub || norm(r.level3)===norm(dSub))).map(r => (r.answers && r.answers.__item_name) || '').filter(Boolean))];
-  setSelectPreserve('devF_Item', devItems, 'All Items');
+  var devExpanded = [];
+  devRes.filter(r => (!dProg || norm(r.level2)===norm(dProg)) && (!dSub || norm(r.level3)===norm(dSub))).forEach(r => {
+    expandDevelopmentResponseRows(r).forEach(er => { if(er.itemName && er.itemName !== '-') devExpanded.push(er.itemName); });
+  });
+  setSelectPreserve('devF_Item', [...new Set(devExpanded)], 'All Items');
   setSelectPreserve('devF_AdOffice', hierarchy.map(h => h.name), 'All AD Offices');
   var dAd = document.getElementById('devF_AdOffice').value;
   setSelectPreserve('devF_AiOffice', getAllAiOfficesByAdName(dAd), 'All AI Offices');
@@ -1770,17 +1921,25 @@ function fillDataFilters(){
   initDataFilters();
 }
 
-function formatAnswersText(ans){
+function formatAnswersText(ans, activeItem){
   if(!ans || typeof ans !== 'object') return '';
   var parts = [];
   if(ans.__officer_name) parts.push('Officer: ' + ans.__officer_name);
   Object.keys(ans).forEach(k => {
-    if(k === '__item_name' || k === '__progress_qty' || k === '__officer_name' || k === '__user') return;
+    if(k === '__item_name' || k === '__selected_items' || k === '__item_specific' || k === '__item_quantities' || k === '__progress_qty' || k === '__officer_name' || k === '__user') return;
     var v = ans[k];
     if(v !== undefined && v !== null && v !== ''){
       parts.push(Array.isArray(v) ? v.join(', ') : String(v));
     }
   });
+  if(activeItem && ans.__item_specific && ans.__item_specific[activeItem]){
+    var sp = ans.__item_specific[activeItem];
+    Object.keys(sp).forEach(sk => {
+      if(sp[sk] !== undefined && sp[sk] !== null && sp[sk] !== ''){
+        parts.push(sk + ': ' + (Array.isArray(sp[sk]) ? sp[sk].join(', ') : String(sp[sk])));
+      }
+    });
+  }
   if(ans.__progress_qty !== undefined && ans.__progress_qty !== null && ans.__progress_qty !== ''){
     parts.unshift('Qty: ' + ans.__progress_qty);
   }
@@ -1818,22 +1977,27 @@ function renderData(){
   var dAd   = document.getElementById('devF_AdOffice').value;
   var dAi   = document.getElementById('devF_AiOffice').value;
 
-  var devFiltered = devAll.filter(r => {
+  var devExpandedRows = [];
+  devAll.forEach(r => {
     var adName = resolveAdOfficeForDivision(r.division || r.office);
     var aiName = cleanOffName(r.division || r.office);
-    var itemN  = (r.answers && r.answers.__item_name) || '';
-    return (!dYr   || norm(r.level1) === norm(dYr)) &&
-           (!dPr   || norm(r.level2) === norm(dPr)) &&
-           (!dSub  || norm(r.level3) === norm(dSub)) &&
-           (!dItem || norm(itemN) === norm(dItem)) &&
-           (!dAd   || norm(adName) === norm(dAd)) &&
-           (!dAi   || norm(aiName) === norm(dAi));
+    var baseMatch = (!dYr  || norm(r.level1) === norm(dYr)) &&
+                    (!dPr  || norm(r.level2) === norm(dPr)) &&
+                    (!dSub || norm(r.level3) === norm(dSub)) &&
+                    (!dAd  || norm(adName) === norm(dAd)) &&
+                    (!dAi  || norm(aiName) === norm(dAi));
+    if(!baseMatch) return;
+    expandDevelopmentResponseRows(r).forEach(er => {
+      if(!dItem || norm(er.itemName) === norm(dItem)){
+        devExpandedRows.push(er);
+      }
+    });
   });
-  window.filteredDevResponses = devFiltered;
+  window.filteredDevResponses = devExpandedRows;
 
   document.getElementById('extDataCount').textContent = extFiltered.length;
-  document.getElementById('devDataCount').textContent = devFiltered.length;
-  document.getElementById('dataScopeNote').textContent = 'මුළු දත්ත: ' + responses.length + ' • Extension: ' + extFiltered.length + ' • Development: ' + devFiltered.length;
+  document.getElementById('devDataCount').textContent = devExpandedRows.length;
+  document.getElementById('dataScopeNote').textContent = 'මුළු දත්ත: ' + responses.length + ' • Extension: ' + extFiltered.length + ' • Development (Item Rows): ' + devExpandedRows.length;
 
   document.getElementById('extDataTbody').innerHTML = extFiltered.length ? extFiltered.map(r => {
     var catName = r.level2 || 'Extension';
@@ -1850,18 +2014,18 @@ function renderData(){
     '</tr>';
   }).join('') : '<tr><td colspan="7" class="text-center text-xs text-slate-400 py-5">Extension දත්ත නැත</td></tr>';
 
-  document.getElementById('devDataTbody').innerHTML = devFiltered.length ? devFiltered.map(r => {
+  document.getElementById('devDataTbody').innerHTML = devExpandedRows.length ? devExpandedRows.map(er => {
+    var r = er.rawRecord;
     var catName = r.level2 || 'Development';
     var badgeCls = getCategoryColorClass(catName);
     var adName = resolveAdOfficeForDivision(r.division || r.office);
-    var itemN = (r.answers && r.answers.__item_name) || '-';
     return '<tr>' +
       '<td class="text-xs"><span class="px-2.5 py-1 rounded-full border font-bold text-[11px] ' + badgeCls + '">' + catName + '</span></td>' +
       '<td class="text-xs">' + (r.level1 || '-') + '</td>' +
       '<td class="text-xs font-semibold">' + (r.level3 || '-') + '</td>' +
-      '<td class="text-xs font-medium text-emerald-900">' + itemN + '</td>' +
+      '<td class="text-xs font-bold text-emerald-900">' + (er.itemName || '-') + '</td>' +
       '<td class="text-xs"><b>' + cleanOffName(r.division || r.office) + '</b><div class="text-[11px] text-slate-400">' + adName + '</div></td>' +
-      '<td class="text-xs">' + formatAnswersText(r.answers) + '</td>' +
+      '<td class="text-xs">' + er.answersText + '</td>' +
       '<td class="text-xs whitespace-nowrap">' + (r.created_at ? new Date(r.created_at).toLocaleDateString() : '') + '</td>' +
       '<td class="whitespace-nowrap space-x-2"><button onclick="openEditData(\'' + r.id + '\')" class="text-indigo-600 font-semibold text-xs">Edit</button><button onclick="delData(\'' + r.id + '\')" class="text-red-500 text-xs">Del</button></td>' +
     '</tr>';
@@ -1933,22 +2097,24 @@ function downloadCategoryExcel(type){
   var list = type === 'development' ? (window.filteredDevResponses || []) : (window.filteredExtResponses || []);
   if(!list.length) return showToast('No filtered data available for download', false);
 
-  var rows = list.map(r => {
+  var rows = list.map(entry => {
+    var r = (type === 'development' && entry && entry.rawRecord) ? entry.rawRecord : entry;
+    var ans = (type === 'development' && entry && entry.answers) ? entry.answers : (r.answers || {});
     var adName = resolveAdOfficeForDivision(r.division || r.office);
     var base = {
       'Date': r.created_at ? new Date(r.created_at).toLocaleString() : '',
       'AD Office': adName,
       'AI Office': cleanOffName(r.division || r.office),
-      'AI Officer': (r.answers && r.answers.__officer_name) || '',
+      'AI Officer': ans.__officer_name || '',
       [type === 'development' ? 'Year' : 'Session']: r.level1 || '',
       'Main Program': r.level2 || '',
       'Sub Program': r.level3 || ''
     };
     if(type === 'development'){
-      base['Item'] = (r.answers && r.answers.__item_name) || '';
+      base['Item'] = (entry && entry.itemName) || ans.__item_name || '';
     }
-    base['Progress Qty'] = (r.answers && r.answers.__progress_qty !== undefined) ? r.answers.__progress_qty : '';
-    base['Answers'] = formatAnswersText(r.answers);
+    base['Progress Qty'] = (ans.__progress_qty !== undefined) ? ans.__progress_qty : '';
+    base['Answers'] = (type === 'development' && entry && entry.answersText) ? entry.answersText : formatAnswersText(ans);
     return base;
   });
 
@@ -2026,7 +2192,6 @@ document.getElementById('userForm').addEventListener('submit',async function(e){
     users.push(p);
   }
 
-  // Update localStorage if current user matches so unit.html sees updated officer_name immediately on same browser
   if(norm(localStorage.getItem('user')) === norm(p.username)){
     localStorage.setItem('user_officer_name', officerVal);
   }
