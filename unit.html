@@ -1202,7 +1202,7 @@ function downloadTargetSheetExcel(type){
 }
 
 /* ========================================================================= */
-/* SECTION 2: DATA ENTRY FORM (MULTI-ITEM PER-BOX TARGETS + ITEM QUESTIONS)  */
+/* SECTION 2: DATA ENTRY FORM (MULTI-ITEM PER-BOX TARGETS + MERGED QUESTIONS)*/
 /* ========================================================================= */
 function uSelectMain(m){
   curMain=m; curL1=null; curL2=null; curL3=null; curSub=null; curItem=null; curSelectedItems=[];
@@ -1355,25 +1355,33 @@ function nodePath(){
   return parts.join(' → ');
 }
 
-function renderField(q, itemScopeName){
+function renderField(q, itemScopeName, sharedItemTitles){
   var req=q.is_required?'required':'';
   var opts = Array.isArray(q.options) ? q.options : [];
   var scopeAttr = itemScopeName ? ' data-item-scope="' + encodeURIComponent(itemScopeName) + '"' : '';
+  var sharedAttr = (Array.isArray(sharedItemTitles) && sharedItemTitles.length)
+    ? ' data-shared-items="' + encodeURIComponent(JSON.stringify(sharedItemTitles)) + '"'
+    : '';
   var radioGroup = itemScopeName ? ('q_' + q.id + '_' + encodeURIComponent(itemScopeName)) : ('q_' + q.id);
 
-  if(q.question_type==='short_text') return '<input data-qid="'+q.id+'"'+scopeAttr+' '+req+' placeholder="Type කරන්න...">';
-  if(q.question_type==='paragraph') return '<textarea data-qid="'+q.id+'"'+scopeAttr+' rows="3" '+req+' placeholder="Type කරන්න..."></textarea>';
-  if(q.question_type==='number') return '<input type="number" step="any" data-qid="'+q.id+'"'+scopeAttr+' '+req+' placeholder="0">';
-  if(q.question_type==='date') return '<input type="date" data-qid="'+q.id+'"'+scopeAttr+' '+req+'>';
-  if(q.question_type==='yes_no') return '<div class="flex gap-2"><label class="flex-1 text-center rounded-xl border py-2 text-sm option-label cursor-pointer"><input type="radio" name="'+radioGroup+'" value="Yes" data-qid="'+q.id+'"'+scopeAttr+' '+req+' class="hidden"><span class="block w-full h-full p-1">Yes</span></label><label class="flex-1 text-center rounded-xl border py-2 text-sm option-label cursor-pointer"><input type="radio" name="'+radioGroup+'" value="No" data-qid="'+q.id+'"'+scopeAttr+' '+req+' class="hidden"><span class="block w-full h-full p-1">No</span></label></div>';
-  if(q.question_type==='multiple_choice'){ return opts.map(o=>'<label class="flex gap-2 items-center text-sm py-1.5 option-label rounded-lg px-2 cursor-pointer"><input type="radio" name="'+radioGroup+'" value="'+o+'" data-qid="'+q.id+'"'+scopeAttr+' '+req+' class="!w-auto mr-2"><span>'+o+'</span></label>').join(''); }
-  if(q.question_type==='checkbox'){ return opts.map(o=>'<label class="flex gap-2 items-center text-sm py-1.5 option-label rounded-lg px-2 cursor-pointer"><input type="checkbox" value="'+o+'" data-qid="'+q.id+'"'+scopeAttr+' data-multi="1" class="!w-auto mr-2"><span>'+o+'</span></label>').join(''); }
-  if(q.question_type==='dropdown'){ return '<select data-qid="'+q.id+'"'+scopeAttr+' '+req+'><option value="">-- තෝරන්න --</option>'+opts.map(o=>'<option>'+o+'</option>').join('')+'</select>'; }
-  return '<input data-qid="'+q.id+'"'+scopeAttr+' '+req+'>';
+  if(q.question_type==='short_text') return '<input data-qid="'+q.id+'"'+scopeAttr+sharedAttr+' '+req+' placeholder="Type කරන්න...">';
+  if(q.question_type==='paragraph') return '<textarea data-qid="'+q.id+'"'+scopeAttr+sharedAttr+' rows="3" '+req+' placeholder="Type කරන්න..."></textarea>';
+  if(q.question_type==='number') return '<input type="number" step="any" data-qid="'+q.id+'"'+scopeAttr+sharedAttr+' '+req+' placeholder="0">';
+  if(q.question_type==='date') return '<input type="date" data-qid="'+q.id+'"'+scopeAttr+sharedAttr+' '+req+'>';
+  if(q.question_type==='yes_no') return '<div class="flex gap-2"><label class="flex-1 text-center rounded-xl border py-2 text-sm option-label cursor-pointer"><input type="radio" name="'+radioGroup+'" value="Yes" data-qid="'+q.id+'"'+scopeAttr+sharedAttr+' '+req+' class="hidden"><span class="block w-full h-full p-1">Yes</span></label><label class="flex-1 text-center rounded-xl border py-2 text-sm option-label cursor-pointer"><input type="radio" name="'+radioGroup+'" value="No" data-qid="'+q.id+'"'+scopeAttr+sharedAttr+' '+req+' class="hidden"><span class="block w-full h-full p-1">No</span></label></div>';
+  if(q.question_type==='multiple_choice'){ return opts.map(o=>'<label class="flex gap-2 items-center text-sm py-1.5 option-label rounded-lg px-2 cursor-pointer"><input type="radio" name="'+radioGroup+'" value="'+o+'" data-qid="'+q.id+'"'+scopeAttr+sharedAttr+' '+req+' class="!w-auto mr-2"><span>'+o+'</span></label>').join(''); }
+  if(q.question_type==='checkbox'){ return opts.map(o=>'<label class="flex gap-2 items-center text-sm py-1.5 option-label rounded-lg px-2 cursor-pointer"><input type="checkbox" value="'+o+'" data-qid="'+q.id+'"'+scopeAttr+sharedAttr+' data-multi="1" class="!w-auto mr-2"><span>'+o+'</span></label>').join(''); }
+  if(q.question_type==='dropdown'){ return '<select data-qid="'+q.id+'"'+scopeAttr+sharedAttr+' '+req+'><option value="">-- තෝරන්න --</option>'+opts.map(o=>'<option>'+o+'</option>').join('')+'</select>'; }
+  return '<input data-qid="'+q.id+'"'+scopeAttr+sharedAttr+' '+req+'>';
 }
 
 function getQuestionsForNode(nodeId){
   return (questions||[]).filter(q => String(q.node_id) === String(nodeId)).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
+}
+
+function questionSignature(q){
+  var optsNorm = Array.isArray(q.options) ? q.options.map(norm).join('|') : '';
+  return [norm(q.question_text), norm(q.question_type), optsNorm].join('::');
 }
 
 function renderUForm(preservedQtyMap){
@@ -1468,31 +1476,61 @@ function renderUForm(preservedQtyMap){
     '</div>';
   }).join('');
 
-  // Collect questions: general/sub-program questions + item-specific questions for each selected item
+  // Collect questions: merge identical questions across selected items into one single question,
+  // and keep questions unique to a specific item under that item's block.
   var commonQs = [];
   var perItemBlocks = [];
 
   if(curMain === 'development' && selObjs.length > 0){
     var subQs = curL3 ? getQuestionsForNode(curL3) : [];
-    var itemQuestionEntries = [];
+    var itemQsMap = new Map();
     selObjs.forEach(itObj => {
-      var iQs = getQuestionsForNode(itObj.id);
-      if(iQs.length){
-        itemQuestionEntries.push({ itemObj: itObj, qs: iQs });
-      }
+      itemQsMap.set(String(itObj.id), getQuestionsForNode(itObj.id));
     });
 
-    if(itemQuestionEntries.length > 0){
-      commonQs = subQs;
-      perItemBlocks = itemQuestionEntries;
-    } else if(selObjs.length === 1){
-      commonQs = getQuestionsForNode(selObjs[0].id);
-      if(!commonQs.length) commonQs = subQs;
+    if(selObjs.length === 1){
+      var singleList = itemQsMap.get(String(selObjs[0].id)) || [];
+      commonQs = singleList.length ? singleList : subQs;
     } else {
-      commonQs = subQs;
+      // Determine which question signatures exist across ALL selected items
+      var sigCountAcrossItems = new Map();
+      selObjs.forEach(itObj => {
+        var iQs = itemQsMap.get(String(itObj.id)) || [];
+        var uniqueSigsForItem = new Set(iQs.map(questionSignature));
+        uniqueSigsForItem.forEach(sig => {
+          sigCountAcrossItems.set(sig, (sigCountAcrossItems.get(sig) || 0) + 1);
+        });
+      });
+
+      var allSelectedTitles = selObjs.map(o => o.title);
+      var seenSharedSigs = new Set();
+
+      // Add sub-program level questions first as shared across all selected items
+      subQs.forEach(q => {
+        commonQs.push({ q: q, sharedTitles: allSelectedTitles });
+      });
+
+      // Questions that appear in all selected items are merged once into commonQs
+      var firstItemQs = itemQsMap.get(String(selObjs[0].id)) || [];
+      firstItemQs.forEach(q => {
+        var sig = questionSignature(q);
+        if(sigCountAcrossItems.get(sig) === selObjs.length && !seenSharedSigs.has(sig)){
+          seenSharedSigs.add(sig);
+          commonQs.push({ q: q, sharedTitles: allSelectedTitles });
+        }
+      });
+
+      // Questions unique to a single/subset item (not shared across all selected items) are shown under that item
+      selObjs.forEach(itObj => {
+        var iQs = itemQsMap.get(String(itObj.id)) || [];
+        var uniqueQs = iQs.filter(q => (sigCountAcrossItems.get(questionSignature(q)) || 0) < selObjs.length);
+        if(uniqueQs.length){
+          perItemBlocks.push({ itemObj: itObj, qs: uniqueQs });
+        }
+      });
     }
   } else {
-    commonQs = getQuestionsForNode(lid);
+    commonQs = getQuestionsForNode(lid).map(q => ({ q: q, sharedTitles: null }));
   }
 
   if(!commonQs.length && !perItemBlocks.length){
@@ -1505,15 +1543,16 @@ function renderUForm(preservedQtyMap){
   var html='<div class="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-[12px]">Auto Fill: <b>'+mySubName+' | '+myDiv+' | Officer: '+offLabel+' | '+nodePath()+'</b></div>';
   html+='<form id="dynForm" class="mt-4 space-y-4" onsubmit="return submitUForm(event)">';
 
-  commonQs.forEach((q, idx) => {
-    html+='<div class="rounded-xl border p-4 bg-white"><label class="text-[14px] font-semibold">'+(idx+1)+'. '+q.question_text+' '+(q.is_required?'<span class="text-red-500">*</span>':'')+'</label><div class="mt-2">'+renderField(q, '')+'</div></div>';
+  commonQs.forEach((entry, idx) => {
+    var q = entry.q;
+    html+='<div class="rounded-xl border p-4 bg-white"><label class="text-[14px] font-semibold">'+(idx+1)+'. '+q.question_text+' '+(q.is_required?'<span class="text-red-500">*</span>':'')+'</label><div class="mt-2">'+renderField(q, '', entry.sharedTitles)+'</div></div>';
   });
 
   perItemBlocks.forEach(block => {
     html += '<div class="rounded-2xl border-2 border-emerald-200 bg-emerald-50/30 p-4 space-y-3">' +
-      '<div class="text-xs font-extrabold text-emerald-900 uppercase">📝 ' + block.itemObj.title + ' — வினாக்கள்</div>';
+      '<div class="text-xs font-extrabold text-emerald-900 uppercase">📝 ' + block.itemObj.title + ' — தனிப்பட்ட வினாக்கள்</div>';
     block.qs.forEach((q, qIdx) => {
-      html+='<div class="rounded-xl border p-3.5 bg-white"><label class="text-[13.5px] font-semibold">'+(qIdx+1)+'. '+q.question_text+' '+(q.is_required?'<span class="text-red-500">*</span>':'')+'</label><div class="mt-2">'+renderField(q, block.itemObj.title)+'</div></div>';
+      html+='<div class="rounded-xl border p-3.5 bg-white"><label class="text-[13.5px] font-semibold">'+(qIdx+1)+'. '+q.question_text+' '+(q.is_required?'<span class="text-red-500">*</span>':'')+'</label><div class="mt-2">'+renderField(q, block.itemObj.title, null)+'</div></div>';
     });
     html += '</div>';
   });
@@ -1535,18 +1574,31 @@ function collectAns(){
     var id=el.dataset.qid;
     var scopeEnc = el.dataset.itemScope || '';
     var scopeName = scopeEnc ? decodeURIComponent(scopeEnc) : '';
+    var sharedEnc = el.dataset.sharedItems || '';
+    var sharedList = [];
+    if(sharedEnc){
+      try{ sharedList = JSON.parse(decodeURIComponent(sharedEnc)); }catch(e){ sharedList = []; }
+    }
     var val = undefined;
 
     if(el.dataset.multi==='1'){
-      if(el.checked){
-        if(scopeName){
-          if(!perItemAns[scopeName]) perItemAns[scopeName] = {};
-          if(!perItemAns[scopeName][id]) perItemAns[scopeName][id] = [];
-          perItemAns[scopeName][id].push(el.value);
-        } else {
-          if(!ans[id]) ans[id]=[];
-          ans[id].push(el.value);
-        }
+      if(!el.checked) return;
+      val = el.value;
+      if(scopeName){
+        if(!perItemAns[scopeName]) perItemAns[scopeName] = {};
+        if(!Array.isArray(perItemAns[scopeName][id])) perItemAns[scopeName][id] = [];
+        if(!perItemAns[scopeName][id].includes(val)) perItemAns[scopeName][id].push(val);
+      } else if(Array.isArray(sharedList) && sharedList.length){
+        if(!Array.isArray(ans[id])) ans[id] = [];
+        if(!ans[id].includes(val)) ans[id].push(val);
+        sharedList.forEach(itTitle => {
+          if(!perItemAns[itTitle]) perItemAns[itTitle] = {};
+          if(!Array.isArray(perItemAns[itTitle][id])) perItemAns[itTitle][id] = [];
+          if(!perItemAns[itTitle][id].includes(val)) perItemAns[itTitle][id].push(val);
+        });
+      } else {
+        if(!Array.isArray(ans[id])) ans[id] = [];
+        if(!ans[id].includes(val)) ans[id].push(val);
       }
       return;
     } else if(el.type==='radio'){
@@ -1559,6 +1611,12 @@ function collectAns(){
     if(scopeName){
       if(!perItemAns[scopeName]) perItemAns[scopeName] = {};
       perItemAns[scopeName][id] = val;
+    } else if(Array.isArray(sharedList) && sharedList.length){
+      ans[id] = val;
+      sharedList.forEach(itTitle => {
+        if(!perItemAns[itTitle]) perItemAns[itTitle] = {};
+        perItemAns[itTitle][id] = val;
+      });
     } else {
       ans[id] = val;
     }
