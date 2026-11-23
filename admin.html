@@ -53,6 +53,7 @@
 <button data-nav="targets" onclick="goNav('targets')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">🎯 Target Setup<br><span class="text-[11px] font-normal opacity-80">Extension & Development Targets</span></button>
 <button data-nav="builder" onclick="goNav('builder')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">🧩 ප්‍රශ්න සකස් කිරීම<br><span class="text-[11px] font-normal opacity-80">Form Builder</span></button>
 <button data-nav="pricelist" onclick="goNav('pricelist')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">💰 Item Price List<br><span class="text-[11px] font-normal opacity-80">Year / Program / Item / Price</span></button>
+<button data-nav="pivapproval" onclick="goNav('pivapproval')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">🧾 PIV APPROVAL<br><span class="text-[11px] font-normal opacity-80">Unit → AD → DD Approval</span></button>
 <button data-nav="data" onclick="goNav('data')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">📊 දත්ත (Data)<br><span class="text-[11px] font-normal opacity-80">Edit / Delete / Filter</span></button>
 <button data-nav="users" onclick="goNav('users')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">👥 පරිශීලකයින් (Users)</button>
 <button data-nav="hierarchy" onclick="goNav('hierarchy')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">🏛️ කාර්යාල</button>
@@ -252,7 +253,7 @@
   </div>
 </div>
 
-<!-- ============ BUILDER ============ -->
+<!-- ============ BUILDER (WITH UP, DOWN, DELETE, COPY ALL SUB-NODES & EDIT) ============ -->
 <div id="page-builder" class="page hidden">
 <div class="card !py-3 flex flex-wrap items-center gap-2 text-[13px]"><span class="font-bold">ඔබ සිටින්නේ:</span><span id="crumb" class="text-indigo-700 font-semibold">Extension / Development තෝරන්න</span><button onclick="resetWizard()" class="ml-auto btn btn-ghost px-3 py-1.5 text-xs">↺ මුල සිට</button></div>
 
@@ -275,24 +276,25 @@
 
 <div id="w2" class="wizard-step">
 <div class="card"><div class="flex justify-between items-center"><h2 class="font-bold text-[19px]" id="w2Title">Step 2</h2><button onclick="goNav('targets')" class="btn btn-ghost text-xs">+ Target Setup වෙත</button></div>
+<p class="text-xs text-slate-500 mt-1">Up / Down / Delete / Copy All & Edit</p>
 <div id="l1List" class="mt-4 space-y-2"></div>
 <div class="flex gap-2 mt-5"><button onclick="gotoStep(1)" class="btn btn-ghost">← Back</button><button onclick="gotoStep(3)" id="w2Next" class="btn btn-primary ml-auto" disabled>Next →</button></div></div>
 </div>
 
 <div id="w3" class="wizard-step">
-<div class="card"><h2 class="font-bold text-[19px]" id="w3Title">Step 3</h2><p class="text-xs text-slate-500 mt-1" id="w3Desc"></p>
+<div class="card"><h2 class="font-bold text-[19px]" id="w3Title">Step 3</h2><p class="text-xs text-slate-500 mt-1" id="w3Desc">Up / Down / Delete / Copy All (உட்பிரிவுகள் அனைத்தும் Copy ஆகும்) & Edit</p>
 <div id="l2List" class="mt-4 space-y-2"></div>
 <div class="flex gap-2 mt-5"><button onclick="gotoStep(2)" class="btn btn-ghost">← Back</button><button onclick="w3Next()" id="w3Next" class="btn btn-primary ml-auto" disabled>Next →</button></div></div>
 </div>
 
 <div id="w4" class="wizard-step">
-<div class="card"><h2 class="font-bold text-[19px]" id="w4Title">Step 4</h2><p class="text-xs text-slate-500 mt-1" id="w4Desc"></p>
+<div class="card"><h2 class="font-bold text-[19px]" id="w4Title">Step 4 — Sub Program</h2><p class="text-xs text-slate-500 mt-1" id="w4Desc">Up / Down / Delete / Copy All (உட்பிரிவுகள் அனைத்தும் Copy ஆகும்) & Edit</p>
 <div id="l3List" class="mt-4 space-y-2"></div>
 <div class="flex gap-2 mt-5"><button onclick="gotoStep(3)" class="btn btn-ghost">← Back</button><button onclick="w4Next()" id="w4Next" class="btn btn-primary ml-auto" disabled>Next →</button></div></div>
 </div>
 
 <div id="w5" class="wizard-step">
-<div class="card"><h2 class="font-bold text-[19px]">Step 5 — Item තෝරන්න</h2>
+<div class="card"><h2 class="font-bold text-[19px]">Step 5 — Item තෝරන්න</h2><p class="text-xs text-slate-500 mt-1">Up / Down / Delete / Copy All & Edit</p>
 <div id="itemList" class="mt-4 space-y-2"></div>
 <div class="flex gap-2 mt-5"><button onclick="gotoStep(4)" class="btn btn-ghost">← Back</button><button onclick="gotoStep(6)" class="btn btn-primary ml-auto">Next: ප්‍රශ්න →</button></div></div>
 </div>
@@ -369,7 +371,70 @@
   </div>
 </div>
 
-<!-- ============ DATA (SEPARATE EXTENSION & DEVELOPMENT TABLES + COLORS + FILTERS + EDIT + EXCEL) ============ -->
+<!-- ============ PIV APPROVAL (UNIT -> AD -> DD APPROVAL) ============ -->
+<div id="page-pivapproval" class="page hidden space-y-5">
+  <div class="card space-y-4">
+    <div class="flex flex-wrap justify-between items-center gap-2">
+      <div>
+        <span class="px-2.5 py-0.5 rounded-full bg-violet-100 text-violet-800 text-[11px] font-bold uppercase">🧾 PIV APPROVAL (UNIT → AD OFFICE → DD OFFICE)</span>
+        <h2 class="text-xl font-bold text-slate-900 mt-1">PIV Approval Management</h2>
+        <p class="text-xs text-slate-500">Unit submit PIV records. AD Office check & submit to DD Office -> AD Approved / DD Office Pending. DD Office check & Approve -> Date saved.</p>
+      </div>
+      <button onclick="sbSync()" class="btn btn-ghost text-xs px-3 py-2">↻ Refresh PIV</button>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-violet-50/60 p-3.5 rounded-2xl border border-violet-200">
+      <div>
+        <label class="text-[11px] font-bold text-violet-950 uppercase">AD Office</label>
+        <select id="admPivFilterAd" onchange="renderAdminPivTable()" class="mt-1 bg-white text-xs">
+          <option value="">All AD Offices</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-[11px] font-bold text-violet-950 uppercase">Year</label>
+        <select id="admPivFilterYear" onchange="renderAdminPivTable()" class="mt-1 bg-white text-xs">
+          <option value="">All Years</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-[11px] font-bold text-violet-950 uppercase">Main Program</label>
+        <select id="admPivFilterProg" onchange="renderAdminPivTable()" class="mt-1 bg-white text-xs">
+          <option value="">All Main Programs</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-[11px] font-bold text-violet-950 uppercase">DD Status</label>
+        <select id="admPivFilterStatus" onchange="renderAdminPivTable()" class="mt-1 bg-white text-xs">
+          <option value="">All Status</option>
+          <option value="dd_pending">DD Office Pending</option>
+          <option value="dd_approved">DD Office Approved</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Auto Unit No</th>
+            <th>AI / AD Office</th>
+            <th>Year / Program</th>
+            <th>Sub Program / Item</th>
+            <th>Units / Amount</th>
+            <th>Banked / PIV Date</th>
+            <th>AD Office Status</th>
+            <th>DD Office Status</th>
+            <th>DD Approval Date</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="adminPivTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DATA ============ -->
 <div id="page-data" class="page hidden space-y-6">
   <div class="card">
     <div class="flex flex-wrap justify-between items-center gap-2">
@@ -385,7 +450,6 @@
     </div>
   </div>
 
-  <!-- Edit Box (Works for both Extension & Development Data) -->
   <div id="editBox" class="hidden card border-2 border-indigo-300 rounded-2xl p-4 bg-indigo-50/70 shadow-sm">
     <div class="flex justify-between items-center">
       <h4 class="font-bold text-indigo-950">✏️ Edit Record</h4>
@@ -398,7 +462,6 @@
     </div>
   </div>
 
-  <!-- 1. EXTENSION DATA TABLE -->
   <div class="card space-y-4 border-t-4 border-t-blue-600 bg-blue-50/20">
     <div class="flex flex-wrap justify-between items-center gap-2">
       <div>
@@ -459,7 +522,6 @@
     </div>
   </div>
 
-  <!-- 2. DEVELOPMENT DATA TABLE -->
   <div class="card space-y-4 border-t-4 border-t-emerald-600 bg-emerald-50/20">
     <div class="flex flex-wrap justify-between items-center gap-2">
       <div>
@@ -527,7 +589,6 @@
     </div>
   </div>
 
-  <!-- Hidden/kept legacy filter elements for compatibility -->
   <div class="hidden">
     <select id="fMain"></select>
     <select id="fSub"></select>
@@ -542,12 +603,12 @@
 <div class="grid lg:grid-cols-[380px_1fr] gap-5">
   <div class="card h-fit">
     <h3 class="font-bold">User Add / Edit (Officer Name & Password)</h3>
-    <p class="text-xs text-slate-500 mt-1">change thebOfficer Name and Password.</p>
+    <p class="text-xs text-slate-500 mt-1">AI Officer Name name update </p>
     <form id="userForm" class="mt-4 space-y-3">
       <input type="hidden" id="uId">
       <div><label>නම *</label><input id="uName" required class="mt-1"></div>
       <div><label>Username *</label><input id="uUsername" required class="mt-1"></div>
-      <div><label>Officer Name *</label><input id="uOfficer" required placeholder="Officer Name..." class="mt-1 bg-amber-50/60 border-amber-300 font-semibold"></div>
+      <div><label>Officer Name *</label><input id="uOfficer" required placeholder="AI Officer Name..." class="mt-1 bg-amber-50/60 border-amber-300 font-semibold"></div>
       <div><label>Password *</label><input id="uPassword" type="password" required placeholder="New Password..." class="mt-1 bg-indigo-50/60 border-indigo-300 font-semibold"></div>
       <div class="grid grid-cols-2 gap-3">
         <div><label>Role</label><select id="uRole" class="mt-1"><option value="unit_user">Unit</option><option value="sub_admin">Sub Admin</option><option value="main_admin">Main Admin</option></select></div>
@@ -575,7 +636,6 @@
 
 </div></div>
 
-<!-- HIERARCHY DATA MUST BE DEFINED BEFORE MAIN SCRIPT -->
 <script id="hier-data" type="application/json">[{"id":"sub1","name":"ADA Kundasale","divisions":[{"name":"Dambagahapitiya","offices":["Dambagahapitiya"]},{"name":"Kalunthenna","offices":["Kalunthenna"]},{"name":"Nugethenna","offices":["Nugethenna"]},{"name":"Morayaya","offices":["Morayaya"]},{"name":"Ulpathagama","offices":["Ulpathagama"]},{"name":"Namadagala","offices":["Namadagala"]},{"name":"Theldeniya","offices":["Theldeniya"]},{"name":"Udispaththuwa","offices":["Udispaththuwa"]},{"name":"Wendaruwa","offices":["Wendaruwa"]},{"name":"Digana","offices":["Digana"]},{"name":"Gunnepana","offices":["Gunnepana"]},{"name":"Manikhinna","offices":["Manikhinna"]},{"name":"Wavinna","offices":["Wavinna"]},{"name":"Medamahanuwara","offices":["Medamahanuwara"]}]},{"id":"sub2","name":"ADA Kandy","divisions":[{"name":"Waththegama","offices":["Waththegama"]},{"name":"Huluganga","offices":["Huluganga"]},{"name":"Bowala","offices":["Bowala"]},{"name":"Ketawalaleula","offices":["Ketawalaleula"]},{"name":"Galaha","offices":["Galaha"]},{"name":"Marassana","offices":["Marassana"]},{"name":"Thalathuoya","offices":["Thalathuoya"]}]},{"id":"sub3","name":"ADA Udunuwara / Yatinuwara","divisions":[{"name":"Edaduwawe","offices":["Edaduwawe"]},{"name":"Giragama","offices":["Giragama"]},{"name":"Manikdiwella","offices":["Manikdiwella"]},{"name":"Alapalawala","offices":["Alapalawala"]},{"name":"Ambanwala","offices":["Ambanwala"]},{"name":"Imbuldeniya","offices":["Imbuldeniya"]},{"name":"Pethiyagoda","offices":["Pethiyagoda"]},{"name":"Thalawathura","offices":["Thalawathura"]},{"name":"Medapitiya","offices":["Medapitiya"]},{"name":"Mulgama","offices":["Mulgama"]},{"name":"Delpitiya","offices":["Delpitiya"]},{"name":"Gampola","offices":["Gampola"]},{"name":"Kuruduwaththa","offices":["Kuruduwaththa"]},{"name":"Rambukpitiya","offices":["Rambukpitiya"]}]},{"id":"sub4","name":"ADA Harispattuwa","divisions":[{"name":"Aludeniya","offices":["Aludeniya"]},{"name":"Galagedara","offices":["Galagedara"]},{"name":"Welivita","offices":["Welivita"]},{"name":"Ankumbura","offices":["Ankumbura"]},{"name":"Batugoda","offices":["Batugoda"]},{"name":"Wawala","offices":["Wawala"]},{"name":"Alawathugoda","offices":["Alawathugoda"]},{"name":"Medawala","offices":["Medawala"]},{"name":"Yatiwawala","offices":["Yatiwawala"]},{"name":"Hatharaliyadda","offices":["Hatharaliyadda"]}]}]</script>
 
 <script>
@@ -617,7 +677,7 @@ function openModal(opt){return new Promise(function(res){__modalResolve=res;docu
 function closeModal(ok){document.getElementById('modalBack').classList.remove('show');if(__modalResolve){var r=__modalResolve;__modalResolve=null;r({ok:ok,value:document.getElementById('modalInput').value});}}
 function profAlert(msg,title){return openModal({title:title||'තොරතුරු',msg:msg,icon:'✅',hideCancel:true,okText:'OK'});}
 function profConfirm(msg,title){return openModal({title:title||'විශ්වාසද?',msg:msg,icon:'⚠️',okText:'ඔව්'}).then(r=>r.ok);}
-function profPrompt(msg,defVal){return openModal({title:'නම',msg:msg,icon:'✏️',input:true,value:defVal||''}).then(r=>r.ok?r.value:null);}
+function profPrompt(msg,defVal){return openModal({title:'නම / Edit',msg:msg,icon:'✏️',input:true,value:defVal||''}).then(r=>r.ok?r.value:null);}
 
 var role=localStorage.getItem('role')||'main_admin'; var mySub=localStorage.getItem('user_subOfficeId')||'ALL';
 var roleEl=document.getElementById('roleLabel'); if(roleEl) roleEl.textContent=role==='main_admin'?'Main Admin':'Sub Admin';
@@ -630,11 +690,13 @@ try{
   if(hierEl && hierEl.textContent) hierarchy=JSON.parse(hierEl.textContent);
 }catch(e){ console.error('Hierarchy parse error:', e); }
 
-var nodes=[], questions=[], users=[], responses=[], targetRecords=[], plItems=[];
+var nodes=[], questions=[], users=[], responses=[], targetRecords=[], plItems=[], pivRecords=[];
 var curMain=null, curL1=null, curL2=null, curL3=null, curSub=null, curItem=null, curStep=1, selHierSub='sub1', selHierDiv=null, editingId=null;
+var PIV_STORAGE_KEY = 'fw_piv_submissions_v1';
 
 function norm(s){ return String(s||'').trim().toLowerCase(); }
 function cleanOffName(s){ return String(s||'').replace(/\s*\(unit\)/gi, '').trim(); }
+function parseNum(v){ var n = parseFloat(String(v===undefined||v===null?'':v).replace(/[^0-9.-]/g,'')); return isNaN(n) ? 0 : n; }
 
 function openSidebar(){var sb=document.getElementById('sidebar');sb.style.transform='translateX(0)';sb.style.left='0';sb.style.display='flex';document.getElementById('sidebarOverlay').classList.remove('hidden');document.getElementById('sidebarCloseFab').classList.remove('hidden');}
 function closeSidebar(){var sb=document.getElementById('sidebar');if(window.innerWidth<1024)sb.style.transform='translateX(-110%)';document.getElementById('sidebarOverlay').classList.add('hidden');document.getElementById('sidebarCloseFab').classList.add('hidden');}
@@ -646,10 +708,11 @@ function goNav(p){
   if(pg) pg.classList.remove('hidden');
   document.querySelectorAll('.nav-btn').forEach(b=>b.className='nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10');
   var btn=document.querySelector('[data-nav="'+p+'"]'); if(btn)btn.className='nav-btn w-full text-left px-4 py-3 rounded-xl bg-white text-slate-900 font-semibold';
-  document.getElementById('pageTitle').textContent={'dashboard':'Dashboard','targets':'Target Setup','builder':'ප්‍රශ්න සකස් කිරීම','pricelist':'Item Price List','data':'දත්ත','users':'පරිශීලකයින්','hierarchy':'කාර්යාල'}[p]||'Dashboard';
+  document.getElementById('pageTitle').textContent={'dashboard':'Dashboard','targets':'Target Setup','builder':'ප්‍රශ්න සකස් කිරීම','pricelist':'Item Price List','pivapproval':'PIV APPROVAL','data':'දත්ත','users':'පරිශීලකයින්','hierarchy':'කාර්යාල'}[p]||'Dashboard';
   if(p==='targets')resetTargetWizard();
   if(p==='builder')resetWizard();
   if(p==='pricelist')initPriceList();
+  if(p==='pivapproval'){ populateAdminPivFilters(); renderAdminPivTable(); }
   if(p==='data'){ initDataFilters(); renderData(); }
   if(p==='users')renderUsers();
   if(p==='hierarchy')renderHierarchy();
@@ -706,6 +769,164 @@ function renderDashboard(){
   });
   document.getElementById('publishedBox').innerHTML=html;
   document.getElementById('recentBox').innerHTML=responses.slice(0,8).map(r=>'<div class="flex justify-between gap-3 rounded-xl border p-3 text-[13px]"><div><b>'+(r.node_path||'')+'</b><div class="text-xs text-slate-500">'+(r.division||'')+' • '+(r.office||'')+'</div></div><div class="text-xs text-slate-400">'+(r.created_at?new Date(r.created_at).toLocaleDateString():'')+'</div></div>').join('')||'<div class="text-xs text-slate-400">පිළිතුරු නැත</div>';
+}
+
+/* ================= Shared Deep Copy Helper (All Sub-Levels, Questions & Targets) ================= */
+function executeDeepCopyForNode(srcNode, level, newTitle, contextNodes){
+  newTitle = String(newTitle || '').trim();
+  if(!srcNode || !newTitle) return null;
+
+  var stamp = Date.now() + '_' + Math.floor(Math.random() * 1000);
+  var newNodesToSave = [];
+  var newTargetsToSave = [];
+  var newQuestionsToSave = [];
+
+  var curL1Node = contextNodes && contextNodes.l1 ? nodes.find(x => x.id === contextNodes.l1) : null;
+  var curL2Node = contextNodes && contextNodes.l2 ? nodes.find(x => x.id === contextNodes.l2) : null;
+  var curL3Node = contextNodes && contextNodes.l3 ? nodes.find(x => x.id === contextNodes.l3) : null;
+
+  function cloneQuestionsForNode(oldNodeId, newNodeId){
+    questions.filter(q => q && String(q.node_id) === String(oldNodeId)).forEach((q, qi) => {
+      var cq = Object.assign({}, q, {
+        id: 'q_' + stamp + '_' + qi + '_' + Math.random().toString(36).slice(2,5),
+        node_id: newNodeId,
+        options: Array.isArray(q.options) ? q.options.slice() : []
+      });
+      questions.push(cq);
+      newQuestionsToSave.push(cq);
+    });
+  }
+
+  function cloneTargetsForPath(l1Title, l2Title, l3Title, itemTitle, newL1Title, newL2Title, newL3Title, newItemTitle){
+    targetRecords.filter(tr =>
+      norm(tr.main_type) === norm(srcNode.main_type) &&
+      (!l1Title || norm(tr.level1) === norm(l1Title)) &&
+      (!l2Title || norm(tr.level2) === norm(l2Title)) &&
+      (!l3Title || norm(tr.level3) === norm(l3Title)) &&
+      (!itemTitle || norm(tr.item_name) === norm(itemTitle))
+    ).forEach(tr => {
+      var cleanOff = cleanOffName(tr.office);
+      var fL1 = newL1Title !== undefined ? newL1Title : tr.level1;
+      var fL2 = newL2Title !== undefined ? newL2Title : tr.level2;
+      var fL3 = newL3Title !== undefined ? newL3Title : tr.level3;
+      var fIt = newItemTitle !== undefined ? newItemTitle : tr.item_name;
+      var newRecId = [tr.main_type, fL1, fL2, fL3, fIt, tr.sub_office_id || '', tr.division || '', cleanOff].join('|');
+      var newRec = Object.assign({}, tr, {
+        id: newRecId,
+        level1: fL1,
+        level2: fL2,
+        level3: fL3,
+        item_name: fIt,
+        office: cleanOff
+      });
+      var existingIdx = targetRecords.findIndex(x => x.id === newRecId);
+      if(existingIdx > -1) targetRecords[existingIdx] = newRec;
+      else targetRecords.push(newRec);
+      newTargetsToSave.push(newRec);
+    });
+  }
+
+  var siblingsCount = nodes.filter(n => n && n.main_type === srcNode.main_type && n.level === level && (srcNode.parent_id ? n.parent_id === srcNode.parent_id : !n.parent_id)).length;
+  var rootCloned = {
+    id: 'n_' + stamp + '_l' + level,
+    main_type: srcNode.main_type,
+    level: level,
+    parent_id: srcNode.parent_id,
+    title: newTitle,
+    subtitle: srcNode.subtitle || '',
+    is_published: srcNode.is_published !== false,
+    sort_order: siblingsCount + 1
+  };
+  nodes.push(rootCloned);
+  newNodesToSave.push(rootCloned);
+  cloneQuestionsForNode(srcNode.id, rootCloned.id);
+
+  if(level === 1){
+    var l2Kids = nodes.filter(n => n && n.main_type === srcNode.main_type && n.level === 2 && n.parent_id === srcNode.id);
+    l2Kids.forEach((p2, i2) => {
+      var c2 = { id: 'n_' + stamp + '_2_' + i2, main_type: p2.main_type, level: 2, parent_id: rootCloned.id, title: p2.title, subtitle: p2.subtitle || '', is_published: p2.is_published !== false, sort_order: p2.sort_order || (i2 + 1) };
+      nodes.push(c2); newNodesToSave.push(c2);
+      cloneQuestionsForNode(p2.id, c2.id);
+
+      var l3Kids = nodes.filter(n => n && n.main_type === srcNode.main_type && n.level === 3 && n.parent_id === p2.id);
+      l3Kids.forEach((s3, i3) => {
+        var c3 = { id: 'n_' + stamp + '_3_' + i2 + '_' + i3, main_type: s3.main_type, level: 3, parent_id: c2.id, title: s3.title, subtitle: s3.subtitle || '', is_published: s3.is_published !== false, sort_order: s3.sort_order || (i3 + 1) };
+        nodes.push(c3); newNodesToSave.push(c3);
+        cloneQuestionsForNode(s3.id, c3.id);
+
+        var l4Kids = nodes.filter(n => n && n.main_type === srcNode.main_type && n.level === 4 && n.parent_id === s3.id);
+        if(l4Kids.length){
+          l4Kids.forEach((it4, i4) => {
+            var c4 = { id: 'n_' + stamp + '_4_' + i2 + '_' + i3 + '_' + i4, main_type: it4.main_type, level: 4, parent_id: c3.id, title: it4.title, subtitle: it4.subtitle || '', is_published: it4.is_published !== false, sort_order: it4.sort_order || (i4 + 1) };
+            nodes.push(c4); newNodesToSave.push(c4);
+            cloneQuestionsForNode(it4.id, c4.id);
+            cloneTargetsForPath(srcNode.title, p2.title, s3.title, it4.title, newTitle, p2.title, s3.title, it4.title);
+          });
+        } else {
+          cloneTargetsForPath(srcNode.title, p2.title, s3.title, '', newTitle, p2.title, s3.title, '');
+        }
+      });
+    });
+  } else if(level === 2){
+    var l1Title = curL1Node ? curL1Node.title : '';
+    var l3Kids = nodes.filter(n => n && n.main_type === srcNode.main_type && n.level === 3 && n.parent_id === srcNode.id);
+    l3Kids.forEach((s3, i3) => {
+      var c3 = { id: 'n_' + stamp + '_3_' + i3, main_type: s3.main_type, level: 3, parent_id: rootCloned.id, title: s3.title, subtitle: s3.subtitle || '', is_published: s3.is_published !== false, sort_order: s3.sort_order || (i3 + 1) };
+      nodes.push(c3); newNodesToSave.push(c3);
+      cloneQuestionsForNode(s3.id, c3.id);
+
+      var l4Kids = nodes.filter(n => n && n.main_type === srcNode.main_type && n.level === 4 && n.parent_id === s3.id);
+      if(l4Kids.length){
+        l4Kids.forEach((it4, i4) => {
+          var c4 = { id: 'n_' + stamp + '_4_' + i3 + '_' + i4, main_type: it4.main_type, level: 4, parent_id: c3.id, title: it4.title, subtitle: it4.subtitle || '', is_published: it4.is_published !== false, sort_order: it4.sort_order || (i4 + 1) };
+          nodes.push(c4); newNodesToSave.push(c4);
+          cloneQuestionsForNode(it4.id, c4.id);
+          cloneTargetsForPath(l1Title, srcNode.title, s3.title, it4.title, l1Title, newTitle, s3.title, it4.title);
+        });
+      } else {
+        cloneTargetsForPath(l1Title, srcNode.title, s3.title, '', l1Title, newTitle, s3.title, '');
+      }
+    });
+  } else if(level === 3){
+    var l1Title = curL1Node ? curL1Node.title : '';
+    var l2Title = curL2Node ? curL2Node.title : '';
+    var l4Kids = nodes.filter(n => n && n.main_type === srcNode.main_type && n.level === 4 && n.parent_id === srcNode.id);
+    if(l4Kids.length){
+      l4Kids.forEach((it4, i4) => {
+        var c4 = { id: 'n_' + stamp + '_4_' + i4, main_type: it4.main_type, level: 4, parent_id: rootCloned.id, title: it4.title, subtitle: it4.subtitle || '', is_published: it4.is_published !== false, sort_order: it4.sort_order || (i4 + 1) };
+        nodes.push(c4); newNodesToSave.push(c4);
+        cloneQuestionsForNode(it4.id, c4.id);
+        cloneTargetsForPath(l1Title, l2Title, srcNode.title, it4.title, l1Title, l2Title, newTitle, it4.title);
+      });
+    } else {
+      cloneTargetsForPath(l1Title, l2Title, srcNode.title, '', l1Title, l2Title, newTitle, '');
+    }
+  } else if(level === 4){
+    var l1Title = curL1Node ? curL1Node.title : '';
+    var l2Title = curL2Node ? curL2Node.title : '';
+    var l3Title = curL3Node ? curL3Node.title : '';
+    cloneTargetsForPath(l1Title, l2Title, l3Title, srcNode.title, l1Title, l2Title, l3Title, newTitle);
+  }
+
+  return {
+    clonedNode: rootCloned,
+    newNodesToSave: newNodesToSave,
+    newTargetsToSave: newTargetsToSave,
+    newQuestionsToSave: newQuestionsToSave
+  };
+}
+
+async function persistCopiedBundle(bundle){
+  if(!bundle || !sb) return;
+  if(bundle.newNodesToSave.length){
+    await sb.from('nodes').upsert(bundle.newNodesToSave, { onConflict: 'id' });
+  }
+  if(bundle.newTargetsToSave.length){
+    await sb.from('targets').upsert(bundle.newTargetsToSave, { onConflict: 'id' });
+  }
+  if(bundle.newQuestionsToSave.length){
+    await sb.from('questions').upsert(bundle.newQuestionsToSave, { onConflict: 'id' });
+  }
 }
 
 /* ================= Target Setup Wizard + Copy All Sub-Levels ================= */
@@ -775,142 +996,26 @@ function tSelectNode(level, id){
 }
 function tAfterL3(){ if(tMain==='development')tGoto(5); else tGoto(6); }
 
-// Deep Copy for any level (1: Session/Year, 2: Main Program, 3: Sub Program, 4: Item) + all descendant sub-nodes & targets
 async function tCopyNodeDeep(nodeId, level){
   var srcNode = nodes.find(x => x.id === nodeId);
   if(!srcNode) return;
 
-  var newTitle = await profPrompt('"' + srcNode.title + '" Copy all:', srcNode.title + ' (Copy)');
+  var newTitle = await profPrompt('"' + srcNode.title + '" மற்றும் அதிலுள்ள எல்லா உட்பிரிவுகளையும் Copy செய்ய புதிய பெயர்:', srcNode.title + ' (Copy)');
   if(!newTitle || !newTitle.trim()) return;
-  newTitle = newTitle.trim();
 
-  var stamp = Date.now() + '_' + Math.floor(Math.random() * 1000);
-  var newNodesToSave = [];
-  var newTargetsToSave = [];
+  var bundle = executeDeepCopyForNode(srcNode, level, newTitle.trim(), { l1: tL1, l2: tL2, l3: tL3 });
+  if(!bundle) return;
 
-  var curL1Node = nodes.find(x => x.id === tL1);
-  var curL2Node = nodes.find(x => x.id === tL2);
-  var curL3Node = nodes.find(x => x.id === tL3);
+  if(level === 1){ tL1 = bundle.clonedNode.id; tL2 = null; tL3 = null; tL4 = null; }
+  else if(level === 2){ tL2 = bundle.clonedNode.id; tL3 = null; tL4 = null; }
+  else if(level === 3){ tL3 = bundle.clonedNode.id; tL4 = null; }
+  else if(level === 4){ tL4 = bundle.clonedNode.id; }
 
-  function cloneTargetsForPath(l1Title, l2Title, l3Title, itemTitle, newL1Title, newL2Title, newL3Title, newItemTitle){
-    targetRecords.filter(tr =>
-      norm(tr.main_type) === norm(srcNode.main_type) &&
-      (!l1Title || norm(tr.level1) === norm(l1Title)) &&
-      (!l2Title || norm(tr.level2) === norm(l2Title)) &&
-      (!l3Title || norm(tr.level3) === norm(l3Title)) &&
-      (!itemTitle || norm(tr.item_name) === norm(itemTitle))
-    ).forEach(tr => {
-      var cleanOff = cleanOffName(tr.office);
-      var fL1 = newL1Title !== undefined ? newL1Title : tr.level1;
-      var fL2 = newL2Title !== undefined ? newL2Title : tr.level2;
-      var fL3 = newL3Title !== undefined ? newL3Title : tr.level3;
-      var fIt = newItemTitle !== undefined ? newItemTitle : tr.item_name;
-      var newRecId = [tr.main_type, fL1, fL2, fL3, fIt, tr.sub_office_id || '', tr.division || '', cleanOff].join('|');
-      var newRec = Object.assign({}, tr, {
-        id: newRecId,
-        level1: fL1,
-        level2: fL2,
-        level3: fL3,
-        item_name: fIt,
-        office: cleanOff
-      });
-      var existingIdx = targetRecords.findIndex(x => x.id === newRecId);
-      if(existingIdx > -1) targetRecords[existingIdx] = newRec;
-      else targetRecords.push(newRec);
-      newTargetsToSave.push(newRec);
-    });
-  }
-
-  var rootCloned = {
-    id: 'n_' + stamp + '_l' + level,
-    main_type: srcNode.main_type,
-    level: level,
-    parent_id: srcNode.parent_id,
-    title: newTitle,
-    subtitle: srcNode.subtitle || '',
-    is_published: srcNode.is_published !== false,
-    sort_order: tChildrenOf(srcNode.parent_id, level).length + 1
-  };
-  nodes.push(rootCloned);
-  newNodesToSave.push(rootCloned);
-
-  if(level === 1){
-    // Clone L2 programs -> L3 sub programs -> L4 items + targets
-    var l2Kids = nodes.filter(n => n && n.main_type === srcNode.main_type && n.level === 2 && n.parent_id === srcNode.id);
-    l2Kids.forEach((p2, i2) => {
-      var c2 = { id: 'n_' + stamp + '_2_' + i2, main_type: p2.main_type, level: 2, parent_id: rootCloned.id, title: p2.title, subtitle: p2.subtitle || '', is_published: p2.is_published !== false, sort_order: p2.sort_order || (i2 + 1) };
-      nodes.push(c2); newNodesToSave.push(c2);
-
-      var l3Kids = nodes.filter(n => n && n.main_type === srcNode.main_type && n.level === 3 && n.parent_id === p2.id);
-      l3Kids.forEach((s3, i3) => {
-        var c3 = { id: 'n_' + stamp + '_3_' + i2 + '_' + i3, main_type: s3.main_type, level: 3, parent_id: c2.id, title: s3.title, subtitle: s3.subtitle || '', is_published: s3.is_published !== false, sort_order: s3.sort_order || (i3 + 1) };
-        nodes.push(c3); newNodesToSave.push(c3);
-
-        var l4Kids = nodes.filter(n => n && n.main_type === srcNode.main_type && n.level === 4 && n.parent_id === s3.id);
-        if(l4Kids.length){
-          l4Kids.forEach((it4, i4) => {
-            var c4 = { id: 'n_' + stamp + '_4_' + i2 + '_' + i3 + '_' + i4, main_type: it4.main_type, level: 4, parent_id: c3.id, title: it4.title, subtitle: it4.subtitle || '', is_published: it4.is_published !== false, sort_order: it4.sort_order || (i4 + 1) };
-            nodes.push(c4); newNodesToSave.push(c4);
-            cloneTargetsForPath(srcNode.title, p2.title, s3.title, it4.title, newTitle, p2.title, s3.title, it4.title);
-          });
-        } else {
-          cloneTargetsForPath(srcNode.title, p2.title, s3.title, '', newTitle, p2.title, s3.title, '');
-        }
-      });
-    });
-    tL1 = rootCloned.id; tL2 = null; tL3 = null; tL4 = null;
-  } else if(level === 2){
-    var l1Title = curL1Node ? curL1Node.title : '';
-    var l3Kids = nodes.filter(n => n && n.main_type === srcNode.main_type && n.level === 3 && n.parent_id === srcNode.id);
-    l3Kids.forEach((s3, i3) => {
-      var c3 = { id: 'n_' + stamp + '_3_' + i3, main_type: s3.main_type, level: 3, parent_id: rootCloned.id, title: s3.title, subtitle: s3.subtitle || '', is_published: s3.is_published !== false, sort_order: s3.sort_order || (i3 + 1) };
-      nodes.push(c3); newNodesToSave.push(c3);
-
-      var l4Kids = nodes.filter(n => n && n.main_type === srcNode.main_type && n.level === 4 && n.parent_id === s3.id);
-      if(l4Kids.length){
-        l4Kids.forEach((it4, i4) => {
-          var c4 = { id: 'n_' + stamp + '_4_' + i3 + '_' + i4, main_type: it4.main_type, level: 4, parent_id: c3.id, title: it4.title, subtitle: it4.subtitle || '', is_published: it4.is_published !== false, sort_order: it4.sort_order || (i4 + 1) };
-          nodes.push(c4); newNodesToSave.push(c4);
-          cloneTargetsForPath(l1Title, srcNode.title, s3.title, it4.title, l1Title, newTitle, s3.title, it4.title);
-        });
-      } else {
-        cloneTargetsForPath(l1Title, srcNode.title, s3.title, '', l1Title, newTitle, s3.title, '');
-      }
-    });
-    tL2 = rootCloned.id; tL3 = null; tL4 = null;
-  } else if(level === 3){
-    var l1Title = curL1Node ? curL1Node.title : '';
-    var l2Title = curL2Node ? curL2Node.title : '';
-    var l4Kids = nodes.filter(n => n && n.main_type === srcNode.main_type && n.level === 4 && n.parent_id === srcNode.id);
-    if(l4Kids.length){
-      l4Kids.forEach((it4, i4) => {
-        var c4 = { id: 'n_' + stamp + '_4_' + i4, main_type: it4.main_type, level: 4, parent_id: rootCloned.id, title: it4.title, subtitle: it4.subtitle || '', is_published: it4.is_published !== false, sort_order: it4.sort_order || (i4 + 1) };
-        nodes.push(c4); newNodesToSave.push(c4);
-        cloneTargetsForPath(l1Title, l2Title, srcNode.title, it4.title, l1Title, l2Title, newTitle, it4.title);
-      });
-    } else {
-      cloneTargetsForPath(l1Title, l2Title, srcNode.title, '', l1Title, l2Title, newTitle, '');
-    }
-    tL3 = rootCloned.id; tL4 = null;
-  } else if(level === 4){
-    var l1Title = curL1Node ? curL1Node.title : '';
-    var l2Title = curL2Node ? curL2Node.title : '';
-    var l3Title = curL3Node ? curL3Node.title : '';
-    cloneTargetsForPath(l1Title, l2Title, l3Title, srcNode.title, l1Title, l2Title, l3Title, newTitle);
-    tL4 = rootCloned.id;
-  }
-
-  if(sb){
-    await sb.from('nodes').upsert(newNodesToSave, { onConflict: 'id' });
-    if(newTargetsToSave.length){
-      await sb.from('targets').upsert(newTargetsToSave, { onConflict: 'id' });
-    }
-  }
-
+  await persistCopiedBundle(bundle);
   tRenderLevel(level);
   tUpdateCrumb();
   renderDashboard();
-  showToast('"' + newTitle + '" all(' + (newNodesToSave.length - 1) + ') Copy  ✓', true);
+  showToast('"' + newTitle.trim() + '" மற்றும் ' + (bundle.newNodesToSave.length - 1) + ' உட்பிரிவுகள் Copy ஆகின ✓', true);
 }
 
 async function tAddNode(level){
@@ -1046,7 +1151,7 @@ async function saveAllTargets(){
 }
 function tBackFromUnits(){ if(tMain==='development')tGoto(5); else tGoto(4); }
 
-/* ================= Form Builder + Live Preview ================= */
+/* ================= Form Builder (Up, Down, Delete, Copy All Sub-Nodes & Edit) ================= */
 function resetWizard(){curMain=null;curL1=null;curL2=null;curL3=null;curSub=null;curItem=null;gotoStep(1);updateCrumb();}
 function updateCrumb(){
   var parts=[]; if(curMain)parts.push(curMain==='extension'?'🌾 Extension':'🏗️ Development');
@@ -1065,40 +1170,183 @@ function gotoStep(s){
   if(s===2)renderL1(); if(s===3)renderL2(); if(s===4)renderL4(); if(s===5)renderItem(); if(s===6)renderQuestions();
   updateCrumb();
 }
-function pickMain(m){curMain=m;curL1=null;curL2=null;curL3=null;gotoStep(2);}
+function pickMain(m){curMain=m;curL1=null;curL2=null;curL3=null;curSub=null;curItem=null;gotoStep(2);}
 function childrenOf(pid,level){
   nodes = Array.isArray(nodes) ? nodes : [];
   return nodes.filter(n=>n && n.main_type===curMain&&n.level===level&&(pid?n.parent_id===pid:!n.parent_id)).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
 }
 
-function builderSelectCard(n,sel,clickFn){
-  return '<div class="node-card '+(sel?'sel':'')+'" onclick="'+clickFn+'(\''+n.id+'\')"><div class="flex justify-between"><div class="font-bold">'+n.title+'</div><span class="text-indigo-600 text-sm">'+(sel?'✓':'තෝරන්න →')+'</span></div></div>';
+function builderSelectCard(n, sel, pickFn, level){
+  var copyFn = level === 1 ? 'wCopyL1' : level === 2 ? 'wCopyL2' : level === 3 ? 'wCopyL3' : 'wCopyL4';
+  var editFn = level === 1 ? 'wEditL1' : level === 2 ? 'wEditL2' : level === 3 ? 'wEditL3' : 'wEditL4';
+  return '<div class="node-card '+(sel?'sel':'')+'" onclick="'+pickFn+'(\''+n.id+'\')">' +
+    '<div class="flex flex-wrap justify-between items-center gap-2">' +
+      '<div class="font-bold">'+n.title+'</div>' +
+      '<div class="flex items-center gap-1.5" onclick="event.stopPropagation()">' +
+        '<button type="button" onclick="wMoveBuilderNode(\''+n.id+'\',-1,'+level+')" class="btn btn-ghost px-2 py-1 text-xs" title="Up">↑</button>' +
+        '<button type="button" onclick="wMoveBuilderNode(\''+n.id+'\',1,'+level+')" class="btn btn-ghost px-2 py-1 text-xs" title="Down">↓</button>' +
+        '<button type="button" onclick="'+copyFn+'(\''+n.id+'\')" class="btn btn-ghost px-2.5 py-1 text-xs font-bold text-indigo-700 border border-indigo-200 bg-indigo-50">📋 Copy All</button>' +
+        '<button type="button" onclick="'+editFn+'(\''+n.id+'\')" class="btn btn-ghost px-2 py-1 text-xs font-semibold text-slate-700">✏️ Edit</button>' +
+        '<button type="button" onclick="wDeleteBuilderNode(\''+n.id+'\','+level+')" class="btn btn-ghost px-2 py-1 text-xs font-semibold text-red-600">🗑 Delete</button>' +
+        '<span class="text-indigo-600 text-sm font-semibold ml-1">'+(sel?'✓':'තෝරන්න →')+'</span>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
 }
+
+async function wMoveBuilderNode(id, dir, level){
+  var cur = nodes.find(x => x.id === id);
+  if(!cur) return;
+  var siblings = childrenOf(cur.parent_id, level);
+  var idx = siblings.findIndex(x => x.id === id);
+  var nIdx = idx + dir;
+  if(nIdx < 0 || nIdx >= siblings.length) return;
+  var temp = siblings[idx];
+  siblings[idx] = siblings[nIdx];
+  siblings[nIdx] = temp;
+  for(var i = 0; i < siblings.length; i++){
+    var orig = nodes.find(x => x.id === siblings[i].id);
+    if(orig){
+      orig.sort_order = i + 1;
+      if(sb) await sb.from('nodes').update({ sort_order: orig.sort_order }).eq('id', orig.id);
+    }
+  }
+  if(level === 1) renderL1();
+  else if(level === 2) renderL2();
+  else if(level === 3) renderL4();
+  else if(level === 4) renderItem();
+  showToast('வரிசை மாற்றப்பட்டது ✓', true);
+}
+
+function collectDescendantNodeIds(rootId){
+  var ids = [rootId];
+  var queue = [rootId];
+  while(queue.length){
+    var pid = queue.shift();
+    nodes.filter(n => n && String(n.parent_id) === String(pid)).forEach(ch => {
+      ids.push(ch.id);
+      queue.push(ch.id);
+    });
+  }
+  return ids;
+}
+
+async function wDeleteBuilderNode(id, level){
+  var n = nodes.find(x => x.id === id);
+  if(!n) return;
+  if(!(await profConfirm('"' + n.title + '" மற்றும் அதனுள் உள்ள எல்லா உட்பிரிவுகளையும் Delete செய்யவா?'))) return;
+
+  var delIds = collectDescendantNodeIds(id);
+  nodes = nodes.filter(x => !delIds.includes(x.id));
+  questions = questions.filter(q => !delIds.includes(q.node_id));
+
+  if(sb){
+    for(var i = 0; i < delIds.length; i++){
+      await sb.from('nodes').delete().eq('id', delIds[i]);
+      await sb.from('questions').delete().eq('node_id', delIds[i]);
+    }
+  }
+
+  if(level === 1 && curL1 === id){ curL1=null; curL2=null; curL3=null; curSub=null; curItem=null; }
+  if(level === 2 && curL2 === id){ curL2=null; curL3=null; curSub=null; curItem=null; }
+  if(level === 3){ if(curSub === id) curSub=null; if(curL3 === id){ curL3=null; curItem=null; } }
+  if(level === 4 && curItem === id){ curItem=null; }
+
+  if(level === 1) renderL1();
+  else if(level === 2) renderL2();
+  else if(level === 3) renderL4();
+  else if(level === 4) renderItem();
+  updateCrumb();
+  renderDashboard();
+  showToast('Delete செய்யப்பட்டது ✓', true);
+}
+
+async function wEditBuilderNode(id, level){
+  var n = nodes.find(x => x.id === id);
+  if(!n) return;
+  var oldTitle = n.title;
+  var newName = await profPrompt('නම වෙනස් කරන්න (Target Setup பகுதியிலும் மாறும்)', n.title);
+  if(!newName || !newName.trim()) return;
+  newName = newName.trim();
+  n.title = newName;
+  if(sb) await sb.from('nodes').update({ title: newName }).eq('id', id);
+
+  targetRecords.forEach(tr => {
+    if(norm(tr.main_type) === norm(n.main_type)){
+      if(level === 1 && norm(tr.level1) === norm(oldTitle)) tr.level1 = newName;
+      if(level === 2 && norm(tr.level2) === norm(oldTitle)) tr.level2 = newName;
+      if(level === 3 && norm(tr.level3) === norm(oldTitle)) tr.level3 = newName;
+      if(level === 4 && norm(tr.item_name) === norm(oldTitle)) tr.item_name = newName;
+    }
+  });
+
+  if(level === 1) renderL1();
+  else if(level === 2) renderL2();
+  else if(level === 3) renderL4();
+  else if(level === 4) renderItem();
+  updateCrumb();
+  renderDashboard();
+  showToast('Edit & Target Sync Save විය ✓', true);
+}
+
+async function wCopyBuilderNode(id, level){
+  var srcNode = nodes.find(x => x.id === id);
+  if(!srcNode) return;
+  var newTitle = await profPrompt('"' + srcNode.title + '" மற்றும் அதிலுள்ள எல்லா உட்பிரிவுகளையும் Copy செய்ய புதிய பெயர்:', srcNode.title + ' (Copy)');
+  if(!newTitle || !newTitle.trim()) return;
+
+  var bundle = executeDeepCopyForNode(srcNode, level, newTitle.trim(), { l1: curL1, l2: curL2, l3: (curMain === 'extension' ? curSub : curL3) });
+  if(!bundle) return;
+
+  if(level === 1){ curL1 = bundle.clonedNode.id; curL2 = null; curL3 = null; curSub = null; curItem = null; renderL1(); }
+  else if(level === 2){ curL2 = bundle.clonedNode.id; curL3 = null; curSub = null; curItem = null; renderL2(); }
+  else if(level === 3){
+    if(curMain === 'extension'){ curSub = bundle.clonedNode.id; }
+    else { curL3 = bundle.clonedNode.id; curItem = null; }
+    renderL4();
+  }
+  else if(level === 4){ curItem = bundle.clonedNode.id; renderItem(); }
+
+  await persistCopiedBundle(bundle);
+  updateCrumb();
+  renderDashboard();
+  showToast('"' + newTitle.trim() + '" மற்றும் எல்லா உட்பிரிவுகளும் (' + (bundle.newNodesToSave.length - 1) + ') Copy ஆகின ✓', true);
+}
+
+function wCopyL1(id){ return wCopyBuilderNode(id, 1); }
+function wCopyL2(id){ return wCopyBuilderNode(id, 2); }
+function wCopyL3(id){ return wCopyBuilderNode(id, 3); }
+function wCopyL4(id){ return wCopyBuilderNode(id, 4); }
+function wEditL1(id){ return wEditBuilderNode(id, 1); }
+function wEditL2(id){ return wEditBuilderNode(id, 2); }
+function wEditL3(id){ return wEditBuilderNode(id, 3); }
+function wEditL4(id){ return wEditBuilderNode(id, 4); }
+
 function renderL1(){
   document.getElementById('w2Title').textContent=curMain==='extension'?'Step 2 — Season':'Step 2 — Year';
-  document.getElementById('l1List').innerHTML=childrenOf(null,1).map(n=>builderSelectCard(n,curL1===n.id,'pickL1')).join('')||'<div class="text-xs text-slate-400">Target Setup හි දත්ත ඇතුළත් කරන්න</div>';
+  document.getElementById('l1List').innerHTML=childrenOf(null,1).map(n=>builderSelectCard(n,curL1===n.id,'pickL1',1)).join('')||'<div class="text-xs text-slate-400">Target Setup හි දත්ත ඇතුළත් කරන්න</div>';
   document.getElementById('w2Next').disabled=!curL1;
 }
-function pickL1(id){curL1=id;curL2=null;curL3=null;renderL1();}
+function pickL1(id){curL1=id;curL2=null;curL3=null;curSub=null;curItem=null;renderL1();}
 function renderL2(){
   document.getElementById('w3Title').textContent='Step 3 — Program';
-  document.getElementById('l2List').innerHTML=childrenOf(curL1,2).map(n=>builderSelectCard(n,curL2===n.id,'pickL2')).join('')||'<div class="text-xs text-slate-400">දත්ත නැත</div>';
+  document.getElementById('l2List').innerHTML=childrenOf(curL1,2).map(n=>builderSelectCard(n,curL2===n.id,'pickL2',2)).join('')||'<div class="text-xs text-slate-400">දත්ත නැත</div>';
   document.getElementById('w3Next').disabled=!curL2;
 }
-function pickL2(id){curL2=id;curL3=null;renderL2();}
+function pickL2(id){curL2=id;curL3=null;curSub=null;curItem=null;renderL2();}
 function w3Next(){gotoStep(4);}
 function w4Next(){if(curMain==='development')gotoStep(5);else gotoStep(6);}
 function backFromQ(){if(curMain==='development')gotoStep(5);else gotoStep(4);}
 function renderL4(){
   let isExt=curMain==='extension';
-  document.getElementById('l3List').innerHTML=childrenOf(curL2,3).map(n=>builderSelectCard(n,(isExt?curSub:curL3)===n.id,isExt?'pickSub':'pickL3')).join('')||'<div class="text-xs text-slate-400">දත්ත නැත</div>';
+  document.getElementById('l3List').innerHTML=childrenOf(curL2,3).map(n=>builderSelectCard(n,(isExt?curSub:curL3)===n.id,isExt?'pickSub':'pickL3',3)).join('')||'<div class="text-xs text-slate-400">දත්ත නැත</div>';
   document.getElementById('w4Next').disabled=isExt?false:!curL3;
 }
-function pickL3(id){curL3=id;renderL4();}
+function pickL3(id){curL3=id;curItem=null;renderL4();}
 function pickSub(id){curSub=id;renderL4();}
 function renderItem(){
   let list=curL3?nodes.filter(n=>n && n.main_type==='development'&&n.level===4&&n.parent_id===curL3):[];
-  document.getElementById('itemList').innerHTML=list.map(n=>builderSelectCard(n,curItem===n.id,'pickItem')).join('')||'<div class="text-xs text-slate-400">Items නැත</div>';
+  document.getElementById('itemList').innerHTML=list.map(n=>builderSelectCard(n,curItem===n.id,'pickItem',4)).join('')||'<div class="text-xs text-slate-400">Items නැත</div>';
 }
 function pickItem(id){curItem=id;renderItem();}
 
@@ -1135,12 +1383,29 @@ function renderQuestionPreviewControl(q){
   return '<input type="text" disabled placeholder="Short answer..." class="mt-1 bg-white text-xs">';
 }
 
+async function copyQuestionItem(id){
+  var q = questions.find(x => x.id === id);
+  if(!q) return;
+  var newText = await profPrompt('ප්‍රශ්නය Copy செய்து Edit செய்யவும்:', q.question_text + ' (Copy)');
+  if(!newText || !newText.trim()) return;
+  var cq = Object.assign({}, q, {
+    id: 'q' + Date.now(),
+    question_text: newText.trim(),
+    options: Array.isArray(q.options) ? q.options.slice() : [],
+    order_index: questions.filter(x => x.node_id === q.node_id).length + 1
+  });
+  questions.push(cq);
+  if(sb) await sb.from('questions').upsert(cq);
+  renderQuestions();
+  showToast('ප්‍රශ්නය Copy විය ✓', true);
+}
+
 function renderQuestions(){
   var lid=leafId(); if(!lid)return;
   questions = Array.isArray(questions) ? questions : [];
   var qs=questions.filter(q=>q && q.node_id===lid).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
   document.getElementById('qCount').textContent=qs.length;
-  document.getElementById('qList').innerHTML=qs.map((q,i)=>'<div class="rounded-xl border p-3 bg-white flex justify-between"><div><b>'+(i+1)+'. '+q.question_text+'</b><div class="text-xs text-slate-400">'+q.question_type+'</div></div><div class="flex gap-1"><button onclick="moveQ(\''+q.id+'\',-1)" class="btn btn-ghost px-2 py-1 text-xs">↑</button><button onclick="moveQ(\''+q.id+'\',1)" class="btn btn-ghost px-2 py-1 text-xs">↓</button><button onclick="editQ(\''+q.id+'\')" class="btn btn-ghost px-2 py-1 text-xs">Edit</button><button onclick="delQ(\''+q.id+'\')" class="text-red-500 text-xs px-2">Delete</button></div></div>').join('')||'<div class="text-xs text-slate-400">ප්‍රශ්න නැත</div>';
+  document.getElementById('qList').innerHTML=qs.map((q,i)=>'<div class="rounded-xl border p-3 bg-white flex flex-wrap justify-between gap-2"><div><b>'+(i+1)+'. '+q.question_text+'</b><div class="text-xs text-slate-400">'+q.question_type+'</div></div><div class="flex flex-wrap gap-1"><button type="button" onclick="moveQ(\''+q.id+'\',-1)" class="btn btn-ghost px-2 py-1 text-xs">↑</button><button type="button" onclick="moveQ(\''+q.id+'\',1)" class="btn btn-ghost px-2 py-1 text-xs">↓</button><button type="button" onclick="copyQuestionItem(\''+q.id+'\')" class="btn btn-ghost px-2 py-1 text-xs text-indigo-700">Copy</button><button type="button" onclick="editQ(\''+q.id+'\')" class="btn btn-ghost px-2 py-1 text-xs">Edit</button><button type="button" onclick="delQ(\''+q.id+'\')" class="text-red-500 text-xs px-2">Delete</button></div></div>').join('')||'<div class="text-xs text-slate-400">ප්‍රශ්න නැත</div>';
 
   var prevEl = document.getElementById('qPreview');
   if(prevEl){
@@ -1264,7 +1529,144 @@ function importPriceExcel(e){
   reader.readAsArrayBuffer(file);
 }
 
-/* ================= Data View: Separate Extension & Dev Tables + Colors + Filters + Edit + Excel ================= */
+/* ================= PIV APPROVAL (UNIT -> AD -> DD APPROVAL) ================= */
+function loadLocalPivRecords(){
+  try{
+    var raw = localStorage.getItem(PIV_STORAGE_KEY);
+    if(raw){
+      var parsed = JSON.parse(raw);
+      if(Array.isArray(parsed)) return parsed;
+    }
+  }catch(e){}
+  return [];
+}
+
+function saveLocalPivRecords(arr){
+  try{ localStorage.setItem(PIV_STORAGE_KEY, JSON.stringify(arr)); }catch(e){}
+}
+
+function getAllPivRecords(){
+  var localList = loadLocalPivRecords();
+  var map = new Map();
+  (pivRecords||[]).forEach(r => { if(r && r.id) map.set(String(r.id), r); });
+  localList.forEach(r => { if(r && r.id && !map.has(String(r.id))) map.set(String(r.id), r); });
+  pivRecords = Array.from(map.values()).sort((a,b) => String(b.created_at||'').localeCompare(String(a.created_at||'')));
+  saveLocalPivRecords(pivRecords);
+  return pivRecords;
+}
+
+function isAdApprovedForDd(r){
+  var st = norm(r.ad_approval_status);
+  return st === 'approved' || st === 'submitted_to_dd' || Boolean(r.dd_office_submit_date);
+}
+
+function isDdApproved(r){
+  return norm(r.dd_approval_status) === 'approved';
+}
+
+function setSelectKeep(selId, arr, defLbl){
+  var el = document.getElementById(selId);
+  if(!el) return;
+  var prev = el.value;
+  el.innerHTML = '<option value="">' + defLbl + '</option>' + arr.map(v => '<option value="' + v + '">' + v + '</option>').join('');
+  if(arr.includes(prev)) el.value = prev;
+  else el.value = '';
+}
+
+function populateAdminPivFilters(){
+  var list = getAllPivRecords();
+  setSelectKeep('admPivFilterAd', [...new Set(list.map(r => r.ad_office || resolveAdOfficeForDivision(r.division || r.office)).filter(Boolean))], 'All AD Offices');
+  setSelectKeep('admPivFilterYear', [...new Set(list.map(r => r.year).filter(Boolean))], 'All Years');
+  setSelectKeep('admPivFilterProg', [...new Set(list.map(r => r.main_program).filter(Boolean))], 'All Main Programs');
+}
+
+function renderAdminPivTable(){
+  var list = getAllPivRecords();
+  populateAdminPivFilters();
+
+  var fAd = (document.getElementById('admPivFilterAd') || {}).value || '';
+  var fYr = (document.getElementById('admPivFilterYear') || {}).value || '';
+  var fPr = (document.getElementById('admPivFilterProg') || {}).value || '';
+  var fSt = (document.getElementById('admPivFilterStatus') || {}).value || '';
+
+  var filtered = list.filter(r => {
+    var adName = r.ad_office || resolveAdOfficeForDivision(r.division || r.office) || '';
+    var ddDone = isDdApproved(r);
+    return (!fAd || norm(adName) === norm(fAd)) &&
+           (!fYr || norm(r.year) === norm(fYr)) &&
+           (!fPr || norm(r.main_program) === norm(fPr)) &&
+           (!fSt || (fSt === 'dd_approved' && ddDone) || (fSt === 'dd_pending' && !ddDone));
+  });
+
+  var tbody = document.getElementById('adminPivTbody');
+  if(!tbody) return;
+  if(!filtered.length){
+    tbody.innerHTML = '<tr><td colspan="10" class="text-center py-6 text-slate-400 text-xs">PIV தரவுகள் இல்லை</td></tr>';
+    return;
+  }
+
+  var todayStr = new Date().toISOString().slice(0,10);
+
+  tbody.innerHTML = filtered.map(r => {
+    var adDone = isAdApprovedForDd(r);
+    var ddDone = isDdApproved(r);
+    var adName = r.ad_office || resolveAdOfficeForDivision(r.division || r.office) || '-';
+
+    var adBadge = adDone
+      ? '<span class="px-2 py-1 rounded-full text-[11px] font-bold bg-blue-600 text-white whitespace-nowrap">AD Approved</span>'
+      : '<span class="px-2 py-1 rounded-full text-[11px] font-bold bg-slate-200 text-slate-700 whitespace-nowrap">AD Pending</span>';
+
+    var ddBadge = ddDone
+      ? '<span class="px-2 py-1 rounded-full text-[11px] font-bold bg-emerald-600 text-white whitespace-nowrap">DD Approved</span>'
+      : (adDone
+          ? '<span class="px-2 py-1 rounded-full text-[11px] font-bold bg-amber-500 text-white whitespace-nowrap">DD Office Pending</span>'
+          : '<span class="px-2 py-1 rounded-full text-[11px] font-bold bg-red-600 text-white whitespace-nowrap">Waiting AD</span>');
+
+    var dateVal = r.dd_approval_date || (ddDone ? todayStr : todayStr);
+
+    return '<tr>' +
+      '<td class="font-bold text-indigo-950 whitespace-nowrap">' + (r.auto_unit_no || '-') + '</td>' +
+      '<td class="text-xs"><b>' + cleanOffName(r.division || r.office || '-') + '</b><div class="text-[11px] text-slate-500">' + adName + '</div></td>' +
+      '<td class="text-xs"><b>' + (r.year || '-') + '</b><br>' + (r.main_program || '-') + '</td>' +
+      '<td class="text-xs">' + (r.sub_program || '-') + '<br><b class="text-emerald-900">' + (r.item_name || '-') + '</b></td>' +
+      '<td class="text-xs">Units: <b>' + parseNum(r.no_of_units) + '</b><br><b class="text-emerald-700">Rs. ' + parseNum(r.payment_amount).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) + '</b></td>' +
+      '<td class="text-xs whitespace-nowrap">Bank: ' + (r.banked_date || '-') + '<br>PIV: ' + (r.piv_submit_date || '-') + '</td>' +
+      '<td class="text-center">' + adBadge + '</td>' +
+      '<td class="text-center">' + ddBadge + '</td>' +
+      '<td class="text-center whitespace-nowrap"><input type="date" id="ddAppDate_' + r.id + '" value="' + dateVal + '" class="!w-36 text-xs bg-white"></td>' +
+      '<td class="text-center whitespace-nowrap"><button onclick="ddApprovePivRecord(\'' + r.id + '\')" class="btn btn-success px-3 py-1.5 text-xs font-bold">' + (ddDone ? 'Update Date' : 'DD Approve') + '</button></td>' +
+    '</tr>';
+  }).join('');
+}
+
+async function ddApprovePivRecord(id){
+  var rec = pivRecords.find(x => String(x.id) === String(id));
+  if(!rec) return;
+
+  var dateEl = document.getElementById('ddAppDate_' + id);
+  var appDate = dateEl ? dateEl.value : '';
+  if(!appDate) return showToast('DD Approval Date உள்ளிடவும்', false);
+
+  rec.dd_approval_status = 'Approved';
+  rec.dd_approval_date = appDate;
+  rec.dd_approved_by = localStorage.getItem('user') || 'DD Office';
+  rec.dd_approved_at = new Date().toISOString();
+
+  if(sb){
+    await sb.from('piv_submissions').update({
+      dd_approval_status: 'Approved',
+      dd_approval_date: appDate,
+      dd_approved_by: rec.dd_approved_by,
+      dd_approved_at: rec.dd_approved_at
+    }).eq('id', rec.id);
+  }
+
+  saveLocalPivRecords(pivRecords);
+  renderAdminPivTable();
+  showToast('DD Office Approved & Date (' + appDate + ') Saved ✓', true);
+}
+
+/* ================= Data View ================= */
 const CAT_PALETTE = [
   'bg-indigo-100 text-indigo-900 border-indigo-300',
   'bg-amber-100 text-amber-900 border-amber-300',
@@ -1371,8 +1773,9 @@ function fillDataFilters(){
 function formatAnswersText(ans){
   if(!ans || typeof ans !== 'object') return '';
   var parts = [];
+  if(ans.__officer_name) parts.push('Officer: ' + ans.__officer_name);
   Object.keys(ans).forEach(k => {
-    if(k === '__item_name' || k === '__progress_qty') return;
+    if(k === '__item_name' || k === '__progress_qty' || k === '__officer_name' || k === '__user') return;
     var v = ans[k];
     if(v !== undefined && v !== null && v !== ''){
       parts.push(Array.isArray(v) ? v.join(', ') : String(v));
@@ -1477,7 +1880,7 @@ function openEditData(id){
   document.getElementById('editFields').innerHTML = keys.map((k, idx) => {
     var val = ans[k];
     var displayVal = Array.isArray(val) ? val.join(', ') : (val !== undefined && val !== null ? String(val) : '');
-    var label = k === '__progress_qty' ? 'Progress Qty' : (k === '__item_name' ? 'Item Name' : k);
+    var label = k === '__progress_qty' ? 'Progress Qty' : (k === '__item_name' ? 'Item Name' : (k === '__officer_name' ? 'AI Officer Name' : k));
     return '<div class="grid sm:grid-cols-[200px_1fr] gap-2 items-center bg-white p-2.5 rounded-xl border">' +
       '<label class="text-xs font-bold text-slate-700">' + label + '</label>' +
       '<input type="text" data-edit-key="' + encodeURIComponent(k) + '" data-is-arr="' + (Array.isArray(val) ? '1' : '0') + '" value="' + displayVal.replace(/"/g, '&quot;') + '" class="bg-slate-50 text-xs">' +
@@ -1536,6 +1939,7 @@ function downloadCategoryExcel(type){
       'Date': r.created_at ? new Date(r.created_at).toLocaleString() : '',
       'AD Office': adName,
       'AI Office': cleanOffName(r.division || r.office),
+      'AI Officer': (r.answers && r.answers.__officer_name) || '',
       [type === 'development' ? 'Year' : 'Session']: r.level1 || '',
       'Main Program': r.level2 || '',
       'Sub Program': r.level3 || ''
@@ -1561,7 +1965,7 @@ function downloadCSV(){
   let blob=new Blob([csv],{type:'text/csv'}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='data.csv'; a.click();
 }
 
-/* ================= Users (Officer Name & Password Update) ================= */
+/* ================= Users (Officer Name Update -> Unit Sync) ================= */
 function resetUser(){
   document.getElementById('userForm').reset();
   document.getElementById('uId').value='';
@@ -1594,7 +1998,7 @@ function renderUsers(){
   users = Array.isArray(users) ? users : [];
   var q = norm(document.getElementById('userSearch') ? document.getElementById('userSearch').value : '');
   var list = q ? users.filter(u => (JSON.stringify(u)).toLowerCase().includes(q)) : users;
-  document.getElementById('userList').innerHTML=list.map(u=>'<div onclick="editUserForCredentials(\''+u.id+'\')" class="cursor-pointer rounded-xl border p-3 flex justify-between items-center bg-white hover:bg-indigo-50/40 transition"><div><b>'+(u.name||'')+'</b><div class="text-xs text-slate-500">'+(u.username||'')+' | '+(u.role||'')+'</div><div class="text-[11px] text-indigo-700 font-semibold mt-0.5">Officer: '+(u.officer_name||'-')+'</div></div><div class="flex items-center gap-2" onclick="event.stopPropagation()"><button onclick="editUserForCredentials(\''+u.id+'\')" class="btn btn-ghost px-2.5 py-1 text-xs">Edit</button><button onclick="delUser(\''+u.id+'\')" class="text-red-500 text-xs">Del</button></div></div>').join('')||'<div class="text-xs text-slate-400">Users නැත</div>';
+  document.getElementById('userList').innerHTML=list.map(u=>'<div onclick="editUserForCredentials(\''+u.id+'\')" class="cursor-pointer rounded-xl border p-3 flex justify-between items-center bg-white hover:bg-indigo-50/40 transition"><div><b>'+(u.name||'')+'</b><div class="text-xs text-slate-500">'+(u.username||'')+' | '+(u.role||'')+' | '+(u.division||'')+'</div><div class="text-[11px] text-indigo-700 font-semibold mt-0.5">Officer: '+(u.officer_name||'-')+'</div></div><div class="flex items-center gap-2" onclick="event.stopPropagation()"><button onclick="editUserForCredentials(\''+u.id+'\')" class="btn btn-ghost px-2.5 py-1 text-xs">Edit</button><button onclick="delUser(\''+u.id+'\')" class="text-red-500 text-xs">Del</button></div></div>').join('')||'<div class="text-xs text-slate-400">Users නැත</div>';
 }
 document.getElementById('userForm').addEventListener('submit',async function(e){
   e.preventDefault();
@@ -1621,8 +2025,14 @@ document.getElementById('userForm').addEventListener('submit',async function(e){
   } else {
     users.push(p);
   }
+
+  // Update localStorage if current user matches so unit.html sees updated officer_name immediately on same browser
+  if(norm(localStorage.getItem('user')) === norm(p.username)){
+    localStorage.setItem('user_officer_name', officerVal);
+  }
+
   if(sb) await sb.from('profiles').upsert(p,{onConflict:'username'});
-  renderUsers(); showToast('Officer Name & Password Save විය ✓',true);
+  renderUsers(); showToast('Officer Name Update Save විය (Unit இல் பிரதிபலிக்கும்) ✓',true);
 });
 async function delUser(id){users=users.filter(x=>x.id!==id);renderUsers();}
 function onUSub(){let h=hierarchy.find(x=>x.id===document.getElementById('uSub').value);document.getElementById('uDiv').innerHTML=h?h.divisions.map(d=>'<option>'+d.name+'</option>').join(''):'';onUDiv();}
@@ -1641,7 +2051,12 @@ function selDiv(d){selHierDiv=d;renderHierarchy();}
 
 /* ================= Supabase Sync ================= */
 async function sbSync(){
-  if(!sb){document.getElementById('sbStatus').textContent='Offline';return;}
+  if(!sb){
+    document.getElementById('sbStatus').textContent='Offline';
+    pivRecords = loadLocalPivRecords();
+    renderDashboard(); renderData(); renderUsers(); renderAdminPivTable();
+    return;
+  }
   try{
     let n=await sb.from('nodes').select('*').order('sort_order'); if(Array.isArray(n.data)) nodes=n.data;
     let q=await sb.from('questions').select('*').order('order_index'); if(Array.isArray(q.data)) questions=q.data;
@@ -1649,9 +2064,19 @@ async function sbSync(){
     let t=await sb.from('targets').select('*'); if(Array.isArray(t.data)) targetRecords=t.data;
     let p=await sb.from('item_prices').select('*'); if(Array.isArray(p.data)) plItems=p.data;
     let u=await sb.from('profiles').select('*'); if(Array.isArray(u.data)) users=u.data;
+    let piv=await sb.from('piv_submissions').select('*').order('created_at',{ascending:false});
+    if(piv && Array.isArray(piv.data) && !piv.error){
+      pivRecords = piv.data;
+      saveLocalPivRecords(pivRecords);
+    } else {
+      pivRecords = loadLocalPivRecords();
+    }
     document.getElementById('sbStatus').textContent='Data: Connected ✓';
-  }catch(e){document.getElementById('sbStatus').textContent='Error';}
-  renderDashboard(); renderData(); renderUsers();
+  }catch(e){
+    pivRecords = loadLocalPivRecords();
+    document.getElementById('sbStatus').textContent='Error';
+  }
+  renderDashboard(); renderData(); renderUsers(); renderAdminPivTable();
 }
 
 fillDataFilters(); document.getElementById('uSub').innerHTML=hierarchy.map(h=>'<option value="'+h.id+'">'+h.name+'</option>').join(''); onUSub();
