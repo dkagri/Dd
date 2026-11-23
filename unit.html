@@ -30,7 +30,7 @@ select, input, textarea { -webkit-appearance: none; appearance: none; }
 <div id="modalBack" class="modal-back" onclick="if(event.target===this) closeModal(false)"><div class="modal-card"><div id="modalIcon" class="text-3xl">ℹ️</div><h3 id="modalTitle" class="font-bold text-[18px] mt-2"></h3><p id="modalMsg" class="text-sm text-slate-500 mt-1"></p><div id="modalInputWrap" class="hidden mt-3"><input id="modalInput"></div><div class="flex gap-2 mt-5"><button onclick="closeModal(false)" class="btn btn-ghost flex-1">Cancel</button><button onclick="closeModal(true)" class="btn btn-primary flex-1">OK</button></div></div></div>
 <div id="toast" class="toast"></div>
 
-<div class="max-w-[1180px] mx-auto p-4 md:p-6">
+<div class="max-w-[1240px] mx-auto p-4 md:p-6">
 <!-- TOP HEADER -->
 <div class="flex justify-between items-center mb-4">
   <div class="flex items-center gap-3">
@@ -56,19 +56,27 @@ select, input, textarea { -webkit-appearance: none; appearance: none; }
   </div>
 </div>
 
-<!-- NAVIGATION TABS -->
-<div class="grid md:grid-cols-3 gap-4 mt-5">
+<!-- NAVIGATION TABS (5 SECTIONS) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mt-5">
   <button onclick="showSection('targets')" id="btnTargets" class="text-left rounded-2xl border-2 border-indigo-600 bg-indigo-600 text-white p-4">
-    <div class="font-bold text-base">🎯 1. Targets & Progress</div>
-    <div class="text-xs opacity-90 mt-1">Extension & Development Boxes + Sheet</div>
+    <div class="font-bold text-sm">🎯 1. Targets & Progress</div>
+    <div class="text-[11px] opacity-90 mt-1">Extension & Development Boxes + Sheet</div>
   </button>
   <button onclick="showSection('form')" id="btnForm" class="text-left rounded-2xl border p-4 bg-white">
-    <div class="font-bold text-base">📝 2. Data Entry - දත්ත ඇතුළත් කරන්න</div>
-    <div class="text-xs text-slate-500 mt-1">Data & Progress Update</div>
+    <div class="font-bold text-sm">📝 2. Data Entry - දත්ත ඇතුළත් කරන්න</div>
+    <div class="text-[11px] text-slate-500 mt-1">Data & Progress Update</div>
   </button>
   <button onclick="showSection('mydata')" id="btnMy" class="text-left rounded-2xl border p-4 bg-white">
-    <div class="font-bold text-base">📊 3. My Data - මගේ දත්ත</div>
-    <div class="text-xs text-slate-500 mt-1">Extension & Development Tables + Excel</div>
+    <div class="font-bold text-sm">📊 3. My Data - මගේ දත්ත</div>
+    <div class="text-[11px] text-slate-500 mt-1">Extension & Development Tables + Excel</div>
+  </button>
+  <button onclick="showSection('pricelist')" id="btnPriceList" class="text-left rounded-2xl border p-4 bg-white">
+    <div class="font-bold text-sm">💰 4. View Item Price List</div>
+    <div class="text-[11px] text-slate-500 mt-1">Admin Price List + Filter + Excel</div>
+  </button>
+  <button onclick="showSection('piv')" id="btnPiv" class="text-left rounded-2xl border p-4 bg-white">
+    <div class="font-bold text-sm">🧾 5. PIV Submitting</div>
+    <div class="text-[11px] text-slate-500 mt-1">Development Payment & PIV Entry</div>
   </button>
 </div>
 
@@ -164,7 +172,7 @@ select, input, textarea { -webkit-appearance: none; appearance: none; }
     <div id="devCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
   </div>
 
-  <!-- PHYSICAL TARGET & PROGRESS SHEET (SEPARATE EXTENSION & DEVELOPMENT TABLES + FILTERS + SEPARATE EXCEL DOWNLOAD) -->
+  <!-- PHYSICAL TARGET & PROGRESS SHEET (SEPARATE FILTERS FOR EXTENSION & DEVELOPMENT + MERGED EXCEL DOWNLOAD) -->
   <div class="card space-y-5">
     <div>
       <div class="text-[11px] font-bold text-indigo-600 uppercase">📋 PHYSICAL TARGET & PROGRESS SHEET</div>
@@ -172,27 +180,25 @@ select, input, textarea { -webkit-appearance: none; appearance: none; }
       <p class="text-xs text-slate-500">Target</p>
     </div>
 
-    <!-- MAIN PROGRAM & SUB PROGRAM FILTERS FOR TARGET TABLES -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-2xl border">
-      <div>
-        <label class="text-[11px] font-bold text-slate-600 uppercase">Filter by Main Program</label>
-        <select id="sheetFilterMainProg" onchange="onSheetMainProgChange()" class="mt-1 bg-white text-xs">
-          <option value="">All Main Programs</option>
-        </select>
-      </div>
-      <div>
-        <label class="text-[11px] font-bold text-slate-600 uppercase">Filter by Sub Program</label>
-        <select id="sheetFilterSubProg" onchange="renderTargetSheets()" class="mt-1 bg-white text-xs">
-          <option value="">All Sub Programs</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- EXTENSION TARGET TABLE (NO ITEM COLUMN) -->
+    <!-- EXTENSION TARGET TABLE (OWN FILTERS: MAIN PROGRAM, SUB PROGRAM) -->
     <div class="space-y-3 border rounded-2xl p-4 bg-white">
       <div class="flex flex-wrap justify-between items-center gap-2">
         <h4 class="text-base font-bold text-blue-900">🌾 Extension Target & Progress Table</h4>
         <button onclick="downloadTargetSheetExcel('extension')" class="btn btn-success px-4 py-2 text-xs">⬇ Download Extension Excel</button>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-blue-50/50 p-3 rounded-xl border border-blue-100">
+        <div>
+          <label class="text-[11px] font-bold text-blue-900 uppercase">Main Program</label>
+          <select id="extFilterMainProg" onchange="onExtMainProgChange()" class="mt-1 bg-white text-xs">
+            <option value="">All Main Programs</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-blue-900 uppercase">Sub Program</label>
+          <select id="extFilterSubProg" onchange="renderExtensionSheet()" class="mt-1 bg-white text-xs">
+            <option value="">All Sub Programs</option>
+          </select>
+        </div>
       </div>
       <div class="table-wrap">
         <table class="matrix-table w-full border-collapse" id="extTargetMatrixTable">
@@ -211,11 +217,31 @@ select, input, textarea { -webkit-appearance: none; appearance: none; }
       </div>
     </div>
 
-    <!-- DEVELOPMENT TARGET TABLE (WITH ITEM COLUMN) -->
+    <!-- DEVELOPMENT TARGET TABLE (OWN FILTERS: MAIN PROGRAM, SUB PROGRAM, ITEM) -->
     <div class="space-y-3 border rounded-2xl p-4 bg-white">
       <div class="flex flex-wrap justify-between items-center gap-2">
         <h4 class="text-base font-bold text-emerald-900">🏗️ Development Target & Progress Table</h4>
         <button onclick="downloadTargetSheetExcel('development')" class="btn btn-success px-4 py-2 text-xs">⬇ Download Development Excel</button>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-emerald-50/50 p-3 rounded-xl border border-emerald-100">
+        <div>
+          <label class="text-[11px] font-bold text-emerald-900 uppercase">Main Program</label>
+          <select id="devFilterMainProg" onchange="onDevMainProgChange()" class="mt-1 bg-white text-xs">
+            <option value="">All Main Programs</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-emerald-900 uppercase">Sub Program</label>
+          <select id="devFilterSubProg" onchange="onDevSubProgChange()" class="mt-1 bg-white text-xs">
+            <option value="">All Sub Programs</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-emerald-900 uppercase">Item</label>
+          <select id="devFilterItem" onchange="renderDevelopmentSheet()" class="mt-1 bg-white text-xs">
+            <option value="">All Items</option>
+          </select>
+        </div>
       </div>
       <div class="table-wrap">
         <table class="matrix-table w-full border-collapse" id="devTargetMatrixTable">
@@ -376,6 +402,172 @@ select, input, textarea { -webkit-appearance: none; appearance: none; }
   </div>
 </div>
 
+<!-- ========================================================================= -->
+<!-- SECTION 4: VIEW ITEM PRICE LIST (ADMIN SYNCED + FILTERS + EXCEL)        -->
+<!-- ========================================================================= -->
+<div id="panel-pricelist" class="mt-5 hidden space-y-5">
+  <div class="card space-y-4">
+    <div class="flex flex-wrap justify-between items-center gap-2">
+      <div>
+        <div class="text-[11px] font-bold text-amber-700 uppercase">💰 ADMIN ITEM PRICE LIST</div>
+        <h2 class="font-bold text-[20px] text-slate-900">View Item Price List</h2>
+        <p class="text-xs text-slate-500">price upadate</p>
+      </div>
+      <button onclick="downloadPriceListExcel()" class="btn btn-success text-xs px-4 py-2">⬇ Download Price List Excel</button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-amber-50/60 p-3.5 rounded-2xl border border-amber-200">
+      <div>
+        <label class="text-[11px] font-bold text-amber-950 uppercase">Year</label>
+        <select id="plFilterYear" onchange="onPriceYearChange()" class="mt-1 bg-white text-xs">
+          <option value="">All Years</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-[11px] font-bold text-amber-950 uppercase">Main Program</label>
+        <select id="plFilterMainProg" onchange="onPriceMainProgChange()" class="mt-1 bg-white text-xs">
+          <option value="">All Main Programs</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-[11px] font-bold text-amber-950 uppercase">Sub Program</label>
+        <select id="plFilterSubProg" onchange="renderPriceListTable()" class="mt-1 bg-white text-xs">
+          <option value="">All Sub Programs</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="matrix-table w-full border-collapse" id="itemPriceListTable">
+        <thead>
+          <tr>
+            <th>Program</th>
+            <th>Sub Program</th>
+            <th>Item</th>
+            <th>Unit Price</th>
+            <th>Subsidy</th>
+            <th>Government Price</th>
+            <th>Farmers Price</th>
+          </tr>
+        </thead>
+        <tbody id="itemPriceListTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- SECTION 5: PIV SUBMITTING (DEVELOPMENT PAYMENT + AUTO UNIT NO + APPROVALS)-->
+<!-- ========================================================================= -->
+<div id="panel-piv" class="mt-5 hidden space-y-5">
+  <div class="card space-y-4">
+    <div class="flex flex-wrap justify-between items-center gap-2">
+      <div>
+        <div class="text-[11px] font-bold text-indigo-700 uppercase">🧾 DEVELOPMENT PAYMENT & PIV</div>
+        <h2 class="font-bold text-[20px] text-slate-900">PIV Submitting</h2>
+        <p class="text-xs text-slate-500">Enter the Payment Information Voucher (PIV) details for items.</p>
+      </div>
+      <button type="button" onclick="resetPivForm()" class="btn btn-ghost text-xs px-3 py-1.5">↺ Clear PIV Form</button>
+    </div>
+
+    <form id="pivForm" onsubmit="return submitPivEntry(event)" class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div>
+          <label class="text-xs font-semibold">1. Year *</label>
+          <select id="pivYear" onchange="onPivYearChange()" required class="mt-1 bg-white text-xs">
+            <option value="">-- Select Year --</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-semibold">2. Main Program *</label>
+          <select id="pivMainProg" onchange="onPivMainChange()" required class="mt-1 bg-white text-xs">
+            <option value="">-- Select Main Program --</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-semibold">3. Sub Program *</label>
+          <select id="pivSubProg" onchange="onPivSubChange()" required class="mt-1 bg-white text-xs">
+            <option value="">-- Select Sub Program --</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-semibold">4. Item *</label>
+          <select id="pivItem" onchange="onPivItemChange()" required class="mt-1 bg-white text-xs">
+            <option value="">-- Select Item --</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="rounded-2xl bg-indigo-50/70 border border-indigo-200 p-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label class="text-xs font-bold text-slate-800">5. No of Units *</label>
+          <input type="number" step="any" min="1" id="pivUnits" oninput="recalcPivPaymentAmount()" required placeholder="e.g. 10" class="mt-1 bg-white font-bold">
+          <div class="text-[11px] text-slate-500 mt-1">Farmer Unit Price: <b id="pivFarmerUnitRate">Rs. 0.00</b></div>
+        </div>
+        <div>
+          <label class="text-xs font-bold text-indigo-900">Payment Amount (Auto)</label>
+          <input type="text" id="pivPaymentAmountDisplay" readonly class="mt-1 bg-white font-extrabold text-indigo-700 border-indigo-300" value="Rs. 0.00">
+          <div class="text-[11px] text-slate-500 mt-1">No of Units × Farmers Price</div>
+        </div>
+        <div>
+          <label class="text-xs font-bold text-slate-700">Auto Unit Number</label>
+          <input type="text" id="pivAutoUnitNoPreview" readonly class="mt-1 bg-slate-100 font-bold text-slate-700" placeholder="Will be generated after submission">
+          <div class="text-[11px] text-slate-500 mt-1">Automatically generate</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div>
+          <label class="text-xs font-semibold">6. Banked Date *</label>
+          <input type="date" id="pivBankedDate" required class="mt-1 bg-white text-xs">
+        </div>
+        <div>
+          <label class="text-xs font-semibold">7. PIV Submitting Date (Ad office)*</label>
+          <input type="date" id="pivSubmitDate" required class="mt-1 bg-white text-xs">
+        </div>
+        <div>
+          <label class="text-xs font-semibold">8. No of PIV *</label>
+          <input type="text" id="pivNumber" required placeholder="no" class="mt-1 bg-white text-xs font-semibold">
+        </div>
+      </div>
+
+      <div class="flex justify-end">
+        <button type="submit" id="pivSubmitBtn" class="btn btn-primary px-6 py-3 text-sm">💾 Submit PIV & Generate Unit Number</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- PIV SUBMISSIONS TABLE -->
+  <div class="card space-y-3">
+    <div class="flex flex-wrap justify-between items-center gap-2">
+      <h3 class="font-bold text-base text-slate-900">📋 Submitted PIV Records (<span id="pivRecordsCount">0</span>)</h3>
+      <span class="text-xs text-slate-500">AD Office & Main Admin Approval Status</span>
+    </div>
+    <div class="table-wrap">
+      <table class="matrix-table w-full border-collapse" id="pivSubmissionsTable">
+        <thead>
+          <tr>
+            <th>Auto Unit No</th>
+            <th>Year</th>
+            <th>Main Program</th>
+            <th>Sub Program</th>
+            <th>Item</th>
+            <th>No of Units</th>
+            <th>Payment Amount</th>
+            <th>Banked Date</th>
+            <th>PIV Submit Date</th>
+            <th>No of PIV</th>
+            <th>AD Office Status</th>
+            <th>Main Admin Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="pivSubmissionsTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 </div>
 
 <script>
@@ -425,10 +617,8 @@ var myName=localStorage.getItem('user_name')||myUser;
 var myOfficer=localStorage.getItem('user_officer_name')||'';
 
 function norm(s){ return String(s||'').trim().toLowerCase(); }
-
-function getActiveOfficerName(){
-  return (myOfficer || myName || myUser || '').trim();
-}
+function parseNum(v){ var n = parseFloat(String(v===undefined||v===null?'':v).replace(/[^0-9.-]/g,'')); return isNaN(n) ? 0 : n; }
+function getActiveOfficerName(){ return (myOfficer || myName || myUser || '').trim(); }
 
 function refreshOfficerProfileDisplay(){
   mySubId=localStorage.getItem('user_subOfficeId')||mySubId;
@@ -446,9 +636,10 @@ function refreshOfficerProfileDisplay(){
 
 refreshOfficerProfileDisplay();
 
-var nodes=[], questions=[], responses=[], itemPrices=[], targetRecords=[];
-var curMain='extension', curL1=null, curL2=null, curL3=null, curSub=null, curItem=null, editingId=null;
+var nodes=[], questions=[], responses=[], itemPrices=[], targetRecords=[], pivRecords=[];
+var curMain='extension', curL1=null, curL2=null, curL3=null, curSub=null, curItem=null, editingId=null, editingPivId=null;
 var showAllExtBoxes=false, showAllDevBoxes=false;
+var PIV_STORAGE_KEY = 'fw_piv_submissions_v1';
 
 const COLOR_THEMES = [
   { border: 'border-indigo-300', bg: 'bg-indigo-50/70', badge: 'bg-indigo-600 text-white', bar: 'bg-indigo-600', title: 'text-indigo-950' },
@@ -465,14 +656,29 @@ function showSection(sec){
   document.getElementById('panel-targets').classList.toggle('hidden', sec!=='targets');
   document.getElementById('panel-form').classList.toggle('hidden', sec!=='form');
   document.getElementById('panel-mydata').classList.toggle('hidden', sec!=='mydata');
-  
-  document.getElementById('btnTargets').className = sec==='targets' ? 'text-left rounded-2xl border-2 border-indigo-600 bg-indigo-600 text-white p-4' : 'text-left rounded-2xl border p-4 bg-white';
-  document.getElementById('btnForm').className = sec==='form' ? 'text-left rounded-2xl border-2 border-indigo-600 bg-indigo-600 text-white p-4' : 'text-left rounded-2xl border p-4 bg-white';
-  document.getElementById('btnMy').className = sec==='mydata' ? 'text-left rounded-2xl border-2 border-emerald-600 bg-emerald-600 text-white p-4' : 'text-left rounded-2xl border p-4 bg-white';
-  
+  document.getElementById('panel-pricelist').classList.toggle('hidden', sec!=='pricelist');
+  document.getElementById('panel-piv').classList.toggle('hidden', sec!=='piv');
+
+  var tabs = [
+    { id: 'btnTargets', key: 'targets', active: 'border-indigo-600 bg-indigo-600 text-white' },
+    { id: 'btnForm', key: 'form', active: 'border-indigo-600 bg-indigo-600 text-white' },
+    { id: 'btnMy', key: 'mydata', active: 'border-emerald-600 bg-emerald-600 text-white' },
+    { id: 'btnPriceList', key: 'pricelist', active: 'border-amber-600 bg-amber-600 text-white' },
+    { id: 'btnPiv', key: 'piv', active: 'border-violet-600 bg-violet-600 text-white' }
+  ];
+  tabs.forEach(t => {
+    var el = document.getElementById(t.id);
+    if(!el) return;
+    el.className = (sec === t.key)
+      ? 'text-left rounded-2xl border-2 p-4 ' + t.active
+      : 'text-left rounded-2xl border p-4 bg-white';
+  });
+
   if(sec==='targets') renderUnitTargets();
   if(sec==='form') renderUSelects();
   if(sec==='mydata') renderMy();
+  if(sec==='pricelist') renderPriceListSection();
+  if(sec==='piv') renderPivSection();
 }
 
 function getMyResponses(){
@@ -682,29 +888,68 @@ function renderBoxGrid(rows, gridId, btnId, showAllFlag, defaultLimit, emptyMsg)
   }).join('');
 }
 
-function populateSheetFilterDropdowns(allRows){
-  var mainSel = document.getElementById('sheetFilterMainProg');
-  var subSel = document.getElementById('sheetFilterSubProg');
+function populateExtTableFilters(extRows){
+  var mainSel = document.getElementById('extFilterMainProg');
+  var subSel = document.getElementById('extFilterSubProg');
   if(!mainSel || !subSel) return;
 
   var prevMain = mainSel.value;
   var prevSub = subSel.value;
 
-  var mains = [...new Set(allRows.map(r => r.level2).filter(Boolean))];
+  var mains = [...new Set(extRows.map(r => r.level2).filter(Boolean))];
   mainSel.innerHTML = '<option value="">All Main Programs</option>' + mains.map(m => '<option value="' + m + '">' + m + '</option>').join('');
   if(mains.includes(prevMain)) mainSel.value = prevMain;
   else prevMain = '';
 
-  var subSource = prevMain ? allRows.filter(r => r.level2 === prevMain) : allRows;
+  var subSource = prevMain ? extRows.filter(r => r.level2 === prevMain) : extRows;
   var subs = [...new Set(subSource.map(r => r.level3).filter(Boolean))];
   subSel.innerHTML = '<option value="">All Sub Programs</option>' + subs.map(s => '<option value="' + s + '">' + s + '</option>').join('');
   if(subs.includes(prevSub)) subSel.value = prevSub;
   else subSel.value = '';
 }
 
-function onSheetMainProgChange(){
-  document.getElementById('sheetFilterSubProg').value = '';
-  renderTargetSheets();
+function populateDevTableFilters(devRows){
+  var mainSel = document.getElementById('devFilterMainProg');
+  var subSel = document.getElementById('devFilterSubProg');
+  var itemSel = document.getElementById('devFilterItem');
+  if(!mainSel || !subSel || !itemSel) return;
+
+  var prevMain = mainSel.value;
+  var prevSub = subSel.value;
+  var prevItem = itemSel.value;
+
+  var mains = [...new Set(devRows.map(r => r.level2).filter(Boolean))];
+  mainSel.innerHTML = '<option value="">All Main Programs</option>' + mains.map(m => '<option value="' + m + '">' + m + '</option>').join('');
+  if(mains.includes(prevMain)) mainSel.value = prevMain;
+  else prevMain = '';
+
+  var subSource = prevMain ? devRows.filter(r => r.level2 === prevMain) : devRows;
+  var subs = [...new Set(subSource.map(r => r.level3).filter(Boolean))];
+  subSel.innerHTML = '<option value="">All Sub Programs</option>' + subs.map(s => '<option value="' + s + '">' + s + '</option>').join('');
+  if(subs.includes(prevSub)) subSel.value = prevSub;
+  else prevSub = '';
+
+  var itemSource = subSource.filter(r => !prevSub || r.level3 === prevSub);
+  var items = [...new Set(itemSource.map(r => r.item_name).filter(Boolean))];
+  itemSel.innerHTML = '<option value="">All Items</option>' + items.map(it => '<option value="' + it + '">' + it + '</option>').join('');
+  if(items.includes(prevItem)) itemSel.value = prevItem;
+  else itemSel.value = '';
+}
+
+function onExtMainProgChange(){
+  document.getElementById('extFilterSubProg').value = '';
+  renderExtensionSheet();
+}
+
+function onDevMainProgChange(){
+  document.getElementById('devFilterSubProg').value = '';
+  document.getElementById('devFilterItem').value = '';
+  renderDevTableFiltersAndSheet();
+}
+
+function onDevSubProgChange(){
+  document.getElementById('devFilterItem').value = '';
+  renderDevTableFiltersAndSheet();
 }
 
 function renderUnitTargets(){
@@ -751,9 +996,52 @@ function renderUnitTargets(){
   renderBoxGrid(extFiltered, 'extCardsGrid', 'btnMoreExt', showAllExtBoxes, 6, selSeason ? 'දත්ත නොමැත' : 'Season තෝරන්න');
   renderBoxGrid(devFiltered, 'devCardsGrid', 'btnMoreDev', showAllDevBoxes, 6, selYear ? 'දත්ත නොමැත' : 'Year තෝරන්න');
 
-  window.baseSheetRows = extFiltered.concat(devFiltered);
-  populateSheetFilterDropdowns(window.baseSheetRows);
-  renderTargetSheets();
+  window.currentExtBaseRows = extFiltered;
+  window.currentDevBaseRows = devFiltered;
+
+  populateExtTableFilters(extFiltered);
+  renderExtensionSheet();
+
+  populateDevTableFilters(devFiltered);
+  renderDevelopmentSheet();
+}
+
+function renderDevTableFiltersAndSheet(){
+  populateDevTableFilters(window.currentDevBaseRows || []);
+  renderDevelopmentSheet();
+}
+
+function renderExtensionSheet(){
+  var rows = window.currentExtBaseRows || [];
+  var fMain = (document.getElementById('extFilterMainProg') || {}).value || '';
+  var fSub  = (document.getElementById('extFilterSubProg') || {}).value || '';
+
+  var subSource = fMain ? rows.filter(r => r.level2 === fMain) : rows;
+  var subs = [...new Set(subSource.map(r => r.level3).filter(Boolean))];
+  var subSel = document.getElementById('extFilterSubProg');
+  if(subSel){
+    subSel.innerHTML = '<option value="">All Sub Programs</option>' + subs.map(s => '<option value="' + s + '">' + s + '</option>').join('');
+    if(subs.includes(fSub)) subSel.value = fSub; else fSub = '';
+  }
+
+  var filtered = subSource.filter(r => !fSub || r.level3 === fSub);
+  window.currentExtSheetMeta = renderSingleCategoryMatrix(filtered, 'extTargetMatrixBody', false);
+}
+
+function renderDevelopmentSheet(){
+  var rows = window.currentDevBaseRows || [];
+  var fMain = (document.getElementById('devFilterMainProg') || {}).value || '';
+  var fSub  = (document.getElementById('devFilterSubProg') || {}).value || '';
+  var fItem = (document.getElementById('devFilterItem') || {}).value || '';
+
+  var filtered = rows.filter(r => {
+    if(fMain && r.level2 !== fMain) return false;
+    if(fSub && r.level3 !== fSub) return false;
+    if(fItem && r.item_name !== fItem) return false;
+    return true;
+  });
+
+  window.currentDevSheetMeta = renderSingleCategoryMatrix(filtered, 'devTargetMatrixBody', true);
 }
 
 function sortByAdminOrder(rows){
@@ -766,7 +1054,6 @@ function sortByAdminOrder(rows){
   });
 }
 
-// Build structured merge spans matching the exact visual hierarchy of the table
 function buildMergedMatrixGroups(rows, includeItem){
   var sorted = sortByAdminOrder(rows);
   var items = [];
@@ -843,24 +1130,6 @@ function renderSingleCategoryMatrix(rows, tbodyId, includeItem){
   return built;
 }
 
-function renderTargetSheets(){
-  var base = window.baseSheetRows || [];
-  var fMainProg = (document.getElementById('sheetFilterMainProg') || {}).value || '';
-  var fSubProg = (document.getElementById('sheetFilterSubProg') || {}).value || '';
-
-  var filtered = base.filter(r => {
-    if(fMainProg && r.level2 !== fMainProg) return false;
-    if(fSubProg && r.level3 !== fSubProg) return false;
-    return true;
-  });
-
-  var extRows = filtered.filter(r => r.main_type === 'extension');
-  var devRows = filtered.filter(r => r.main_type === 'development');
-
-  window.currentExtSheetMeta = renderSingleCategoryMatrix(extRows, 'extTargetMatrixBody', false);
-  window.currentDevSheetMeta = renderSingleCategoryMatrix(devRows, 'devTargetMatrixBody', true);
-}
-
 function downloadTargetSheetExcel(type){
   if(typeof XLSX === 'undefined') return showToast('Excel library load ஆகவில்லை', false);
   var isDev = type === 'development';
@@ -873,8 +1142,6 @@ function downloadTargetSheetExcel(type){
 
   var sheetData = [headers];
   var merges = [];
-
-  // Data starts at row index 1 (row 0 is header)
   var dataStartRow = 1;
 
   meta.items.forEach((entry, idx) => {
@@ -884,40 +1151,16 @@ function downloadTargetSheetExcel(type){
     var subVal  = entry.showSub  ? (it.level3 || '-') : '';
 
     if(isDev){
-      sheetData.push([
-        mainVal,
-        subVal,
-        it.item_name || '-',
-        it.target,
-        it.covered,
-        entry.rem,
-        entry.pct + '%'
-      ]);
+      sheetData.push([mainVal, subVal, it.item_name || '-', it.target, it.covered, entry.rem, entry.pct + '%']);
     } else {
-      sheetData.push([
-        mainVal,
-        subVal,
-        it.target,
-        it.covered,
-        entry.rem,
-        entry.pct + '%'
-      ]);
+      sheetData.push([mainVal, subVal, it.target, it.covered, entry.rem, entry.pct + '%']);
     }
 
-    // Column 0 = Main Program
     if(entry.showMain && entry.mainSpan > 1){
-      merges.push({
-        s: { r: excelRowIdx, c: 0 },
-        e: { r: excelRowIdx + entry.mainSpan - 1, c: 0 }
-      });
+      merges.push({ s: { r: excelRowIdx, c: 0 }, e: { r: excelRowIdx + entry.mainSpan - 1, c: 0 } });
     }
-
-    // Column 1 = Sub Program
     if(entry.showSub && entry.subSpan > 1){
-      merges.push({
-        s: { r: excelRowIdx, c: 1 },
-        e: { r: excelRowIdx + entry.subSpan - 1, c: 1 }
-      });
+      merges.push({ s: { r: excelRowIdx, c: 1 }, e: { r: excelRowIdx + entry.subSpan - 1, c: 1 } });
     }
   });
 
@@ -1053,7 +1296,7 @@ function renderUForm(){
 
   var priceBox = document.getElementById('uPriceAutoInfo');
   if(curMain === 'development' && itemTitle){
-    var pObj = (itemPrices||[]).find(x => norm(x.item_name) === norm(itemTitle) && (!n1Title || norm(x.year) === norm(n1Title)));
+    var pObj = (itemPrices||[]).find(x => norm(x.item_name) === norm(itemTitle) && (!n1Title || !x.year || norm(x.year) === norm(n1Title)));
     if(pObj){
       priceBox.classList.remove('hidden');
       document.getElementById('uAutoUnit').textContent = 'Rs. ' + (pObj.unit_price||0);
@@ -1082,7 +1325,7 @@ function renderUForm(){
   qs.forEach((q, idx) => {
     html+='<div class="rounded-xl border p-4 bg-white"><label class="text-[14px] font-semibold">'+(idx+1)+'. '+q.question_text+' '+(q.is_required?'<span class="text-red-500">*</span>':'')+'</label><div class="mt-2">'+renderField(q)+'</div></div>';
   });
-  html+='<div class="flex gap-2"><button type="submit" class="btn btn-primary flex-1 py-3.5">💾 Submit & Update Progress</button><button type="button" onclick="resetFormInputsOnly()" class="btn btn-ghost px-4">Clear</button></div></form>';
+  html+='<div class="flex gap-2"><button type="submit" class="btn btn-primary flex-1 py-3.5">💾 Submit & Update Progress (தொடர்ந்து Update செய்யலாம்)</button><button type="button" onclick="resetFormInputsOnly()" class="btn btn-ghost px-4">Clear</button></div></form>';
   wrap.innerHTML=html;
 }
 
@@ -1365,6 +1608,499 @@ async function delMy(id){
   showToast('Deleted ✓', true);
 }
 
+/* ========================================================================= */
+/* SECTION 4: VIEW ITEM PRICE LIST (ENRICHED FROM ADMIN NODES & ITEM_PRICES) */
+/* ========================================================================= */
+function buildEnrichedPriceList(){
+  var nodeById = new Map((nodes||[]).map(n => [String(n.id), n]));
+  var list = [];
+
+  (itemPrices||[]).forEach((p, idx) => {
+    var program = p.program || p.main_program || p.level2 || '';
+    var subProgram = p.sub_program || p.level3 || '';
+    var year = p.year || p.level1 || '';
+    var itemName = p.item_name || p.item || p.title || '';
+
+    if((!program || !subProgram) && p.node_id){
+      var cur = nodeById.get(String(p.node_id));
+      if(cur){
+        if(!itemName && cur.level === 4) itemName = cur.title;
+        var p3 = cur.level === 4 ? nodeById.get(String(cur.parent_id)) : (cur.level === 3 ? cur : null);
+        if(p3){
+          if(!subProgram) subProgram = p3.title;
+          var p2 = nodeById.get(String(p3.parent_id));
+          if(p2){
+            if(!program) program = p2.title;
+            var p1 = nodeById.get(String(p2.parent_id));
+            if(p1 && !year) year = p1.title;
+          }
+        }
+      }
+    }
+
+    if((!program || !subProgram) && itemName){
+      var matchItemNode = (nodes||[]).find(n => norm(n.main_type) === 'development' && n.level === 4 && norm(n.title) === norm(itemName));
+      if(matchItemNode){
+        var s3 = nodeById.get(String(matchItemNode.parent_id));
+        if(s3){
+          if(!subProgram) subProgram = s3.title;
+          var m2 = nodeById.get(String(s3.parent_id));
+          if(m2){
+            if(!program) program = m2.title;
+            var y1 = nodeById.get(String(m2.parent_id));
+            if(y1 && !year) year = y1.title;
+          }
+        }
+      }
+    }
+
+    var unitPrice = parseNum(p.unit_price);
+    var subsidyRaw = p.subsidy !== undefined && p.subsidy !== null ? String(p.subsidy).trim() : '0%';
+    var govPrice = parseNum(p.gov_price);
+    var farmerPrice = p.farmer_price !== undefined && p.farmer_price !== null && p.farmer_price !== ''
+      ? parseNum(p.farmer_price)
+      : Math.max(0, unitPrice - govPrice);
+
+    list.push({
+      id: p.id || ('pl_' + idx),
+      year: year || '',
+      program: program || '-',
+      sub_program: subProgram || '-',
+      item: itemName || '-',
+      unit_price: unitPrice,
+      subsidy: subsidyRaw || '0%',
+      gov_price: govPrice,
+      farmer_price: farmerPrice
+    });
+  });
+
+  return list;
+}
+
+function onPriceYearChange(){
+  document.getElementById('plFilterMainProg').value = '';
+  document.getElementById('plFilterSubProg').value = '';
+  renderPriceListSection();
+}
+
+function onPriceMainProgChange(){
+  document.getElementById('plFilterSubProg').value = '';
+  renderPriceListSection();
+}
+
+function renderPriceListSection(){
+  var all = buildEnrichedPriceList();
+  window.enrichedPriceListAll = all;
+
+  var ySel = document.getElementById('plFilterYear');
+  var mSel = document.getElementById('plFilterMainProg');
+  var sSel = document.getElementById('plFilterSubProg');
+  if(!ySel || !mSel || !sSel) return;
+
+  var prevY = ySel.value;
+  var prevM = mSel.value;
+  var prevS = sSel.value;
+
+  var years = [...new Set(all.map(x => x.year).filter(Boolean))];
+  ySel.innerHTML = '<option value="">All Years</option>' + years.map(y => '<option value="' + y + '">' + y + '</option>').join('');
+  if(years.includes(prevY)) ySel.value = prevY; else prevY = '';
+
+  var byY = prevY ? all.filter(x => x.year === prevY) : all;
+  var mains = [...new Set(byY.map(x => x.program).filter(p => p && p !== '-'))];
+  mSel.innerHTML = '<option value="">All Main Programs</option>' + mains.map(m => '<option value="' + m + '">' + m + '</option>').join('');
+  if(mains.includes(prevM)) mSel.value = prevM; else prevM = '';
+
+  var byM = prevM ? byY.filter(x => x.program === prevM) : byY;
+  var subs = [...new Set(byM.map(x => x.sub_program).filter(s => s && s !== '-'))];
+  sSel.innerHTML = '<option value="">All Sub Programs</option>' + subs.map(s => '<option value="' + s + '">' + s + '</option>').join('');
+  if(subs.includes(prevS)) sSel.value = prevS; else prevS = '';
+
+  renderPriceListTable();
+}
+
+function renderPriceListTable(){
+  var all = window.enrichedPriceListAll || buildEnrichedPriceList();
+  var fY = (document.getElementById('plFilterYear') || {}).value || '';
+  var fM = (document.getElementById('plFilterMainProg') || {}).value || '';
+  var fS = (document.getElementById('plFilterSubProg') || {}).value || '';
+
+  var filtered = all.filter(x => {
+    if(fY && x.year !== fY) return false;
+    if(fM && x.program !== fM) return false;
+    if(fS && x.sub_program !== fS) return false;
+    return true;
+  });
+
+  window.currentFilteredPriceList = filtered;
+
+  var tbody = document.getElementById('itemPriceListTbody');
+  if(!filtered.length){
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-400 text-xs">Price List දත්ත නොමැත</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(x =>
+    '<tr>' +
+      '<td class="font-bold text-slate-900">' + x.program + '</td>' +
+      '<td class="text-slate-700">' + x.sub_program + '</td>' +
+      '<td class="font-semibold text-indigo-950">' + x.item + '</td>' +
+      '<td class="text-right font-semibold">Rs. ' + x.unit_price.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) + '</td>' +
+      '<td class="text-center font-bold text-amber-700">' + x.subsidy + '</td>' +
+      '<td class="text-right font-semibold text-blue-800">Rs. ' + x.gov_price.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) + '</td>' +
+      '<td class="text-right font-bold text-emerald-700">Rs. ' + x.farmer_price.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) + '</td>' +
+    '</tr>'
+  ).join('');
+}
+
+function downloadPriceListExcel(){
+  if(typeof XLSX === 'undefined') return showToast('Excel library load ஆகவில்லை', false);
+  var rows = window.currentFilteredPriceList || [];
+  if(!rows.length) return showToast('Download කිරීමට Price List දත්ත නැත', false);
+
+  var exportRows = rows.map(x => ({
+    'Year': x.year || '-',
+    'Program': x.program,
+    'Sub Program': x.sub_program,
+    'Item': x.item,
+    'Unit Price': x.unit_price,
+    'Subsidy': x.subsidy,
+    'Government Price': x.gov_price,
+    'Farmers Price': x.farmer_price
+  }));
+
+  var ws = XLSX.utils.json_to_sheet(exportRows);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Item_Price_List');
+  XLSX.writeFile(wb, 'Item_Price_List_' + (myDiv || 'Unit') + '.xlsx');
+}
+
+/* ========================================================================= */
+/* SECTION 5: PIV SUBMITTING (DEV ITEM -> PAYMENT -> AUTO UNIT NO -> TABLE)  */
+/* ========================================================================= */
+function loadLocalPivRecords(){
+  try{
+    var raw = localStorage.getItem(PIV_STORAGE_KEY);
+    if(raw){
+      var parsed = JSON.parse(raw);
+      if(Array.isArray(parsed)) return parsed;
+    }
+  }catch(e){}
+  return [];
+}
+
+function saveLocalPivRecords(arr){
+  try{ localStorage.setItem(PIV_STORAGE_KEY, JSON.stringify(arr)); }catch(e){}
+}
+
+function getDevPublishedNodes(level, parentId){
+  return (nodes||[]).filter(n =>
+    norm(n.main_type) === 'development' &&
+    Number(n.level) === Number(level) &&
+    (parentId ? String(n.parent_id) === String(parentId) : !n.parent_id) &&
+    n.is_published
+  ).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+}
+
+function populatePivDropdowns(keepSelection){
+  var ySel = document.getElementById('pivYear');
+  var mSel = document.getElementById('pivMainProg');
+  var sSel = document.getElementById('pivSubProg');
+  var iSel = document.getElementById('pivItem');
+  if(!ySel || !mSel || !sSel || !iSel) return;
+
+  var prevY = keepSelection ? ySel.value : '';
+  var prevM = keepSelection ? mSel.value : '';
+  var prevS = keepSelection ? sSel.value : '';
+  var prevI = keepSelection ? iSel.value : '';
+
+  var years = getDevPublishedNodes(1, null);
+  ySel.innerHTML = '<option value="">-- Select Year --</option>' + years.map(y => '<option value="' + y.id + '">' + y.title + '</option>').join('');
+  if(prevY && years.some(y => String(y.id) === String(prevY))) ySel.value = prevY; else prevY = '';
+
+  var mains = prevY ? getDevPublishedNodes(2, prevY) : [];
+  mSel.innerHTML = '<option value="">-- Select Main Program --</option>' + mains.map(m => '<option value="' + m.id + '">' + m.title + '</option>').join('');
+  if(prevM && mains.some(m => String(m.id) === String(prevM))) mSel.value = prevM; else prevM = '';
+
+  var subs = prevM ? getDevPublishedNodes(3, prevM) : [];
+  sSel.innerHTML = '<option value="">-- Select Sub Program --</option>' + subs.map(s => '<option value="' + s.id + '">' + s.title + '</option>').join('');
+  if(prevS && subs.some(s => String(s.id) === String(prevS))) sSel.value = prevS; else prevS = '';
+
+  var items = prevS ? getDevPublishedNodes(4, prevS) : [];
+  iSel.innerHTML = '<option value="">-- Select Item --</option>' + items.map(it => '<option value="' + it.id + '">' + it.title + '</option>').join('');
+  if(prevI && items.some(it => String(it.id) === String(prevI))) iSel.value = prevI; else prevI = '';
+
+  recalcPivPaymentAmount();
+}
+
+function onPivYearChange(){
+  document.getElementById('pivMainProg').value = '';
+  document.getElementById('pivSubProg').value = '';
+  document.getElementById('pivItem').value = '';
+  populatePivDropdowns(true);
+}
+
+function onPivMainChange(){
+  document.getElementById('pivSubProg').value = '';
+  document.getElementById('pivItem').value = '';
+  populatePivDropdowns(true);
+}
+
+function onPivSubChange(){
+  document.getElementById('pivItem').value = '';
+  populatePivDropdowns(true);
+}
+
+function onPivItemChange(){
+  recalcPivPaymentAmount();
+}
+
+function findFarmerPriceForPiv(yearTitle, itemTitle){
+  if(!itemTitle) return 0;
+  var enriched = buildEnrichedPriceList();
+  var exact = enriched.find(x => norm(x.item) === norm(itemTitle) && (!yearTitle || !x.year || norm(x.year) === norm(yearTitle)));
+  if(exact) return parseNum(exact.farmer_price);
+  var anyItem = enriched.find(x => norm(x.item) === norm(itemTitle));
+  return anyItem ? parseNum(anyItem.farmer_price) : 0;
+}
+
+function recalcPivPaymentAmount(){
+  var yId = (document.getElementById('pivYear') || {}).value || '';
+  var iId = (document.getElementById('pivItem') || {}).value || '';
+  var yObj = (nodes||[]).find(n => String(n.id) === String(yId));
+  var iObj = (nodes||[]).find(n => String(n.id) === String(iId));
+  var yearTitle = yObj ? yObj.title : '';
+  var itemTitle = iObj ? iObj.title : '';
+
+  var rate = findFarmerPriceForPiv(yearTitle, itemTitle);
+  var units = parseNum((document.getElementById('pivUnits') || {}).value);
+  var total = units * rate;
+
+  document.getElementById('pivFarmerUnitRate').textContent = 'Rs. ' + rate.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  document.getElementById('pivPaymentAmountDisplay').value = 'Rs. ' + total.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  window.currentPivComputedAmount = total;
+}
+
+function generateAutoUnitNumber(yearTitle){
+  var cleanDiv = String(myDiv || 'UNIT').replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 6) || 'UNIT';
+  var cleanYr = String(yearTitle || new Date().getFullYear()).replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 6) || '2026';
+  var seq = (pivRecords||[]).length + 1;
+  var randPart = Math.floor(100 + Math.random() * 900);
+  return 'PIV-' + cleanDiv + '-' + cleanYr + '-' + String(seq).padStart(3, '0') + '-' + randPart;
+}
+
+function resetPivForm(){
+  editingPivId = null;
+  var f = document.getElementById('pivForm');
+  if(f) f.reset();
+  document.getElementById('pivPaymentAmountDisplay').value = 'Rs. 0.00';
+  document.getElementById('pivFarmerUnitRate').textContent = 'Rs. 0.00';
+  document.getElementById('pivAutoUnitNoPreview').value = '';
+  document.getElementById('pivSubmitBtn').textContent = '💾 Submit PIV & Generate Unit Number';
+  populatePivDropdowns(false);
+}
+
+async function submitPivEntry(e){
+  e.preventDefault();
+  var f = document.getElementById('pivForm');
+  if(!f.checkValidity()){ f.reportValidity(); return false; }
+
+  var yId = document.getElementById('pivYear').value;
+  var mId = document.getElementById('pivMainProg').value;
+  var sId = document.getElementById('pivSubProg').value;
+  var iId = document.getElementById('pivItem').value;
+
+  var yObj = (nodes||[]).find(n => String(n.id) === String(yId));
+  var mObj = (nodes||[]).find(n => String(n.id) === String(mId));
+  var sObj = (nodes||[]).find(n => String(n.id) === String(sId));
+  var iObj = (nodes||[]).find(n => String(n.id) === String(iId));
+
+  var yearTitle = yObj ? yObj.title : '';
+  var mainTitle = mObj ? mObj.title : '';
+  var subTitle  = sObj ? sObj.title : '';
+  var itemTitle = iObj ? iObj.title : '';
+
+  var units = parseNum(document.getElementById('pivUnits').value);
+  if(units <= 0) return showToast('No of Units சரியாக உள்ளிடவும்', false);
+
+  var rate = findFarmerPriceForPiv(yearTitle, itemTitle);
+  var paymentAmount = units * rate;
+  var bankedDate = document.getElementById('pivBankedDate').value;
+  var submitDate = document.getElementById('pivSubmitDate').value;
+  var pivNo = document.getElementById('pivNumber').value.trim();
+
+  if(editingPivId){
+    var existing = pivRecords.find(x => String(x.id) === String(editingPivId));
+    if(existing){
+      existing.year = yearTitle;
+      existing.main_program = mainTitle;
+      existing.sub_program = subTitle;
+      existing.item_name = itemTitle;
+      existing.no_of_units = units;
+      existing.payment_amount = paymentAmount;
+      existing.banked_date = bankedDate;
+      existing.piv_submit_date = submitDate;
+      existing.no_of_piv = pivNo;
+      existing.updated_at = new Date().toISOString();
+
+      if(sb){
+        await sb.from('piv_submissions').update(existing).eq('id', existing.id);
+      }
+      saveLocalPivRecords(pivRecords);
+      showToast('PIV Record Updated ✓', true);
+    }
+    resetPivForm();
+    renderPivSubmissionsTable();
+    return false;
+  }
+
+  var autoUnitNo = generateAutoUnitNumber(yearTitle);
+  document.getElementById('pivAutoUnitNoPreview').value = autoUnitNo;
+
+  var record = {
+    id: 'piv_' + Date.now(),
+    auto_unit_no: autoUnitNo,
+    year: yearTitle,
+    main_program: mainTitle,
+    sub_program: subTitle,
+    item_name: itemTitle,
+    no_of_units: units,
+    payment_amount: paymentAmount,
+    banked_date: bankedDate,
+    piv_submit_date: submitDate,
+    no_of_piv: pivNo,
+    ad_office: mySubName || mySubId || '',
+    ad_approval_status: 'Pending',
+    main_admin_status: 'Pending',
+    division: myDiv || '',
+    office: myOffice || '',
+    officer_name: getActiveOfficerName(),
+    created_at: new Date().toISOString()
+  };
+
+  if(sb){
+    var ins = await sb.from('piv_submissions').insert(record);
+    if(ins.error){
+      // Fallback to local storage if table isn't created yet in Supabase
+      pivRecords.unshift(record);
+      saveLocalPivRecords(pivRecords);
+      showToast('PIV Saved (Local Sync) • Unit No: ' + autoUnitNo, true);
+      resetPivForm();
+      renderPivSubmissionsTable();
+      return false;
+    }
+  }
+
+  pivRecords.unshift(record);
+  saveLocalPivRecords(pivRecords);
+  showToast('PIV Submitted • Auto Unit No: ' + autoUnitNo + ' ✓', true);
+  resetPivForm();
+  renderPivSubmissionsTable();
+  return false;
+}
+
+function renderApprovalBadge(status){
+  var isApproved = norm(status) === 'approved';
+  if(isApproved){
+    return '<span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-600 text-white whitespace-nowrap">Approved</span>';
+  }
+  return '<span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-red-600 text-white whitespace-nowrap">Pending</span>';
+}
+
+function getVisiblePivRecords(){
+  var localList = loadLocalPivRecords();
+  var mergedMap = new Map();
+  (pivRecords||[]).forEach(r => { if(r && r.id) mergedMap.set(String(r.id), r); });
+  localList.forEach(r => { if(r && r.id && !mergedMap.has(String(r.id))) mergedMap.set(String(r.id), r); });
+  pivRecords = Array.from(mergedMap.values()).sort((a,b) => String(b.created_at||'').localeCompare(String(a.created_at||'')));
+  saveLocalPivRecords(pivRecords);
+
+  return pivRecords.filter(r => {
+    if(!myDiv && !myOffice) return true;
+    return norm(r.division) === norm(myDiv) || norm(r.office) === norm(myOffice);
+  });
+}
+
+function renderPivSubmissionsTable(){
+  var rows = getVisiblePivRecords();
+  var cntEl = document.getElementById('pivRecordsCount');
+  if(cntEl) cntEl.textContent = rows.length;
+
+  var tbody = document.getElementById('pivSubmissionsTbody');
+  if(!tbody) return;
+
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="13" class="text-center py-6 text-slate-400 text-xs">PIV பதிவுகள் எதுவும் இல்லை</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r =>
+    '<tr>' +
+      '<td class="font-bold text-indigo-900 whitespace-nowrap">' + (r.auto_unit_no || '-') + '</td>' +
+      '<td class="text-center whitespace-nowrap">' + (r.year || '-') + '</td>' +
+      '<td class="font-semibold">' + (r.main_program || '-') + '</td>' +
+      '<td>' + (r.sub_program || '-') + '</td>' +
+      '<td class="font-semibold text-slate-900">' + (r.item_name || '-') + '</td>' +
+      '<td class="text-center font-bold">' + parseNum(r.no_of_units) + '</td>' +
+      '<td class="text-right font-bold text-emerald-700 whitespace-nowrap">Rs. ' + parseNum(r.payment_amount).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) + '</td>' +
+      '<td class="text-center whitespace-nowrap">' + (r.banked_date || '-') + '</td>' +
+      '<td class="text-center whitespace-nowrap">' + (r.piv_submit_date || '-') + '</td>' +
+      '<td class="font-semibold whitespace-nowrap">' + (r.no_of_piv || '-') + '</td>' +
+      '<td class="text-center">' + renderApprovalBadge(r.ad_approval_status || 'Pending') + '</td>' +
+      '<td class="text-center">' + renderApprovalBadge(r.main_admin_status || 'Pending') + '</td>' +
+      '<td class="whitespace-nowrap">' +
+        '<button onclick="editPivRecord(\'' + r.id + '\')" class="btn btn-ghost px-2 py-1 text-xs">Edit</button> ' +
+        '<button onclick="deletePivRecord(\'' + r.id + '\')" class="text-red-500 text-xs px-2">Del</button>' +
+      '</td>' +
+    '</tr>'
+  ).join('');
+}
+
+function editPivRecord(id){
+  var r = pivRecords.find(x => String(x.id) === String(id));
+  if(!r) return;
+  editingPivId = r.id;
+
+  var yNode = getDevPublishedNodes(1, null).find(n => norm(n.title) === norm(r.year));
+  document.getElementById('pivYear').value = yNode ? yNode.id : '';
+  populatePivDropdowns(true);
+
+  var mNode = yNode ? getDevPublishedNodes(2, yNode.id).find(n => norm(n.title) === norm(r.main_program)) : null;
+  document.getElementById('pivMainProg').value = mNode ? mNode.id : '';
+  populatePivDropdowns(true);
+
+  var sNode = mNode ? getDevPublishedNodes(3, mNode.id).find(n => norm(n.title) === norm(r.sub_program)) : null;
+  document.getElementById('pivSubProg').value = sNode ? sNode.id : '';
+  populatePivDropdowns(true);
+
+  var iNode = sNode ? getDevPublishedNodes(4, sNode.id).find(n => norm(n.title) === norm(r.item_name)) : null;
+  document.getElementById('pivItem').value = iNode ? iNode.id : '';
+
+  document.getElementById('pivUnits').value = r.no_of_units || '';
+  document.getElementById('pivAutoUnitNoPreview').value = r.auto_unit_no || '';
+  document.getElementById('pivBankedDate').value = r.banked_date || '';
+  document.getElementById('pivSubmitDate').value = r.piv_submit_date || '';
+  document.getElementById('pivNumber').value = r.no_of_piv || '';
+  document.getElementById('pivSubmitBtn').textContent = '💾 Update PIV Record';
+
+  recalcPivPaymentAmount();
+  document.getElementById('pivForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function deletePivRecord(id){
+  if(!(await profConfirm('මෙම PIV Record Delete කරන්නද?'))) return;
+  pivRecords = pivRecords.filter(x => String(x.id) !== String(id));
+  saveLocalPivRecords(pivRecords);
+  if(sb) await sb.from('piv_submissions').delete().eq('id', id);
+  if(String(editingPivId) === String(id)) resetPivForm();
+  renderPivSubmissionsTable();
+  showToast('PIV Record Deleted ✓', true);
+}
+
+function renderPivSection(){
+  populatePivDropdowns(true);
+  renderPivSubmissionsTable();
+}
+
 async function logout(){
   try{ if(sb) await sb.auth.signOut(); }catch(e){}
   ['role','user','user_name','user_subOfficeId','user_subOfficeName','user_division','user_office','user_officer_name','fw_session'].forEach(k=>localStorage.removeItem(k));
@@ -1373,22 +2109,39 @@ async function logout(){
 
 async function sbSyncAll(){
   var st = document.getElementById('sbSyncStatus');
-  if(!sb){ if(st) st.textContent='Offline Mode'; refreshOfficerProfileDisplay(); return; }
+  if(!sb){
+    if(st) st.textContent='Offline Mode';
+    refreshOfficerProfileDisplay();
+    pivRecords = loadLocalPivRecords();
+    uSelectMain(curMain);
+    renderUnitTargets();
+    renderMy();
+    renderPriceListSection();
+    renderPivSection();
+    return;
+  }
   try{
-    if(st) st.textContent='Syncing with Supabase...';
-    var [nRes, qRes, rRes, tRes, pRes, uRes] = await Promise.all([
+    if(st) st.textContent='Syncing with data...';
+    var [nRes, qRes, rRes, tRes, pRes, uRes, pivRes] = await Promise.all([
       sb.from('nodes').select('*').order('sort_order'),
       sb.from('questions').select('*').order('order_index'),
       sb.from('responses').select('*').order('created_at', {ascending: false}),
       sb.from('targets').select('*'),
       sb.from('item_prices').select('*'),
-      sb.from('profiles').select('*')
+      sb.from('profiles').select('*'),
+      sb.from('piv_submissions').select('*').order('created_at', {ascending: false})
     ]);
     if(Array.isArray(nRes.data)) nodes = nRes.data;
     if(Array.isArray(qRes.data)) questions = qRes.data;
     if(Array.isArray(rRes.data)) responses = rRes.data;
     if(Array.isArray(tRes.data)) targetRecords = tRes.data;
     if(Array.isArray(pRes.data)) itemPrices = pRes.data;
+    if(pivRes && Array.isArray(pivRes.data) && !pivRes.error){
+      pivRecords = pivRes.data;
+      saveLocalPivRecords(pivRecords);
+    } else {
+      pivRecords = loadLocalPivRecords();
+    }
 
     if(Array.isArray(uRes.data) && uRes.data.length){
       var matchedProf = uRes.data.find(u =>
@@ -1409,11 +2162,14 @@ async function sbSyncAll(){
     if(st) st.textContent='Data Connected ✓ (' + myDiv + ')';
   }catch(e){
     refreshOfficerProfileDisplay();
+    pivRecords = loadLocalPivRecords();
     if(st) st.textContent='Sync Error';
   }
   uSelectMain(curMain);
   renderUnitTargets();
   renderMy();
+  renderPriceListSection();
+  renderPivSection();
 }
 
 sbSyncAll();
