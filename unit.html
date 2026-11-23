@@ -172,7 +172,7 @@ select, input, textarea { -webkit-appearance: none; appearance: none; }
     <div id="devCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
   </div>
 
-  <!-- PHYSICAL TARGET & PROGRESS SHEET (SEPARATE FILTERS FOR EXTENSION & DEVELOPMENT + MERGED EXCEL DOWNLOAD) -->
+  <!-- PHYSICAL TARGET & PROGRESS SHEET -->
   <div class="card space-y-5">
     <div>
       <div class="text-[11px] font-bold text-indigo-600 uppercase">📋 PHYSICAL TARGET & PROGRESS SHEET</div>
@@ -180,7 +180,7 @@ select, input, textarea { -webkit-appearance: none; appearance: none; }
       <p class="text-xs text-slate-500">Target</p>
     </div>
 
-    <!-- EXTENSION TARGET TABLE (OWN FILTERS: MAIN PROGRAM, SUB PROGRAM) -->
+    <!-- EXTENSION TARGET TABLE -->
     <div class="space-y-3 border rounded-2xl p-4 bg-white">
       <div class="flex flex-wrap justify-between items-center gap-2">
         <h4 class="text-base font-bold text-blue-900">🌾 Extension Target & Progress Table</h4>
@@ -217,7 +217,7 @@ select, input, textarea { -webkit-appearance: none; appearance: none; }
       </div>
     </div>
 
-    <!-- DEVELOPMENT TARGET TABLE (OWN FILTERS: MAIN PROGRAM, SUB PROGRAM, ITEM) -->
+    <!-- DEVELOPMENT TARGET TABLE -->
     <div class="space-y-3 border rounded-2xl p-4 bg-white">
       <div class="flex flex-wrap justify-between items-center gap-2">
         <h4 class="text-base font-bold text-emerald-900">🏗️ Development Target & Progress Table</h4>
@@ -291,14 +291,14 @@ select, input, textarea { -webkit-appearance: none; appearance: none; }
     <!-- MULTI-SELECT ITEMS BOX FOR DEVELOPMENT -->
     <div id="uItemWrap" class="hidden">
       <div class="flex flex-wrap justify-between items-center gap-2">
-        <label class="text-xs font-semibold">5. Item Name තෝරන්න (ஒன்று அல்லது பல Items தெரிவு செய்யலாம்) *</label>
+        <label class="text-xs font-semibold">5. Item Name තෝරන්න (one or more item can select) *</label>
         <div class="flex gap-2">
           <button type="button" onclick="uSelectAllItems(true)" class="btn btn-ghost px-2.5 py-1 text-[11px] font-semibold">Select All</button>
           <button type="button" onclick="uSelectAllItems(false)" class="btn btn-ghost px-2.5 py-1 text-[11px]">Clear</button>
         </div>
       </div>
       <div id="uItemMultiBox" class="mt-2 rounded-2xl border-2 border-emerald-200 bg-emerald-50/40 p-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2"></div>
-      <div class="text-[11px] text-slate-500 mt-1">தேர்ந்தெடுக்கப்பட்ட Items: <b id="uSelectedItemsSummary" class="text-emerald-800">எதுவும் இல்லை</b></div>
+      <div class="text-[11px] text-slate-500 mt-1">Selected Items: <b id="uSelectedItemsSummary" class="text-emerald-800"> No items</b></div>
     </div>
   </div>
 
@@ -573,6 +573,16 @@ const SUPABASE_URL='https://fqjbnwcavcxloaqwyret.supabase.co';
 const SUPABASE_KEY='sb_publishable_O5ECn-2JZ_Fn6MTASNZsjQ_UBIPqnMA';
 const sb = (typeof supabase!=='undefined') ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
+const DEV_DEFAULT_QUESTIONS = [
+  { text: 'මුලකුරු සහිත නම', type: 'short_text', options: [], required: true },
+  { text: 'ලිපිනය', type: 'short_text', options: [], required: true },
+  { text: 'දුරකථන අංකය', type: 'number', options: [], required: true },
+  { text: 'ජාතික හැදුනුම්පත් අංකය', type: 'short_text', options: [], required: true },
+  { text: 'ගොවි දායකත්වය', type: 'multiple_choice', options: ['නොමිලේ', 'ගොවි දායකත්වය - 25%', 'ගොවි දායකත්වය - 50%'], required: true },
+  { text: 'වටිනාකම (රුපියල්)', type: 'short_text', options: [], required: false },
+  { text: 'සටහන්', type: 'short_text', options: [], required: false }
+];
+
 var __mRes=null;
 function showToast(m,ok){var t=document.getElementById('toast');t.textContent=m;t.className='toast show '+(ok===false?'err':ok===true?'ok':'');setTimeout(function(){t.className='toast';},2800);}
 function openModal(o){return new Promise(function(res){__mRes=res;document.getElementById('modalIcon').textContent=o.icon||'ℹ️';document.getElementById('modalTitle').textContent=o.title||'';document.getElementById('modalMsg').textContent=o.msg||'';document.getElementById('modalInputWrap').classList.toggle('hidden',!o.input);if(o.input){document.getElementById('modalInput').value=o.value||'';}document.getElementById('modalBack').classList.add('show');});}
@@ -705,10 +715,10 @@ function getProgressedQtyForEntry(r, itemFilterName){
 
 function getItemNameForEntry(r){
   if(r && r.answers){
-    if(Array.isArray(r.answers.__selected_items) && r.answers.__selected_items.length > 1){
+    if(r.answers.__item_name) return String(r.answers.__item_name);
+    if(Array.isArray(r.answers.__selected_items) && r.answers.__selected_items.length > 0){
       return r.answers.__selected_items.join(', ');
     }
-    if(r.answers.__item_name) return String(r.answers.__item_name);
   }
   if(r && r.item_name) return String(r.item_name);
   return '';
@@ -766,7 +776,7 @@ function buildAiTargetRows(){
         var selList = (r.answers && Array.isArray(r.answers.__selected_items) && r.answers.__selected_items.length)
           ? r.answers.__selected_items.map(norm)
           : [norm(getItemNameForEntry(r))];
-        if(!selList.includes(norm(t.item_name))) return false;
+        return selList.includes(norm(t.item_name));
       }
       return true;
     });
@@ -1202,7 +1212,7 @@ function downloadTargetSheetExcel(type){
 }
 
 /* ========================================================================= */
-/* SECTION 2: DATA ENTRY FORM (MULTI-ITEM PER-BOX TARGETS + MERGED QUESTIONS)*/
+/* SECTION 2: DATA ENTRY FORM (MAIN 7 + EXTRA QUESTIONS & PER-ITEM SAVE)   */
 /* ========================================================================= */
 function uSelectMain(m){
   curMain=m; curL1=null; curL2=null; curL3=null; curSub=null; curItem=null; curSelectedItems=[];
@@ -1224,15 +1234,12 @@ function renderMultiItemCheckboxes(l4List){
   var box = document.getElementById('uItemMultiBox');
   if(!box) return;
   if(!l4List || !l4List.length){
-    box.innerHTML = '<div class="col-span-full text-xs text-slate-400">Items නොමැත (Sub Program மட்டும் பயன்படுத்தலாம்)</div>';
+    box.innerHTML = '<div class="col-span-full text-xs text-slate-400">Items නොමැත (can use sub program only)</div>';
     updateSelectedItemsSummary(l4List);
     return;
   }
 
   curSelectedItems = curSelectedItems.filter(id => l4List.some(it => String(it.id) === String(id)));
-  if(!curSelectedItems.length && curItem && l4List.some(it => String(it.id) === String(curItem))){
-    curSelectedItems = [String(curItem)];
-  }
 
   box.innerHTML = l4List.map(it => {
     var checked = curSelectedItems.includes(String(it.id)) ? 'checked' : '';
@@ -1254,7 +1261,7 @@ function updateSelectedItemsSummary(l4List){
     var found = list.find(it => String(it.id) === String(id));
     return found ? found.title : '';
   }).filter(Boolean);
-  sumEl.textContent = names.length ? names.join(', ') : 'எதுவும் இல்லை';
+  sumEl.textContent = names.length ? names.join(', ') : 'No items';
 }
 
 function snapshotPerItemQuantities(){
@@ -1336,13 +1343,15 @@ function leafId(){
   return curSub || curL2;
 }
 
-function nodePath(){
+function nodePath(overrideItemTitle){
   var parts=[];
   if(curL1){ var n1=nodes.find(x=>x.id===curL1); if(n1) parts.push(n1.title); }
   if(curL2){ var n2=nodes.find(x=>x.id===curL2); if(n2) parts.push(n2.title); }
   if(curL3){ var n3=nodes.find(x=>x.id===curL3); if(n3) parts.push(n3.title); }
   if(curSub){ var ns=nodes.find(x=>x.id===curSub); if(ns) parts.push(ns.title); }
-  if(curMain==='development'){
+  if(overrideItemTitle){
+    parts.push(overrideItemTitle);
+  } else if(curMain==='development'){
     var selObjs = getSelectedItemObjects();
     if(selObjs.length){
       parts.push(selObjs.map(o => o.title).join(', '));
@@ -1384,6 +1393,59 @@ function questionSignature(q){
   return [norm(q.question_text), norm(q.question_type), optsNorm].join('::');
 }
 
+function isDefaultDevQuestion(q){
+  var sig = questionSignature(q);
+  return DEV_DEFAULT_QUESTIONS.some(tpl => questionSignature({
+    question_text: tpl.text,
+    question_type: tpl.type,
+    options: tpl.options
+  }) === sig);
+}
+
+// Returns the 7 main default questions once + any extra custom questions added by Admin
+function buildDeduplicatedDevQuestions(rawList){
+  var ordered = (rawList || []).slice().sort((a,b)=>(a.order_index||0)-(b.order_index||0));
+  var defaultFoundMap = new Map();
+  var extraQuestions = [];
+  var seenExtraSigs = new Set();
+
+  ordered.forEach(q => {
+    var sig = questionSignature(q);
+    if(isDefaultDevQuestion(q)){
+      if(!defaultFoundMap.has(sig)){
+        defaultFoundMap.set(sig, q);
+      }
+    } else if(!seenExtraSigs.has(sig)){
+      seenExtraSigs.add(sig);
+      extraQuestions.push(q);
+    }
+  });
+
+  var result = [];
+  DEV_DEFAULT_QUESTIONS.forEach((tpl, idx) => {
+    var defSig = questionSignature({
+      question_text: tpl.text,
+      question_type: tpl.type,
+      options: tpl.options
+    });
+    if(defaultFoundMap.has(defSig)){
+      result.push(defaultFoundMap.get(defSig));
+    } else if(extraQuestions.length > 0 || ordered.length > 0){
+      result.push({
+        id: 'tpl_def_' + idx,
+        question_text: tpl.text,
+        question_type: tpl.type,
+        options: (tpl.options||[]).slice(),
+        is_required: tpl.required !== false,
+        order_index: idx + 1
+      });
+    }
+  });
+
+  extraQuestions.forEach(eq => result.push(eq));
+  return result;
+}
+
 function renderUForm(preservedQtyMap){
   var wrap=document.getElementById('uFormWrap');
   var empty=document.getElementById('uEmpty');
@@ -1410,7 +1472,27 @@ function renderUForm(preservedQtyMap){
   var allRows = buildAiTargetRows();
   var selObjs = getSelectedItemObjects();
 
-  // Build target box entries: one box per selected item if multiple items selected, else 1 box
+  // Before selecting any item in Development, show only the 7 main questions (no item boxes yet)
+  if(curMain === 'development' && curL3 && selObjs.length === 0){
+    cardsWrap.innerHTML = '<div class="rounded-2xl bg-white border border-indigo-200 p-3.5 text-xs text-slate-500">Once an item is selected, its target & progress box and specific questions will appear.</div>';
+    if(badgeEl) badgeEl.textContent = '0 Boxes';
+    var preSubQs = buildDeduplicatedDevQuestions(getQuestionsForNode(curL3));
+    if(!preSubQs.length){
+      wrap.innerHTML=''; empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+    var offPre = getActiveOfficerName() || '-';
+    var pHtml = '<div class="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-[12px]">Auto Fill: <b>'+mySubName+' | '+myDiv+' | Officer: '+offPre+' | '+nodePath()+'</b></div>';
+    pHtml += '<form id="dynForm" class="mt-4 space-y-4" onsubmit="return submitUForm(event)">';
+    preSubQs.forEach((q, idx) => {
+      pHtml += '<div class="rounded-xl border p-4 bg-white"><label class="text-[14px] font-semibold">'+(idx+1)+'. '+q.question_text+' '+(q.is_required?'<span class="text-red-500">*</span>':'')+'</label><div class="mt-2">'+renderField(q, '', null)+'</div></div>';
+    });
+    pHtml += '<div class="flex gap-2"><button type="submit" class="btn btn-primary flex-1 py-3.5">💾 Submit & Update Progress</button><button type="button" onclick="resetFormInputsOnly()" class="btn btn-ghost px-4">Clear</button></div></form>';
+    wrap.innerHTML = pHtml;
+    return;
+  }
+
   var targetBoxEntries = [];
   if(curMain === 'development' && selObjs.length > 0){
     targetBoxEntries = selObjs.map(itObj => ({
@@ -1476,8 +1558,6 @@ function renderUForm(preservedQtyMap){
     '</div>';
   }).join('');
 
-  // Collect questions: merge identical questions across selected items into one single question,
-  // and keep questions unique to a specific item under that item's block.
   var commonQs = [];
   var perItemBlocks = [];
 
@@ -1489,43 +1569,49 @@ function renderUForm(preservedQtyMap){
     });
 
     if(selObjs.length === 1){
-      var singleList = itemQsMap.get(String(selObjs[0].id)) || [];
-      commonQs = singleList.length ? singleList : subQs;
+      var singleRaw = itemQsMap.get(String(selObjs[0].id)) || [];
+      var mergedSingle = buildDeduplicatedDevQuestions(singleRaw.length ? singleRaw : subQs);
+      commonQs = mergedSingle.map(q => ({ q: q, sharedTitles: [selObjs[0].title] }));
     } else {
-      // Determine which question signatures exist across ALL selected items
-      var sigCountAcrossItems = new Map();
+      // Combine all raw questions across selected items + subQs, deduplicate the 7 main default questions once,
+      // and show any extra custom questions only if Admin created extra ones.
+      var allCombinedRaw = subQs.slice();
       selObjs.forEach(itObj => {
-        var iQs = itemQsMap.get(String(itObj.id)) || [];
-        var uniqueSigsForItem = new Set(iQs.map(questionSignature));
-        uniqueSigsForItem.forEach(sig => {
-          sigCountAcrossItems.set(sig, (sigCountAcrossItems.get(sig) || 0) + 1);
-        });
+        (itemQsMap.get(String(itObj.id)) || []).forEach(q => allCombinedRaw.push(q));
       });
 
+      var dedupedAll = buildDeduplicatedDevQuestions(allCombinedRaw);
       var allSelectedTitles = selObjs.map(o => o.title);
-      var seenSharedSigs = new Set();
 
-      // Add sub-program level questions first as shared across all selected items
-      subQs.forEach(q => {
-        commonQs.push({ q: q, sharedTitles: allSelectedTitles });
-      });
-
-      // Questions that appear in all selected items are merged once into commonQs
-      var firstItemQs = itemQsMap.get(String(selObjs[0].id)) || [];
-      firstItemQs.forEach(q => {
+      // Default 7 questions + shared extra questions shown once in commonQs
+      var sharedQs = dedupedAll.filter(q => {
+        if(isDefaultDevQuestion(q)) return true;
         var sig = questionSignature(q);
-        if(sigCountAcrossItems.get(sig) === selObjs.length && !seenSharedSigs.has(sig)){
-          seenSharedSigs.add(sig);
-          commonQs.push({ q: q, sharedTitles: allSelectedTitles });
-        }
+        var countInItems = 0;
+        selObjs.forEach(itObj => {
+          var iList = itemQsMap.get(String(itObj.id)) || [];
+          if(iList.some(iq => questionSignature(iq) === sig)) countInItems++;
+        });
+        return countInItems === selObjs.length || subQs.some(sq => questionSignature(sq) === sig);
       });
 
-      // Questions unique to a single/subset item (not shared across all selected items) are shown under that item
+      commonQs = sharedQs.map(q => ({ q: q, sharedTitles: allSelectedTitles }));
+
+      // Extra questions that belong to only specific item(s) (non-default and not in all items)
       selObjs.forEach(itObj => {
-        var iQs = itemQsMap.get(String(itObj.id)) || [];
-        var uniqueQs = iQs.filter(q => (sigCountAcrossItems.get(questionSignature(q)) || 0) < selObjs.length);
-        if(uniqueQs.length){
-          perItemBlocks.push({ itemObj: itObj, qs: uniqueQs });
+        var iList = itemQsMap.get(String(itObj.id)) || [];
+        var extraOnlyForItem = iList.filter(q => {
+          if(isDefaultDevQuestion(q)) return false;
+          var sig = questionSignature(q);
+          var countInItems = 0;
+          selObjs.forEach(otherObj => {
+            var oList = itemQsMap.get(String(otherObj.id)) || [];
+            if(oList.some(oq => questionSignature(oq) === sig)) countInItems++;
+          });
+          return countInItems < selObjs.length && !subQs.some(sq => questionSignature(sq) === sig);
+        });
+        if(extraOnlyForItem.length){
+          perItemBlocks.push({ itemObj: itObj, qs: extraOnlyForItem });
         }
       });
     }
@@ -1550,14 +1636,14 @@ function renderUForm(preservedQtyMap){
 
   perItemBlocks.forEach(block => {
     html += '<div class="rounded-2xl border-2 border-emerald-200 bg-emerald-50/30 p-4 space-y-3">' +
-      '<div class="text-xs font-extrabold text-emerald-900 uppercase">📝 ' + block.itemObj.title + ' — தனிப்பட்ட வினாக்கள்</div>';
+      '<div class="text-xs font-extrabold text-emerald-900 uppercase">📝 ' + block.itemObj.title + ' — மேலதிக வினாக்கள்</div>';
     block.qs.forEach((q, qIdx) => {
       html+='<div class="rounded-xl border p-3.5 bg-white"><label class="text-[13.5px] font-semibold">'+(qIdx+1)+'. '+q.question_text+' '+(q.is_required?'<span class="text-red-500">*</span>':'')+'</label><div class="mt-2">'+renderField(q, block.itemObj.title, null)+'</div></div>';
     });
     html += '</div>';
   });
 
-  html+='<div class="flex gap-2"><button type="submit" class="btn btn-primary flex-1 py-3.5">💾 Submit & Update Progress (தொடர்ந்து Update செய்யலாம்)</button><button type="button" onclick="resetFormInputsOnly()" class="btn btn-ghost px-4">Clear</button></div></form>';
+  html+='<div class="flex gap-2"><button type="submit" class="btn btn-primary flex-1 py-3.5">💾 Submit & Update Progress </button><button type="button" onclick="resetFormInputsOnly()" class="btn btn-ghost px-4">Clear</button></div></form>';
   wrap.innerHTML=html;
 }
 
@@ -1567,11 +1653,10 @@ function resetFormInputsOnly(){
   document.querySelectorAll('[data-item-qty]').forEach(el => { el.value = ''; });
 }
 
-function collectAns(){
-  var ans={};
-  var perItemAns={};
+function collectAnswersForTargetItem(targetItemTitle){
+  var ans = {};
   document.querySelectorAll('#uFormWrap [data-qid]').forEach(function(el){
-    var id=el.dataset.qid;
+    var id = el.dataset.qid;
     var scopeEnc = el.dataset.itemScope || '';
     var scopeName = scopeEnc ? decodeURIComponent(scopeEnc) : '';
     var sharedEnc = el.dataset.sharedItems || '';
@@ -1579,52 +1664,31 @@ function collectAns(){
     if(sharedEnc){
       try{ sharedList = JSON.parse(decodeURIComponent(sharedEnc)); }catch(e){ sharedList = []; }
     }
-    var val = undefined;
 
-    if(el.dataset.multi==='1'){
-      if(!el.checked) return;
-      val = el.value;
-      if(scopeName){
-        if(!perItemAns[scopeName]) perItemAns[scopeName] = {};
-        if(!Array.isArray(perItemAns[scopeName][id])) perItemAns[scopeName][id] = [];
-        if(!perItemAns[scopeName][id].includes(val)) perItemAns[scopeName][id].push(val);
-      } else if(Array.isArray(sharedList) && sharedList.length){
-        if(!Array.isArray(ans[id])) ans[id] = [];
-        if(!ans[id].includes(val)) ans[id].push(val);
-        sharedList.forEach(itTitle => {
-          if(!perItemAns[itTitle]) perItemAns[itTitle] = {};
-          if(!Array.isArray(perItemAns[itTitle][id])) perItemAns[itTitle][id] = [];
-          if(!perItemAns[itTitle][id].includes(val)) perItemAns[itTitle][id].push(val);
-        });
-      } else {
-        if(!Array.isArray(ans[id])) ans[id] = [];
-        if(!ans[id].includes(val)) ans[id].push(val);
-      }
+    // If question belongs to a specific item scope, only collect it for that item
+    if(scopeName && targetItemTitle && norm(scopeName) !== norm(targetItemTitle)){
       return;
-    } else if(el.type==='radio'){
-      if(!el.checked) return;
-      val = el.value;
-    } else {
-      val = el.value;
     }
 
-    if(scopeName){
-      if(!perItemAns[scopeName]) perItemAns[scopeName] = {};
-      perItemAns[scopeName][id] = val;
-    } else if(Array.isArray(sharedList) && sharedList.length){
-      ans[id] = val;
-      sharedList.forEach(itTitle => {
-        if(!perItemAns[itTitle]) perItemAns[itTitle] = {};
-        perItemAns[itTitle][id] = val;
-      });
-    } else {
-      ans[id] = val;
+    if(el.dataset.multi === '1'){
+      if(!el.checked) return;
+      if(!Array.isArray(ans[id])) ans[id] = [];
+      if(!ans[id].includes(el.value)) ans[id].push(el.value);
+      return;
+    }
+
+    if(el.type === 'radio'){
+      if(!el.checked) return;
+      ans[id] = el.value;
+      return;
+    }
+
+    if(el.value !== undefined && el.value !== ''){
+      ans[id] = el.value;
+    } else if(ans[id] === undefined){
+      ans[id] = '';
     }
   });
-
-  if(Object.keys(perItemAns).length){
-    ans.__per_item_answers = perItemAns;
-  }
   return ans;
 }
 
@@ -1634,8 +1698,7 @@ async function submitUForm(e){
   if(!f.checkValidity()){ f.reportValidity(); return false; }
 
   var qtyInputs = Array.from(document.querySelectorAll('[data-item-qty]'));
-  var perItemQty = {};
-  var totalQty = 0;
+  var selObjs = getSelectedItemObjects();
 
   for(var i = 0; i < qtyInputs.length; i++){
     var inp = qtyInputs[i];
@@ -1644,12 +1707,8 @@ async function submitUForm(e){
       inp.focus();
       return showToast('Progress Quantity ඇතුළත් කරන්න', false);
     }
-    var kName = inp.dataset.itemQty || '__default__';
-    perItemQty[kName] = qVal;
-    totalQty += qVal;
   }
 
-  var ans=collectAns();
   var lid=leafId();
   if(!lid) return showToast('අංශය තෝරන්න',false);
 
@@ -1658,50 +1717,79 @@ async function submitUForm(e){
   var n3Title = curMain==='development'
     ? (curL3 ? (nodes.find(x=>x.id===curL3)||{}).title || '' : '')
     : (curSub ? (nodes.find(x=>x.id===curSub)||{}).title || '' : '');
-  var selObjs = getSelectedItemObjects();
-  var itemTitle = selObjs.length
-    ? selObjs.map(o => o.title).join(', ')
-    : (curItem ? (nodes.find(x=>x.id===curItem)||{}).title || '' : '');
 
   var activeOff = getActiveOfficerName();
-  ans.__progress_qty = totalQty;
-  ans.__per_item_qty = perItemQty;
-  if(selObjs.length){
-    ans.__selected_items = selObjs.map(o => o.title);
-    ans.__item_name = itemTitle;
-  } else if(itemTitle){
-    ans.__item_name = itemTitle;
-  }
-  if(myUser) ans.__user = myUser;
-  if(activeOff) ans.__officer_name = activeOff;
+  var payloadsToInsert = [];
+  var baseStamp = Date.now();
 
-  var dbPayload = {
-    id: 'r_' + Date.now(),
-    node_id: String(lid),
-    main_type: curMain,
-    level1: n1Title,
-    level2: n2Title,
-    level3: n3Title,
-    node_path: nodePath(),
-    division: myDiv,
-    office: myOffice,
-    answers: ans,
-    created_at: new Date().toISOString()
-  };
+  if(curMain === 'development' && selObjs.length > 0){
+    // Save a separate row for EACH selected item (1, 2, 3+ items)
+    selObjs.forEach((itObj, idx) => {
+      var qtyInp = qtyInputs.find(el => norm(el.dataset.itemQty) === norm(itObj.title)) || qtyInputs[idx] || qtyInputs[0];
+      var itemQty = qtyInp ? (parseFloat(qtyInp.value) || 0) : 0;
+      var itemAns = collectAnswersForTargetItem(itObj.title);
+      itemAns.__progress_qty = itemQty;
+      itemAns.__item_name = itObj.title;
+      itemAns.__selected_items = [itObj.title];
+      if(myUser) itemAns.__user = myUser;
+      if(activeOff) itemAns.__officer_name = activeOff;
+
+      payloadsToInsert.push({
+        id: 'r_' + baseStamp + '_' + (idx + 1) + '_' + Math.floor(Math.random()*100),
+        node_id: String(itObj.id),
+        main_type: curMain,
+        level1: n1Title,
+        level2: n2Title,
+        level3: n3Title,
+        node_path: nodePath(itObj.title),
+        division: myDiv,
+        office: myOffice,
+        answers: itemAns,
+        created_at: new Date(baseStamp + idx).toISOString()
+      });
+    });
+  } else {
+    var singleItemTitle = curItem ? ((nodes.find(x=>x.id===curItem)||{}).title || '') : '';
+    var totalQty = qtyInputs.reduce((sum, el) => sum + (parseFloat(el.value) || 0), 0);
+    var ans = collectAnswersForTargetItem(singleItemTitle);
+    ans.__progress_qty = totalQty;
+    if(singleItemTitle){
+      ans.__item_name = singleItemTitle;
+      ans.__selected_items = [singleItemTitle];
+    }
+    if(myUser) ans.__user = myUser;
+    if(activeOff) ans.__officer_name = activeOff;
+
+    payloadsToInsert.push({
+      id: 'r_' + baseStamp,
+      node_id: String(lid),
+      main_type: curMain,
+      level1: n1Title,
+      level2: n2Title,
+      level3: n3Title,
+      node_path: nodePath(singleItemTitle),
+      division: myDiv,
+      office: myOffice,
+      answers: ans,
+      created_at: new Date().toISOString()
+    });
+  }
 
   if(sb){
-    var ins = await sb.from('responses').insert(dbPayload);
+    var ins = await sb.from('responses').insert(payloadsToInsert);
     if(ins.error){
       return showToast('Save Error: ' + ins.error.message, false);
     }
   }
 
-  responses.unshift(dbPayload);
+  payloadsToInsert.slice().reverse().forEach(p => responses.unshift(p));
 
   resetFormInputsOnly();
   renderUForm();
   renderUnitTargets();
-  showToast('දත්ත Save වී Progress Auto Update විය ✓', true);
+  showToast(payloadsToInsert.length > 1
+    ? (payloadsToInsert.length + ' Items தனித்தனியே Save ஆகின ✓')
+    : 'දත්ත Save වී Progress Auto Update විය ✓', true);
   return false;
 }
 
@@ -1715,52 +1803,108 @@ function onMyFilterChange(){
   renderMy();
 }
 
-function getAnswerValueForHeader(r, hText, qColMap){
-  var ids = qColMap.get(hText) || [];
-  var itemNames = (r.answers && Array.isArray(r.answers.__selected_items) && r.answers.__selected_items.length)
-    ? r.answers.__selected_items
+function getAnswerValueForHeader(r, hText, qColMap) {
+  var ids = (qColMap && qColMap.get(hText)) ? qColMap.get(hText).slice() : [];
+  var ansObj = (r && r.answers && typeof r.answers === 'object') ? r.answers : {};
+
+  // 1. கேள்வி உரையின் (question_text) அடிப்படையில் பொருந்தும் அனைத்து question_id-களையும் சேகரித்தல்
+  (questions || []).forEach(function(q) {
+    if (norm(q.question_text) === norm(hText) && ids.indexOf(String(q.id)) === -1) {
+      ids.push(String(q.id));
+    }
+  });
+
+  // 2. __per_item_answers உள்ளே இருந்தால் முதலில் தேடுதல்
+  var itemNames = (Array.isArray(ansObj.__selected_items) && ansObj.__selected_items.length)
+    ? ansObj.__selected_items
     : (getItemNameForEntry(r) ? [getItemNameForEntry(r)] : []);
 
-  for(var i = 0; i < itemNames.length; i++){
-    var iName = itemNames[i];
-    var perMap = (r.answers && r.answers.__per_item_answers && r.answers.__per_item_answers[iName]) || null;
-    if(perMap){
-      for(var k = 0; k < ids.length; k++){
-        if(perMap[ids[k]] !== undefined && perMap[ids[k]] !== ''){
-          var rawP = perMap[ids[k]];
-          return Array.isArray(rawP) ? rawP.join(', ') : rawP;
+  for (var i = 0; i < itemNames.length; i++) {
+    var perMap = (ansObj.__per_item_answers && ansObj.__per_item_answers[itemNames[i]]) || null;
+    if (perMap && typeof perMap === 'object') {
+      for (var k = 0; k < ids.length; k++) {
+        var valP = perMap[ids[k]];
+        if (valP !== undefined && valP !== null && String(valP).trim() !== '') {
+          return Array.isArray(valP) ? valP.join(', ') : String(valP);
         }
+      }
+      // கேள்வி பெயர் நேரடியாக key ஆக இருந்தால்
+      if (perMap[hText] !== undefined && perMap[hText] !== null && String(perMap[hText]).trim() !== '') {
+        return Array.isArray(perMap[hText]) ? perMap[hText].join(', ') : String(perMap[hText]);
       }
     }
   }
 
-  for(var k2 = 0; k2 < ids.length; k2++){
-    if(r.answers && r.answers[ids[k2]] !== undefined && r.answers[ids[k2]] !== ''){
-      var raw = r.answers[ids[k2]];
-      return Array.isArray(raw) ? raw.join(', ') : raw;
+  // 3. r.answers-இல் நேரடியாக question_id மூலம் தேடுதல்
+  for (var k2 = 0; k2 < ids.length; k2++) {
+    var val = ansObj[ids[k2]];
+    if (val !== undefined && val !== null && String(val).trim() !== '') {
+      return Array.isArray(val) ? val.join(', ') : String(val);
     }
   }
+
+  // 4. r.answers-இல் question_text (தலைப்பு) நேரடியாக key ஆக இருந்தால் தேடுதல்
+  var matchingKey = Object.keys(ansObj).find(function(key) {
+    if (key.indexOf('__') === 0) return false;
+    return norm(key) === norm(hText);
+  });
+  if (matchingKey && ansObj[matchingKey] !== undefined && ansObj[matchingKey] !== null && String(ansObj[matchingKey]).trim() !== '') {
+    return Array.isArray(ansObj[matchingKey]) ? ansObj[matchingKey].join(', ') : String(ansObj[matchingKey]);
+  }
+
   return '';
 }
 
-function buildDynamicSubTable(list, theadId, tbodyId, countId){
-  if(countId) document.getElementById(countId).textContent = list.length;
+function buildDynamicSubTable(list, theadId, tbodyId, countId) {
+  if (countId) document.getElementById(countId).textContent = list.length;
 
   var qColMap = new Map();
-  list.forEach(r => {
-    var qs = (questions||[]).filter(q => String(q.node_id) === String(r.node_id)).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
-    qs.forEach(q => {
-      if(!qColMap.has(q.question_text)) qColMap.set(q.question_text, []);
-      if(!qColMap.get(q.question_text).includes(q.id)) qColMap.get(q.question_text).push(q.id);
+
+  // முதலில் Development இயல்புநிலை வினாக்களின் வரிசையில் தலைப்புகளைச் சேர்த்தல்
+  var isDevTable = (tbodyId === 'devMyTbody');
+  if (isDevTable && typeof DEV_DEFAULT_QUESTIONS !== 'undefined') {
+    DEV_DEFAULT_QUESTIONS.forEach(function(tpl) {
+      if (!qColMap.has(tpl.text)) qColMap.set(tpl.text, []);
     });
-    if(r.answers && r.answers.__per_item_answers && typeof r.answers.__per_item_answers === 'object'){
-      Object.values(r.answers.__per_item_answers).forEach(qMap => {
-        if(!qMap || typeof qMap !== 'object') return;
-        Object.keys(qMap).forEach(qid => {
-          var qObj = (questions||[]).find(q => String(q.id) === String(qid));
+  }
+
+  list.forEach(function(r) {
+    var ansObj = (r && r.answers && typeof r.answers === 'object') ? r.answers : {};
+
+    // r.node_id-க்கு உரிய வினாக்கள்
+    var qs = (questions || []).filter(function(q) {
+      return String(q.node_id) === String(r.node_id);
+    }).sort(function(a, b) { return (a.order_index || 0) - (b.order_index || 0); });
+
+    qs.forEach(function(q) {
+      if (!qColMap.has(q.question_text)) qColMap.set(q.question_text, []);
+      if (qColMap.get(q.question_text).indexOf(String(q.id)) === -1) {
+        qColMap.get(q.question_text).push(String(q.id));
+      }
+    });
+
+    // r.answers-இல் உள்ள ஒவ்வொரு question_id-க்கும் அதன் question_text-ஐக் கண்டறிந்து இணைத்தல்
+    Object.keys(ansObj).forEach(function(key) {
+      if (key.indexOf('__') === 0) return;
+      var qObj = (questions || []).find(function(q) { return String(q.id) === String(key); });
+      var label = qObj ? qObj.question_text : key;
+      if (!qColMap.has(label)) qColMap.set(label, []);
+      if (qObj && qColMap.get(label).indexOf(String(qObj.id)) === -1) {
+        qColMap.get(label).push(String(qObj.id));
+      }
+    });
+
+    // __per_item_answers உள்ளே உள்ள வினாக்களையும் இணைத்தல்
+    if (ansObj.__per_item_answers && typeof ansObj.__per_item_answers === 'object') {
+      Object.values(ansObj.__per_item_answers).forEach(function(qMap) {
+        if (!qMap || typeof qMap !== 'object') return;
+        Object.keys(qMap).forEach(function(qid) {
+          var qObj = (questions || []).find(function(q) { return String(q.id) === String(qid); });
           var label = qObj ? qObj.question_text : ('Question ' + qid);
-          if(!qColMap.has(label)) qColMap.set(label, []);
-          if(!qColMap.get(label).includes(qid)) qColMap.get(label).push(qid);
+          if (!qColMap.has(label)) qColMap.set(label, []);
+          if (qColMap.get(label).indexOf(String(qid)) === -1) {
+            qColMap.get(label).push(String(qid));
+          }
         });
       });
     }
@@ -1773,24 +1917,24 @@ function buildDynamicSubTable(list, theadId, tbodyId, countId){
     '<th>Main Program</th>' +
     '<th>Sub Program / Item</th>' +
     '<th>Progress Qty</th>' +
-    headers.map(h => '<th>' + h + '</th>').join('') +
+    headers.map(function(h) { return '<th>' + h + '</th>'; }).join('') +
     '<th>Action</th>' +
     '</tr>';
 
-  if(!list.length){
+  if (!list.length) {
     document.getElementById(tbodyId).innerHTML = '<tr><td colspan="' + (6 + headers.length) + '" class="text-center py-5 text-slate-400 text-xs">දත්ත නොමැත</td></tr>';
-    return { headers, qColMap };
+    return { headers: headers, qColMap: qColMap };
   }
 
-  document.getElementById(tbodyId).innerHTML = list.map(r => {
+  document.getElementById(tbodyId).innerHTML = list.map(function(r) {
     var qty = getProgressedQtyForEntry(r);
     var itemN = getItemNameForEntry(r);
     var offN = getOfficerForEntry(r);
     var subLabel = [r.level3, itemN].filter(Boolean).join(' — ') || r.node_path || '';
 
-    var cells = headers.map(hText => {
+    var cells = headers.map(function(hText) {
       var val = getAnswerValueForHeader(r, hText, qColMap);
-      return '<td class="text-xs">' + (val !== '' ? val : '-') + '</td>';
+      return '<td class="text-xs font-medium text-slate-800">' + (val !== '' ? val : '-') + '</td>';
     }).join('');
 
     return '<tr>' +
@@ -1807,7 +1951,7 @@ function buildDynamicSubTable(list, theadId, tbodyId, countId){
     '</tr>';
   }).join('');
 
-  return { headers, qColMap };
+  return { headers: headers, qColMap: qColMap };
 }
 
 function renderMy(){
