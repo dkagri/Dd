@@ -56,6 +56,8 @@
     <button data-nav="dashboard" onclick="goNav('dashboard')" class="nav-btn w-full text-left px-4 py-3 rounded-xl bg-white text-slate-900 font-semibold">🎯 Dashboard & Target Sheet</button>
     <button data-nav="targetset" onclick="goNav('targetset')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">📌 Target Set<br><span class="text-[11px] font-normal opacity-80">AI Office Targets Update</span></button>
     <button data-nav="data" onclick="goNav('data')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">📊 දත්ත (Data & Excel)<br><span class="text-[11px] font-normal opacity-80">Extension & Dev Tables</span></button>
+    <button data-nav="pivapproval" onclick="goNav('pivapproval')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">🧾 PIV APPROVAL<br><span class="text-[11px] font-normal opacity-80">AD Check & Submit to DD</span></button>
+    <button data-nav="pricelist" onclick="goNav('pricelist')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">💰 View Item Price List<br><span class="text-[11px] font-normal opacity-80">Admin Price List & Excel</span></button>
   </nav>
 
   <div class="mt-auto rounded-2xl bg-white/10 p-4 text-white">
@@ -349,7 +351,7 @@
     </div>
 
     <!-- ===================================================================== -->
-    <!-- 3. DATA SECTION: SEPARATE EXTENSION & DEVELOPMENT TABLES + EXCEL      -->
+    <!-- 3. DATA SECTION: SEPARATE EXTENSION & DEVELOPMENT TABLES + FILTERS    -->
     <!-- ===================================================================== -->
     <div id="page-data" class="page hidden space-y-5">
       <div class="card space-y-4">
@@ -361,25 +363,7 @@
           <button onclick="downloadFilteredSubAdminExcel()" class="btn btn-success text-xs px-4 py-2">⬇ Download Filtered Excel</button>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-2xl border">
-          <div>
-            <label class="text-[11px] font-bold text-slate-600 uppercase">AI Range</label>
-            <select id="fAiRange" onchange="renderDataSection()" class="mt-1 bg-white text-xs">
-              <option value="">All AI Ranges</option>
-            </select>
-          </div>
-          <div>
-            <label class="text-[11px] font-bold text-slate-600 uppercase">Extension Program</label>
-            <select id="fExtProg" onchange="renderDataSection()" class="mt-1 bg-white text-xs">
-              <option value="">All Extension Programs</option>
-            </select>
-          </div>
-          <div>
-            <label class="text-[11px] font-bold text-slate-600 uppercase">Development Program</label>
-            <select id="fDevProg" onchange="renderDataSection()" class="mt-1 bg-white text-xs">
-              <option value="">All Development Programs</option>
-            </select>
-          </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-2xl border">
           <div>
             <label class="text-[11px] font-bold text-slate-600 uppercase">Search</label>
             <input id="fSearch" placeholder="Search..." oninput="renderDataSection()" class="mt-1 bg-white text-xs">
@@ -387,9 +371,37 @@
         </div>
       </div>
 
-      <!-- EXTENSION RESPONSES TABLE -->
+      <!-- EXTENSION RESPONSES TABLE (OWN FILTERS: SESSION, MAIN PROGRAM, SUB PROGRAM, AI OFFICE) -->
       <div class="card space-y-3 border-l-4 border-l-blue-600">
-        <h3 class="font-bold text-base text-blue-950">🌾 Extension Data Table (<span id="extRespCount">0</span>)</h3>
+        <div class="flex flex-wrap justify-between items-center gap-2">
+          <h3 class="font-bold text-base text-blue-950">🌾 Extension Data Table (<span id="extRespCount">0</span>)</h3>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-blue-50/50 p-3 rounded-xl border border-blue-100">
+          <div>
+            <label class="text-[11px] font-bold text-blue-900 uppercase">Session</label>
+            <select id="extDataSession" onchange="onExtDataFilterChange('session')" class="mt-1 bg-white text-xs">
+              <option value="">All Sessions</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-blue-900 uppercase">Main Program</label>
+            <select id="extDataMainProg" onchange="onExtDataFilterChange('main')" class="mt-1 bg-white text-xs">
+              <option value="">All Main Programs</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-blue-900 uppercase">Sub Program</label>
+            <select id="extDataSubProg" onchange="renderDataSection()" class="mt-1 bg-white text-xs">
+              <option value="">All Sub Programs</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-blue-900 uppercase">AI Office</label>
+            <select id="extDataAiOffice" onchange="renderDataSection()" class="mt-1 bg-white text-xs">
+              <option value="">All AI Offices</option>
+            </select>
+          </div>
+        </div>
         <div class="table-wrap">
           <table>
             <thead id="extRespThead"></thead>
@@ -398,9 +410,43 @@
         </div>
       </div>
 
-      <!-- DEVELOPMENT RESPONSES TABLE -->
+      <!-- DEVELOPMENT RESPONSES TABLE (OWN FILTERS: YEAR, MAIN PROGRAM, SUB PROGRAM, ITEM, AI OFFICE) -->
       <div class="card space-y-3 border-l-4 border-l-emerald-600">
-        <h3 class="font-bold text-base text-emerald-950">🏗️ Development Data Table (<span id="devRespCount">0</span>)</h3>
+        <div class="flex flex-wrap justify-between items-center gap-2">
+          <h3 class="font-bold text-base text-emerald-950">🏗️ Development Data Table (<span id="devRespCount">0</span>)</h3>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 bg-emerald-50/50 p-3 rounded-xl border border-emerald-100">
+          <div>
+            <label class="text-[11px] font-bold text-emerald-900 uppercase">Year</label>
+            <select id="devDataYear" onchange="onDevDataFilterChange('year')" class="mt-1 bg-white text-xs">
+              <option value="">All Years</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-emerald-900 uppercase">Main Program</label>
+            <select id="devDataMainProg" onchange="onDevDataFilterChange('main')" class="mt-1 bg-white text-xs">
+              <option value="">All Main Programs</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-emerald-900 uppercase">Sub Program</label>
+            <select id="devDataSubProg" onchange="onDevDataFilterChange('sub')" class="mt-1 bg-white text-xs">
+              <option value="">All Sub Programs</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-emerald-900 uppercase">Item</label>
+            <select id="devDataItem" onchange="renderDataSection()" class="mt-1 bg-white text-xs">
+              <option value="">All Items</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-emerald-900 uppercase">AI Office</label>
+            <select id="devDataAiOffice" onchange="renderDataSection()" class="mt-1 bg-white text-xs">
+              <option value="">All AI Offices</option>
+            </select>
+          </div>
+        </div>
         <div class="table-wrap">
           <table>
             <thead id="devRespThead"></thead>
@@ -420,6 +466,127 @@
         <div class="flex gap-2 mt-4">
           <button onclick="saveEdit()" class="btn btn-primary px-4">Save Edit</button>
           <button onclick="closeEdit()" class="btn btn-ghost px-4">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 4. PIV APPROVAL SECTION (UNIT PIV -> AD APPROVAL -> DD SUBMIT DATE)  -->
+    <!-- ===================================================================== -->
+    <div id="page-pivapproval" class="page hidden space-y-5">
+      <div class="card space-y-4">
+        <div class="flex flex-wrap justify-between items-center gap-2">
+          <div>
+            <span class="px-2.5 py-0.5 rounded-full bg-violet-100 text-violet-800 text-[11px] font-bold uppercase">🧾 PIV APPROVAL & DD SUBMISSION</span>
+            <h2 class="text-xl font-bold text-slate-900 mt-1">PIV Approval (AD Office → DD Office)</h2>
+            <p class="text-xs text-slate-500">Verify the PIV details</p>
+          </div>
+          <button onclick="downloadPivApprovalExcel()" class="btn btn-success text-xs px-4 py-2">⬇ Download PIV Excel</button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-violet-50/60 p-3.5 rounded-2xl border border-violet-200">
+          <div>
+            <label class="text-[11px] font-bold text-violet-950 uppercase">Year</label>
+            <select id="pivAppFilterYear" onchange="onPivAppFilterChange('year')" class="mt-1 bg-white text-xs">
+              <option value="">All Years</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-violet-950 uppercase">Main Program</label>
+            <select id="pivAppFilterMain" onchange="onPivAppFilterChange('main')" class="mt-1 bg-white text-xs">
+              <option value="">All Main Programs</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-violet-950 uppercase">Sub Program</label>
+            <select id="pivAppFilterSub" onchange="onPivAppFilterChange('sub')" class="mt-1 bg-white text-xs">
+              <option value="">All Sub Programs</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-violet-950 uppercase">Item</label>
+            <select id="pivAppFilterItem" onchange="renderPivApprovalTable()" class="mt-1 bg-white text-xs">
+              <option value="">All Items</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="matrix-table w-full border-collapse">
+            <thead>
+              <tr>
+                <th>Auto Unit No</th>
+                <th>AI Office</th>
+                <th>Year</th>
+                <th>Main Program</th>
+                <th>Sub Program</th>
+                <th>Item</th>
+                <th>No of Units</th>
+                <th>Payment Amount</th>
+                <th>Banked Date</th>
+                <th>PIV Submit Date</th>
+                <th>No of PIV</th>
+                <th>AD Status</th>
+                <th>DD Office Submit Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="pivApprovalTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 5. VIEW ITEM PRICE LIST SECTION (ADMIN SYNCED + FILTERS + EXCEL)    -->
+    <!-- ===================================================================== -->
+    <div id="page-pricelist" class="page hidden space-y-5">
+      <div class="card space-y-4">
+        <div class="flex flex-wrap justify-between items-center gap-2">
+          <div>
+            <span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[11px] font-bold uppercase">💰 ADMIN ITEM PRICE LIST</span>
+            <h2 class="text-xl font-bold text-slate-900 mt-1">View Item Price List</h2>
+            <p class="text-xs text-slate-500">price list.</p>
+          </div>
+          <button onclick="downloadSubAdminPriceListExcel()" class="btn btn-success text-xs px-4 py-2">⬇ Download Price List Excel</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-amber-50/60 p-3.5 rounded-2xl border border-amber-200">
+          <div>
+            <label class="text-[11px] font-bold text-amber-950 uppercase">Year</label>
+            <select id="saPlFilterYear" onchange="onSaPriceFilterChange('year')" class="mt-1 bg-white text-xs">
+              <option value="">All Years</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-amber-950 uppercase">Main Program</label>
+            <select id="saPlFilterMain" onchange="onSaPriceFilterChange('main')" class="mt-1 bg-white text-xs">
+              <option value="">All Main Programs</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-amber-950 uppercase">Sub Program</label>
+            <select id="saPlFilterSub" onchange="renderSubAdminPriceListTable()" class="mt-1 bg-white text-xs">
+              <option value="">All Sub Programs</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="matrix-table w-full border-collapse">
+            <thead>
+              <tr>
+                <th>Program</th>
+                <th>Sub Program</th>
+                <th>Item</th>
+                <th>Unit Price</th>
+                <th>Subsidy</th>
+                <th>Government Price</th>
+                <th>Farmers Price</th>
+              </tr>
+            </thead>
+            <tbody id="saPriceListTbody"></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -488,10 +655,12 @@ const BOX_COLORS = [
   { border: 'border-orange-300', bg: 'bg-orange-50/70', badge: 'bg-orange-600 text-white', bar: 'bg-orange-500', title: 'text-orange-950' }
 ];
 
-var nodes=[], questions=[], responses=[], targetRecords=[], profiles=[];
+var nodes=[], questions=[], responses=[], targetRecords=[], profiles=[], itemPrices=[], pivRecords=[];
 var showAllExtBoxes=false, showAllDevBoxes=false, showAllExtTbl=false, showAllDevTbl=false, editingId=null;
+var PIV_STORAGE_KEY = 'fw_piv_submissions_v1';
 
 function norm(s){ return String(s||'').trim().toLowerCase(); }
+function parseNum(v){ var n = parseFloat(String(v===undefined||v===null?'':v).replace(/[^0-9.-]/g,'')); return isNaN(n) ? 0 : n; }
 function isAllLabel(s){ return norm(s) === 'all'; }
 
 function getMyAiOffices(){
@@ -565,11 +734,18 @@ function goNav(p){
     document.getElementById('pageTitle').textContent='දත්ත (Data & Excel)';
     populateDataFilters();
     renderDataSection();
+  } else if(p==='pivapproval'){
+    document.getElementById('pageTitle').textContent='PIV APPROVAL (AD Office → DD Office)';
+    populatePivApprovalFilters();
+    renderPivApprovalTable();
+  } else if(p==='pricelist'){
+    document.getElementById('pageTitle').textContent='View Item Price List';
+    renderSubAdminPriceListSection();
   }
 }
 
 /* ========================================================================= */
-/* ROWSPAN MERGE HELPER FOR TABLES                                           */
+/* ROWSPAN MERGE HELPER FOR TABLES & EXCEL                                   */
 /* ========================================================================= */
 function computeRowSpans(rows, keyFn){
   var spans = new Array(rows.length).fill(1);
@@ -586,6 +762,18 @@ function computeRowSpans(rows, keyFn){
     i = j;
   }
   return spans;
+}
+
+function addColumnMergesFromSpans(ws, spans, colIndex, dataStartRow){
+  if(!ws['!merges']) ws['!merges'] = [];
+  for(var i = 0; i < spans.length; i++){
+    if(spans[i] > 1){
+      ws['!merges'].push({
+        s: { r: dataStartRow + i, c: colIndex },
+        e: { r: dataStartRow + i + spans[i] - 1, c: colIndex }
+      });
+    }
+  }
 }
 
 /* ========================================================================= */
@@ -631,7 +819,6 @@ function getGroupKey(r){
   return [r.main_type, r.level1||'', r.level2||'', r.level3||'', r.item_name||''].map(norm).join('|');
 }
 
-// Button/Action group key: for development with items, per Item; otherwise per Sub Program
 function getSaveButtonGroupKey(r){
   if(r.main_type === 'development' && r.item_name){
     return [r.main_type, r.level1||'', r.level2||'', r.level3||'', r.item_name||''].map(norm).join('|');
@@ -862,7 +1049,6 @@ function renderDashboardAll(){
   var extAiOnly = allRows.filter(r => r.main_type === 'extension' && !r.is_all_row);
   var devAiOnly = allRows.filter(r => r.main_type === 'development' && !r.is_all_row);
 
-  // Extension Box Filters
   populateSelectPreserve('extBoxFilterAi', aiOffices, 'All AI Offices');
   populateSelectPreserve('extBoxFilterProg', [...new Set(extAiOnly.map(r=>r.level2).filter(Boolean))], 'All Programs');
   var eAi = document.getElementById('extBoxFilterAi').value;
@@ -888,7 +1074,6 @@ function renderDashboardAll(){
   document.getElementById('extSumPct').textContent = ePct + '%';
   renderColorBoxes(extBoxes, 'extBoxGrid', 'btnMoreExtBoxes', showAllExtBoxes, 6);
 
-  // Development Box Filters
   populateSelectPreserve('devBoxFilterAi', aiOffices, 'All AI Offices');
   populateSelectPreserve('devBoxFilterProg', [...new Set(devAiOnly.map(r=>r.level2).filter(Boolean))], 'All Programs');
   var dAi = document.getElementById('devBoxFilterAi').value;
@@ -914,14 +1099,12 @@ function renderDashboardAll(){
   document.getElementById('devSumPct').textContent = dPct + '%';
   renderColorBoxes(devBoxes, 'devBoxGrid', 'btnMoreDevBoxes', showAllDevBoxes, 6);
 
-  // Extension Table filter dropdowns
   populateSelectPreserve('extTblFilterSeason', [...new Set(extAiOnly.map(r=>r.level1).filter(Boolean))], 'All Seasons');
   populateSelectPreserve('extTblFilterAi', aiOffices, 'All AI Offices');
   populateSelectPreserve('extTblFilterProg', [...new Set(extAiOnly.map(r=>r.level2).filter(Boolean))], 'All Programs');
   var etPr = document.getElementById('extTblFilterProg').value;
   populateSelectPreserve('extTblFilterSub', [...new Set(extAiOnly.filter(r => !etPr || norm(r.level2)===norm(etPr)).map(r=>r.level3).filter(Boolean))], 'All Sub Programs');
 
-  // Development Table filter dropdowns
   populateSelectPreserve('devTblFilterYear', [...new Set(devAiOnly.map(r=>r.level1).filter(Boolean))], 'All Years');
   populateSelectPreserve('devTblFilterAi', aiOffices, 'All AI Offices');
   populateSelectPreserve('devTblFilterProg', [...new Set(devAiOnly.map(r=>r.level2).filter(Boolean))], 'All Programs');
@@ -1002,6 +1185,7 @@ function renderTargetTables(){
 
   var eMainSpans = computeRowSpans(extRows, r => r.level2 || '-');
   var eSubSpans  = computeRowSpans(extRows, r => (r.level2 || '-') + '||' + (r.level3 || '-'));
+  window.currentExtSpans = { main: eMainSpans, sub: eSubSpans };
 
   document.getElementById('extTargetTbody').innerHTML = extRows.length ? extRows.map((it, i) => {
     var rem = Math.max(0, it.target - it.covered);
@@ -1054,6 +1238,7 @@ function renderTargetTables(){
   var dMainSpans = computeRowSpans(devRows, r => r.level2 || '-');
   var dSubSpans  = computeRowSpans(devRows, r => (r.level2 || '-') + '||' + (r.level3 || '-'));
   var dItemSpans = computeRowSpans(devRows, r => (r.level2 || '-') + '||' + (r.level3 || '-') + '||' + (r.item_name || '-'));
+  window.currentDevSpans = { main: dMainSpans, sub: dSubSpans, item: dItemSpans };
 
   document.getElementById('devTargetTbody').innerHTML = devRows.length ? devRows.map((it, i) => {
     var rem = Math.max(0, it.target - it.covered);
@@ -1077,41 +1262,45 @@ function renderTargetTables(){
 }
 
 function downloadTargetTableExcel(type){
-  var rows = type === 'development' ? (window.currentDevTargetRows || []) : (window.currentExtTargetRows || []);
+  var isDev = type === 'development';
+  var rows = isDev ? (window.currentDevTargetRows || []) : (window.currentExtTargetRows || []);
   if(!rows.length) return showToast('No filtered data available for download', false);
 
-  var exportData = rows.map(it => {
+  var mainSpans = computeRowSpans(rows, r => r.level2 || '-');
+  var subSpans  = computeRowSpans(rows, r => (r.level2 || '-') + '||' + (r.level3 || '-'));
+  var itemSpans = isDev ? computeRowSpans(rows, r => (r.level2 || '-') + '||' + (r.level3 || '-') + '||' + (r.item_name || '-')) : [];
+
+  var headers = isDev
+    ? ['AD Office', 'Year', 'Main Program', 'Sub Program', 'Item', 'AI Office', 'Target', 'Progress', 'Remaining', 'Progress %']
+    : ['AD Office', 'Season', 'Main Program', 'Sub Program', 'AI Office', 'Target', 'Progress', 'Remaining', 'Progress %'];
+
+  var sheetData = [headers];
+  rows.forEach((it, idx) => {
     var rem = Math.max(0, it.target - it.covered);
     var pct = it.target > 0 ? Math.min(100, Math.round((it.covered/it.target)*100)) : (it.covered > 0 ? 100 : 0);
-    if(type === 'development'){
-      return {
-        'AD Office': mySubName,
-        'Year': it.level1 || '-',
-        'Main Program': it.level2 || '-',
-        'Sub Program': it.level3 || '-',
-        'Item': it.item_name || '-',
-        'AI Office': it.ai_office,
-        'Target': it.target,
-        'Progress': it.covered,
-        'Remaining': rem,
-        'Progress %': pct + '%'
-      };
+    var mainVal = mainSpans[idx] > 0 ? (it.level2 || '-') : '';
+    var subVal  = subSpans[idx] > 0  ? (it.level3 || '-') : '';
+
+    if(isDev){
+      var itemVal = itemSpans[idx] > 0 ? (it.item_name || '-') : '';
+      sheetData.push([mySubName, it.level1 || '-', mainVal, subVal, itemVal, it.ai_office, it.target, it.covered, rem, pct + '%']);
+    } else {
+      sheetData.push([mySubName, it.level1 || '-', mainVal, subVal, it.ai_office, it.target, it.covered, rem, pct + '%']);
     }
-    return {
-      'AD Office': mySubName,
-      'Season': it.level1 || '-',
-      'Main Program': it.level2 || '-',
-      'Sub Program': it.level3 || '-',
-      'AI Office': it.ai_office,
-      'Target': it.target,
-      'Progress': it.covered,
-      'Remaining': rem,
-      'Progress %': pct + '%'
-    };
   });
 
-  var label = type === 'development' ? 'Development' : 'Extension';
-  var ws = XLSX.utils.json_to_sheet(exportData);
+  var ws = XLSX.utils.aoa_to_sheet(sheetData);
+  var dataStartRow = 1;
+  if(isDev){
+    addColumnMergesFromSpans(ws, mainSpans, 2, dataStartRow);
+    addColumnMergesFromSpans(ws, subSpans, 3, dataStartRow);
+    addColumnMergesFromSpans(ws, itemSpans, 4, dataStartRow);
+  } else {
+    addColumnMergesFromSpans(ws, mainSpans, 2, dataStartRow);
+    addColumnMergesFromSpans(ws, subSpans, 3, dataStartRow);
+  }
+
+  var label = isDev ? 'Development' : 'Extension';
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, label + '_Targets');
   XLSX.writeFile(wb, mySubName.replace(/\s+/g,'_') + '_' + label + '_Filtered_Targets.xlsx');
@@ -1232,7 +1421,6 @@ function renderTargetSetList(){
     return;
   }
 
-  // Group indices by save-button group (Sub Program for Extension; Item or Sub Program for Development)
   var btnGroupIndices = new Map();
   rows.forEach((r, idx) => {
     var bgk = getSaveButtonGroupKey(r);
@@ -1347,20 +1535,70 @@ async function saveGroupTargets(encodedKey){
     renderDashboardAll();
     renderTargetSetList();
     var lbl = toSave[0].row.item_name || toSave[0].row.level3 || toSave[0].row.level2 || 'Sub Program';
-    showToast(lbl + ' — all AI Range (' + toSave.length + ') Target Saveed ✓', true);
+    showToast(lbl + ' — all AI Range (' + toSave.length + ') Target Saved ✓', true);
   }catch(e){
     showToast('Save Error: ' + e.message, false);
   }
 }
 
 /* ========================================================================= */
-/* DATA SECTION: SEPARATE EXTENSION & DEVELOPMENT TABLES + SEPARATE COLUMNS  */
+/* DATA SECTION: SEPARATE FILTERS FOR EXTENSION & DEVELOPMENT TABLES         */
 /* ========================================================================= */
 function populateDataFilters(){
   var mine = getMyResponses();
-  populateSelectPreserve('fAiRange', getMyAiOffices(), 'All AI Ranges');
-  populateSelectPreserve('fExtProg', [...new Set(mine.filter(r=>norm(r.main_type)==='extension').map(r=>r.level2).filter(Boolean))], 'All Extension Programs');
-  populateSelectPreserve('fDevProg', [...new Set(mine.filter(r=>norm(r.main_type)==='development').map(r=>r.level2).filter(Boolean))], 'All Development Programs');
+  var aiList = getMyAiOffices();
+
+  var extMine = mine.filter(r => norm(r.main_type) === 'extension');
+  var devMine = mine.filter(r => norm(r.main_type) === 'development');
+
+  // Extension filters: Session, Main Program, Sub Program, AI Office
+  populateSelectPreserve('extDataSession', [...new Set(extMine.map(r=>r.level1).filter(Boolean))], 'All Sessions');
+  var eSes = document.getElementById('extDataSession').value;
+  var eMainSrc = eSes ? extMine.filter(r=>norm(r.level1)===norm(eSes)) : extMine;
+  populateSelectPreserve('extDataMainProg', [...new Set(eMainSrc.map(r=>r.level2).filter(Boolean))], 'All Main Programs');
+  var eMain = document.getElementById('extDataMainProg').value;
+  var eSubSrc = eMain ? eMainSrc.filter(r=>norm(r.level2)===norm(eMain)) : eMainSrc;
+  populateSelectPreserve('extDataSubProg', [...new Set(eSubSrc.map(r=>r.level3).filter(Boolean))], 'All Sub Programs');
+  populateSelectPreserve('extDataAiOffice', aiList, 'All AI Offices');
+
+  // Development filters: Year, Main Program, Sub Program, Item, AI Office
+  populateSelectPreserve('devDataYear', [...new Set(devMine.map(r=>r.level1).filter(Boolean))], 'All Years');
+  var dYr = document.getElementById('devDataYear').value;
+  var dMainSrc = dYr ? devMine.filter(r=>norm(r.level1)===norm(dYr)) : devMine;
+  populateSelectPreserve('devDataMainProg', [...new Set(dMainSrc.map(r=>r.level2).filter(Boolean))], 'All Main Programs');
+  var dMain = document.getElementById('devDataMainProg').value;
+  var dSubSrc = dMain ? dMainSrc.filter(r=>norm(r.level2)===norm(dMain)) : dMainSrc;
+  populateSelectPreserve('devDataSubProg', [...new Set(dSubSrc.map(r=>r.level3).filter(Boolean))], 'All Sub Programs');
+  var dSub = document.getElementById('devDataSubProg').value;
+  var dItemSrc = dSub ? dSubSrc.filter(r=>norm(r.level3)===norm(dSub)) : dSubSrc;
+  populateSelectPreserve('devDataItem', [...new Set(dItemSrc.map(r=>getItemName(r)).filter(Boolean))], 'All Items');
+  populateSelectPreserve('devDataAiOffice', aiList, 'All AI Offices');
+}
+
+function onExtDataFilterChange(level){
+  if(level === 'session'){
+    document.getElementById('extDataMainProg').value = '';
+    document.getElementById('extDataSubProg').value = '';
+  } else if(level === 'main'){
+    document.getElementById('extDataSubProg').value = '';
+  }
+  populateDataFilters();
+  renderDataSection();
+}
+
+function onDevDataFilterChange(level){
+  if(level === 'year'){
+    document.getElementById('devDataMainProg').value = '';
+    document.getElementById('devDataSubProg').value = '';
+    document.getElementById('devDataItem').value = '';
+  } else if(level === 'main'){
+    document.getElementById('devDataSubProg').value = '';
+    document.getElementById('devDataItem').value = '';
+  } else if(level === 'sub'){
+    document.getElementById('devDataItem').value = '';
+  }
+  populateDataFilters();
+  renderDataSection();
 }
 
 function buildQuestionColumns(list){
@@ -1431,17 +1669,39 @@ function renderResponseCategoryTable(list, theadId, tbodyId, countId){
 }
 
 function renderDataSection(){
-  var fAi = document.getElementById('fAiRange').value;
-  var fExtPr = document.getElementById('fExtProg').value;
-  var fDevPr = document.getElementById('fDevProg').value;
   var search = norm(document.getElementById('fSearch').value);
-
   var mine = getMyResponses();
-  if(fAi) mine = mine.filter(r => norm(r.division) === norm(fAi));
-  if(search) mine = mine.filter(r => (JSON.stringify(r.answers||'') + (r.node_path||'') + (r.division||'') + (r.level2||'')).toLowerCase().includes(search));
+  if(search){
+    mine = mine.filter(r => (JSON.stringify(r.answers||'') + (r.node_path||'') + (r.division||'') + (r.level2||'') + (r.level3||'') + getItemName(r)).toLowerCase().includes(search));
+  }
 
-  var extList = mine.filter(r => norm(r.main_type) === 'extension' && (!fExtPr || norm(r.level2) === norm(fExtPr)));
-  var devList = mine.filter(r => norm(r.main_type) === 'development' && (!fDevPr || norm(r.level2) === norm(fDevPr)));
+  var eSes  = (document.getElementById('extDataSession') || {}).value || '';
+  var eMain = (document.getElementById('extDataMainProg') || {}).value || '';
+  var eSub  = (document.getElementById('extDataSubProg') || {}).value || '';
+  var eAi   = (document.getElementById('extDataAiOffice') || {}).value || '';
+
+  var extList = mine.filter(r =>
+    norm(r.main_type) === 'extension' &&
+    (!eSes  || norm(r.level1) === norm(eSes)) &&
+    (!eMain || norm(r.level2) === norm(eMain)) &&
+    (!eSub  || norm(r.level3) === norm(eSub)) &&
+    (!eAi   || norm(r.division) === norm(eAi))
+  );
+
+  var dYr   = (document.getElementById('devDataYear') || {}).value || '';
+  var dMain = (document.getElementById('devDataMainProg') || {}).value || '';
+  var dSub  = (document.getElementById('devDataSubProg') || {}).value || '';
+  var dItem = (document.getElementById('devDataItem') || {}).value || '';
+  var dAi   = (document.getElementById('devDataAiOffice') || {}).value || '';
+
+  var devList = mine.filter(r =>
+    norm(r.main_type) === 'development' &&
+    (!dYr   || norm(r.level1) === norm(dYr)) &&
+    (!dMain || norm(r.level2) === norm(dMain)) &&
+    (!dSub  || norm(r.level3) === norm(dSub)) &&
+    (!dItem || norm(getItemName(r)) === norm(dItem)) &&
+    (!dAi   || norm(r.division) === norm(dAi))
+  );
 
   window.saExtMeta = renderResponseCategoryTable(extList, 'extRespThead', 'extRespTbody', 'extRespCount');
   window.saDevMeta = renderResponseCategoryTable(devList, 'devRespThead', 'devRespTbody', 'devRespCount');
@@ -1537,6 +1797,333 @@ async function delResponse(id){
   showToast('Deleted ✓', true);
 }
 
+/* ========================================================================= */
+/* PIV APPROVAL SECTION (AD APPROVAL -> DD SUBMIT DATE + FILTER + EXCEL)     */
+/* ========================================================================= */
+function loadLocalPivRecords(){
+  try{
+    var raw = localStorage.getItem(PIV_STORAGE_KEY);
+    if(raw){
+      var parsed = JSON.parse(raw);
+      if(Array.isArray(parsed)) return parsed;
+    }
+  }catch(e){}
+  return [];
+}
+
+function saveLocalPivRecords(arr){
+  try{ localStorage.setItem(PIV_STORAGE_KEY, JSON.stringify(arr)); }catch(e){}
+}
+
+function getAdScopedPivRecords(){
+  var localList = loadLocalPivRecords();
+  var mergedMap = new Map();
+  (pivRecords||[]).forEach(r => { if(r && r.id) mergedMap.set(String(r.id), r); });
+  localList.forEach(r => { if(r && r.id && !mergedMap.has(String(r.id))) mergedMap.set(String(r.id), r); });
+  pivRecords = Array.from(mergedMap.values()).sort((a,b) => String(b.created_at||'').localeCompare(String(a.created_at||'')));
+  saveLocalPivRecords(pivRecords);
+
+  return pivRecords.filter(r => {
+    if(isUnderMyAd(r.division, r.office)) return true;
+    if(mySubName && norm(r.ad_office) === norm(mySubName)) return true;
+    if(mySubId && norm(r.ad_office) === norm(mySubId)) return true;
+    return false;
+  });
+}
+
+function populatePivApprovalFilters(){
+  var list = getAdScopedPivRecords();
+  populateSelectPreserve('pivAppFilterYear', [...new Set(list.map(r=>r.year).filter(Boolean))], 'All Years');
+  var fY = document.getElementById('pivAppFilterYear').value;
+  var byY = fY ? list.filter(r=>norm(r.year)===norm(fY)) : list;
+
+  populateSelectPreserve('pivAppFilterMain', [...new Set(byY.map(r=>r.main_program).filter(Boolean))], 'All Main Programs');
+  var fM = document.getElementById('pivAppFilterMain').value;
+  var byM = fM ? byY.filter(r=>norm(r.main_program)===norm(fM)) : byY;
+
+  populateSelectPreserve('pivAppFilterSub', [...new Set(byM.map(r=>r.sub_program).filter(Boolean))], 'All Sub Programs');
+  var fS = document.getElementById('pivAppFilterSub').value;
+  var byS = fS ? byM.filter(r=>norm(r.sub_program)===norm(fS)) : byM;
+
+  populateSelectPreserve('pivAppFilterItem', [...new Set(byS.map(r=>r.item_name).filter(Boolean))], 'All Items');
+}
+
+function onPivAppFilterChange(level){
+  if(level === 'year'){
+    document.getElementById('pivAppFilterMain').value = '';
+    document.getElementById('pivAppFilterSub').value = '';
+    document.getElementById('pivAppFilterItem').value = '';
+  } else if(level === 'main'){
+    document.getElementById('pivAppFilterSub').value = '';
+    document.getElementById('pivAppFilterItem').value = '';
+  } else if(level === 'sub'){
+    document.getElementById('pivAppFilterItem').value = '';
+  }
+  populatePivApprovalFilters();
+  renderPivApprovalTable();
+}
+
+function renderPivApprovalTable(){
+  var all = getAdScopedPivRecords();
+  var fY = (document.getElementById('pivAppFilterYear') || {}).value || '';
+  var fM = (document.getElementById('pivAppFilterMain') || {}).value || '';
+  var fS = (document.getElementById('pivAppFilterSub') || {}).value || '';
+  var fI = (document.getElementById('pivAppFilterItem') || {}).value || '';
+
+  var filtered = all.filter(r =>
+    (!fY || norm(r.year) === norm(fY)) &&
+    (!fM || norm(r.main_program) === norm(fM)) &&
+    (!fS || norm(r.sub_program) === norm(fS)) &&
+    (!fI || norm(r.item_name) === norm(fI))
+  );
+
+  window.currentFilteredPivApproval = filtered;
+
+  var tbody = document.getElementById('pivApprovalTbody');
+  if(!tbody) return;
+  if(!filtered.length){
+    tbody.innerHTML = '<tr><td colspan="14" class="text-center py-6 text-slate-400 text-xs">PIV தரவுகள் எதுவும் இல்லை</td></tr>';
+    return;
+  }
+
+  var todayStr = new Date().toISOString().slice(0,10);
+
+  tbody.innerHTML = filtered.map(r => {
+    var isApproved = norm(r.ad_approval_status) === 'approved';
+    var badge = isApproved
+      ? '<span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-600 text-white whitespace-nowrap">Approved</span>'
+      : '<span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-red-600 text-white whitespace-nowrap">Pending</span>';
+
+    var dateVal = r.dd_office_submit_date || (isApproved ? todayStr : todayStr);
+
+    return '<tr>' +
+      '<td class="font-bold text-indigo-900 whitespace-nowrap">' + (r.auto_unit_no || '-') + '</td>' +
+      '<td class="font-semibold whitespace-nowrap">' + (r.division || r.office || '-') + '</td>' +
+      '<td class="text-center whitespace-nowrap">' + (r.year || '-') + '</td>' +
+      '<td class="font-semibold">' + (r.main_program || '-') + '</td>' +
+      '<td>' + (r.sub_program || '-') + '</td>' +
+      '<td class="font-semibold text-slate-900">' + (r.item_name || '-') + '</td>' +
+      '<td class="text-center font-bold">' + parseNum(r.no_of_units) + '</td>' +
+      '<td class="text-right font-bold text-emerald-700 whitespace-nowrap">Rs. ' + parseNum(r.payment_amount).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) + '</td>' +
+      '<td class="text-center whitespace-nowrap">' + (r.banked_date || '-') + '</td>' +
+      '<td class="text-center whitespace-nowrap">' + (r.piv_submit_date || '-') + '</td>' +
+      '<td class="font-semibold whitespace-nowrap">' + (r.no_of_piv || '-') + '</td>' +
+      '<td class="text-center">' + badge + '</td>' +
+      '<td class="text-center whitespace-nowrap"><input type="date" id="ddDate_' + r.id + '" value="' + dateVal + '" class="!w-36 text-xs bg-white"></td>' +
+      '<td class="text-center whitespace-nowrap">' +
+        '<button onclick="approvePivToDdOffice(\'' + r.id + '\')" class="btn btn-primary px-3 py-1.5 text-xs font-bold">' + (isApproved ? 'Update DD Date' : 'Approve & Send to DD') + '</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+async function approvePivToDdOffice(id){
+  var rec = pivRecords.find(x => String(x.id) === String(id));
+  if(!rec) return;
+
+  var dateEl = document.getElementById('ddDate_' + id);
+  var ddDate = dateEl ? dateEl.value : '';
+  if(!ddDate) return showToast('DD Office-க்கு அனுப்பும் திகதியை (Date) உள்ளிடவும்', false);
+
+  rec.ad_approval_status = 'Approved';
+  rec.dd_office_submit_date = ddDate;
+  rec.ad_approved_by = myUser || mySubName;
+  rec.ad_approved_at = new Date().toISOString();
+
+  if(sb){
+    await sb.from('piv_submissions').update({
+      ad_approval_status: 'Approved',
+      dd_office_submit_date: ddDate,
+      ad_approved_by: rec.ad_approved_by,
+      ad_approved_at: rec.ad_approved_at
+    }).eq('id', rec.id);
+  }
+
+  saveLocalPivRecords(pivRecords);
+  renderPivApprovalTable();
+  showToast('PIV Approved & DD Submit Date (' + ddDate + ') Saved ✓', true);
+}
+
+function downloadPivApprovalExcel(){
+  if(typeof XLSX === 'undefined') return showToast('Excel library load ஆகவில்லை', false);
+  var rows = window.currentFilteredPivApproval || [];
+  if(!rows.length) return showToast('Download කිරීමට PIV தரவுகள் இல்லை', false);
+
+  var exportData = rows.map(r => ({
+    'Auto Unit No': r.auto_unit_no || '-',
+    'AI Office': r.division || r.office || '-',
+    'AD Office': r.ad_office || mySubName,
+    'Year': r.year || '-',
+    'Main Program': r.main_program || '-',
+    'Sub Program': r.sub_program || '-',
+    'Item': r.item_name || '-',
+    'No of Units': parseNum(r.no_of_units),
+    'Payment Amount': parseNum(r.payment_amount),
+    'Banked Date': r.banked_date || '-',
+    'PIV Submit Date': r.piv_submit_date || '-',
+    'No of PIV': r.no_of_piv || '-',
+    'AD Status': r.ad_approval_status || 'Pending',
+    'DD Office Submit Date': r.dd_office_submit_date || '-',
+    'Main Admin Status': r.main_admin_status || 'Pending'
+  }));
+
+  var ws = XLSX.utils.json_to_sheet(exportData);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'PIV_Approval');
+  XLSX.writeFile(wb, mySubName.replace(/\s+/g,'_') + '_PIV_Approval.xlsx');
+}
+
+/* ========================================================================= */
+/* VIEW ITEM PRICE LIST SECTION (ADMIN SYNCED + FILTERS + EXCEL)            */
+/* ========================================================================= */
+function buildSubAdminPriceList(){
+  var nodeById = new Map((nodes||[]).map(n => [String(n.id), n]));
+  var list = [];
+
+  (itemPrices||[]).forEach((p, idx) => {
+    var program = p.program || p.main_program || p.level2 || '';
+    var subProgram = p.sub_program || p.level3 || '';
+    var year = p.year || p.level1 || '';
+    var itemName = p.item_name || p.item || p.title || '';
+
+    if((!program || !subProgram) && p.node_id){
+      var cur = nodeById.get(String(p.node_id));
+      if(cur){
+        if(!itemName && cur.level === 4) itemName = cur.title;
+        var p3 = cur.level === 4 ? nodeById.get(String(cur.parent_id)) : (cur.level === 3 ? cur : null);
+        if(p3){
+          if(!subProgram) subProgram = p3.title;
+          var p2 = nodeById.get(String(p3.parent_id));
+          if(p2){
+            if(!program) program = p2.title;
+            var p1 = nodeById.get(String(p2.parent_id));
+            if(p1 && !year) year = p1.title;
+          }
+        }
+      }
+    }
+
+    if((!program || !subProgram) && itemName){
+      var matchItemNode = (nodes||[]).find(n => norm(n.main_type) === 'development' && n.level === 4 && norm(n.title) === norm(itemName));
+      if(matchItemNode){
+        var s3 = nodeById.get(String(matchItemNode.parent_id));
+        if(s3){
+          if(!subProgram) subProgram = s3.title;
+          var m2 = nodeById.get(String(s3.parent_id));
+          if(m2){
+            if(!program) program = m2.title;
+            var y1 = nodeById.get(String(m2.parent_id));
+            if(y1 && !year) year = y1.title;
+          }
+        }
+      }
+    }
+
+    var unitPrice = parseNum(p.unit_price);
+    var subsidyRaw = p.subsidy !== undefined && p.subsidy !== null ? String(p.subsidy).trim() : '0%';
+    var govPrice = parseNum(p.gov_price);
+    var farmerPrice = p.farmer_price !== undefined && p.farmer_price !== null && p.farmer_price !== ''
+      ? parseNum(p.farmer_price)
+      : Math.max(0, unitPrice - govPrice);
+
+    list.push({
+      id: p.id || ('spl_' + idx),
+      year: year || '',
+      program: program || '-',
+      sub_program: subProgram || '-',
+      item: itemName || '-',
+      unit_price: unitPrice,
+      subsidy: subsidyRaw || '0%',
+      gov_price: govPrice,
+      farmer_price: farmerPrice
+    });
+  });
+
+  return list;
+}
+
+function onSaPriceFilterChange(level){
+  if(level === 'year'){
+    document.getElementById('saPlFilterMain').value = '';
+    document.getElementById('saPlFilterSub').value = '';
+  } else if(level === 'main'){
+    document.getElementById('saPlFilterSub').value = '';
+  }
+  renderSubAdminPriceListSection();
+}
+
+function renderSubAdminPriceListSection(){
+  var all = buildSubAdminPriceList();
+  window.saPriceListAll = all;
+
+  populateSelectPreserve('saPlFilterYear', [...new Set(all.map(x=>x.year).filter(Boolean))], 'All Years');
+  var fY = (document.getElementById('saPlFilterYear') || {}).value || '';
+  var byY = fY ? all.filter(x=>norm(x.year)===norm(fY)) : all;
+
+  populateSelectPreserve('saPlFilterMain', [...new Set(byY.map(x=>x.program).filter(p=>p && p!=='-'))], 'All Main Programs');
+  var fM = (document.getElementById('saPlFilterMain') || {}).value || '';
+  var byM = fM ? byY.filter(x=>norm(x.program)===norm(fM)) : byY;
+
+  populateSelectPreserve('saPlFilterSub', [...new Set(byM.map(x=>x.sub_program).filter(s=>s && s!=='-'))], 'All Sub Programs');
+  renderSubAdminPriceListTable();
+}
+
+function renderSubAdminPriceListTable(){
+  var all = window.saPriceListAll || buildSubAdminPriceList();
+  var fY = (document.getElementById('saPlFilterYear') || {}).value || '';
+  var fM = (document.getElementById('saPlFilterMain') || {}).value || '';
+  var fS = (document.getElementById('saPlFilterSub') || {}).value || '';
+
+  var filtered = all.filter(x =>
+    (!fY || norm(x.year) === norm(fY)) &&
+    (!fM || norm(x.program) === norm(fM)) &&
+    (!fS || norm(x.sub_program) === norm(fS))
+  );
+
+  window.saFilteredPriceList = filtered;
+
+  var tbody = document.getElementById('saPriceListTbody');
+  if(!tbody) return;
+  if(!filtered.length){
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-400 text-xs">Price List தரவுகள் இல்லை</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(x =>
+    '<tr>' +
+      '<td class="font-bold text-slate-900">' + x.program + '</td>' +
+      '<td class="text-slate-700">' + x.sub_program + '</td>' +
+      '<td class="font-semibold text-indigo-950">' + x.item + '</td>' +
+      '<td class="text-right font-semibold">Rs. ' + x.unit_price.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) + '</td>' +
+      '<td class="text-center font-bold text-amber-700">' + x.subsidy + '</td>' +
+      '<td class="text-right font-semibold text-blue-800">Rs. ' + x.gov_price.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) + '</td>' +
+      '<td class="text-right font-bold text-emerald-700">Rs. ' + x.farmer_price.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) + '</td>' +
+    '</tr>'
+  ).join('');
+}
+
+function downloadSubAdminPriceListExcel(){
+  if(typeof XLSX === 'undefined') return showToast('Excel library load ஆகவில்லை', false);
+  var rows = window.saFilteredPriceList || [];
+  if(!rows.length) return showToast('Download කිරීමට Price List தரவுகள் இல்லை', false);
+
+  var exportData = rows.map(x => ({
+    'Year': x.year || '-',
+    'Program': x.program,
+    'Sub Program': x.sub_program,
+    'Item': x.item,
+    'Unit Price': x.unit_price,
+    'Subsidy': x.subsidy,
+    'Government Price': x.gov_price,
+    'Farmers Price': x.farmer_price
+  }));
+
+  var ws = XLSX.utils.json_to_sheet(exportData);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Item_Price_List');
+  XLSX.writeFile(wb, mySubName.replace(/\s+/g,'_') + '_Item_Price_List.xlsx');
+}
+
 async function logout(){
   try{ if(sb) await sb.auth.signOut(); }catch(e){}
   ['role','user','user_name','user_subOfficeId','user_subOfficeName','user_division','user_office','user_officer_name','fw_session'].forEach(k=>localStorage.removeItem(k));
@@ -1545,23 +2132,45 @@ async function logout(){
 
 async function sbSyncAll(){
   var st = document.getElementById('sbStatus');
-  if(!sb){ if(st) st.textContent='Offline'; return; }
+  if(!sb){
+    if(st) st.textContent='Offline';
+    pivRecords = loadLocalPivRecords();
+    renderDashboardAll();
+    renderTargetSetFilters();
+    renderTargetSetList();
+    populateDataFilters();
+    renderDataSection();
+    populatePivApprovalFilters();
+    renderPivApprovalTable();
+    renderSubAdminPriceListSection();
+    return;
+  }
   try{
     if(st) st.textContent='Syncing...';
-    var [nRes, qRes, rRes, tRes, pRes] = await Promise.all([
+    var [nRes, qRes, rRes, tRes, pRes, ipRes, pivRes] = await Promise.all([
       sb.from('nodes').select('*').order('sort_order'),
       sb.from('questions').select('*').order('order_index'),
       sb.from('responses').select('*').order('created_at', { ascending: false }),
       sb.from('targets').select('*'),
-      sb.from('profiles').select('*')
+      sb.from('profiles').select('*'),
+      sb.from('item_prices').select('*'),
+      sb.from('piv_submissions').select('*').order('created_at', { ascending: false })
     ]);
     if(Array.isArray(nRes.data)) nodes = nRes.data;
     if(Array.isArray(qRes.data)) questions = qRes.data;
     if(Array.isArray(rRes.data)) responses = rRes.data;
     if(Array.isArray(tRes.data)) targetRecords = tRes.data;
     if(Array.isArray(pRes.data)) profiles = pRes.data;
+    if(Array.isArray(ipRes.data)) itemPrices = ipRes.data;
+    if(pivRes && Array.isArray(pivRes.data) && !pivRes.error){
+      pivRecords = pivRes.data;
+      saveLocalPivRecords(pivRecords);
+    } else {
+      pivRecords = loadLocalPivRecords();
+    }
     if(st) st.textContent='Connected ✓';
   }catch(e){
+    pivRecords = loadLocalPivRecords();
     if(st) st.textContent='Sync Error';
   }
   renderDashboardAll();
@@ -1569,6 +2178,9 @@ async function sbSyncAll(){
   renderTargetSetList();
   populateDataFilters();
   renderDataSection();
+  populatePivApprovalFilters();
+  renderPivApprovalTable();
+  renderSubAdminPriceListSection();
 }
 
 sbSyncAll();
