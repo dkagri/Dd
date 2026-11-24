@@ -338,7 +338,11 @@ window.addEventListener('error',function(e){
 
 <div id="w6" class="wizard-step">
 <div class="card"><h2 class="font-bold text-[19px]">Step 6 — Create / Edit Unit Questions</h2>
-<div class="flex flex-wrap gap-2 mt-3"><button onclick="loadDevTemplate()" class="btn btn-success text-xs px-3 py-2">Development Template (6 Questions)</button><button onclick="loadExtTemplate()" class="btn btn-ghost text-xs px-3 py-2">Extension Template</button></div>
+<div class="flex flex-wrap gap-2 mt-3">
+  <button onclick="loadDevTemplate()" class="btn btn-success text-xs px-3 py-2">Development Template (7 Questions)</button>
+  <button onclick="loadExtTemplate()" class="btn btn-ghost text-xs px-3 py-2">Extension Template</button>
+  <button type="button" onclick="syncCurrentQuestionsToSubSiblings()" class="btn btn-primary text-xs px-3 py-2">🔁 Sync Questions to All Items in Sub Program</button>
+</div>
 <div id="devMultiItemNote" class="hidden mt-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3 text-xs text-emerald-950">
   <b>Multi-Item & Summary Rule:</b> When multiple items are selected under a sub program, each item supports per-item farmer contribution radio selection and item-specific extra questions, while common questions appear once in unit data entry and summary/data tables show one column per question and one row per item (with item-specific answers placed only on that item's row).
 </div>
@@ -366,7 +370,7 @@ window.addEventListener('error',function(e){
   </div>
 </div>
 <div id="optWrap" class="hidden"><label>Options</label><div id="optList" class="space-y-2 mt-1"></div><div class="flex gap-2 mt-2"><input id="optInput" placeholder="Option value..."><button type="button" onclick="addOption()" class="btn btn-ghost px-3 shrink-0">+ Add</button></div></div>
-<button class="btn btn-primary w-full">Save Question</button><button type="button" onclick="resetQ()" class="btn btn-ghost w-full">Reset</button></form>
+<button type="submit" id="saveQBtn" class="btn btn-primary w-full">Save Question</button><button type="button" onclick="resetQ()" class="btn btn-ghost w-full">Reset</button></form>
 <div><div class="font-semibold">Questions in Selected Node (<span id="qCount">0</span>)</div><div id="qList" class="mt-3 space-y-2"></div><div class="q-preview mt-4"><div class="font-semibold text-sm">👁️ Preview</div><div id="qPreview" class="mt-3 space-y-3"></div></div></div>
 </div>
 <div class="flex gap-2 mt-5"><button onclick="backFromQ()" class="btn btn-ghost">← Back</button><button onclick="finishWizard()" class="btn btn-success ml-auto">✓ Done — Dashboard</button></div></div>
@@ -717,8 +721,9 @@ const DEV_DEFAULT_QUESTIONS = [
   { text: 'ලිපිනය', type: 'short_text', options: [], required: true },
   { text: 'දුරකථන අංකය', type: 'number', options: [], required: true },
   { text: 'ජාතික හැදුනුම්පත් අංකය', type: 'short_text', options: [], required: true },
-  { text: 'සටහන්', type: 'short_text', options: [], required: false },
-  { text: 'ගොවි දායකත්වය', type: 'multiple_choice', options: ['නොමිලේ', 'ගොවි දායකත්වය - 25%', 'ගොවි දායකත්වය - 50%'], required: true }
+  { text: 'ගොවි දායකත්වය', type: 'multiple_choice', options: ['නොමිලේ', 'ගොවි දායකත්වය - 25%', 'ගොවි දායකත්වය - 50%'], required: true },
+  { text: 'වටිනාකම (රුපියල්)', type: 'short_text', options: [], required: false },
+  { text: 'සටහන්', type: 'short_text', options: [], required: false }
 ];
 
 const DEV_FIXED_ORDER_TITLES = [
@@ -726,8 +731,9 @@ const DEV_FIXED_ORDER_TITLES = [
   'ලිපිනය',
   'දුරකථන අංකය',
   'ජාතික හැදුනුම්පත් අංකය',
-  'සටහන්',
-  'ගොවි දායකත්වය'
+  'ගොවි දායකත්වය',
+  'වටිනාකම (රුපියල්)',
+  'සටහන්'
 ];
 
 function norm(s){ return String(s||'').trim().toLowerCase(); }
@@ -1538,6 +1544,43 @@ async function copyQuestionItem(id){
   showToast('Question copied ✓', true);
 }
 
+async function syncCurrentQuestionsToSubSiblings(){
+  var lid = leafId();
+  if(!lid || !curL3) return showToast('Select a Sub Program & Item first', false);
+  var srcQs = questions.filter(q => q && String(q.node_id) === String(lid)).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
+  if(!srcQs.length) return showToast('No questions in current node to sync', false);
+
+  var siblingItems = nodes.filter(n => n && n.main_type === 'development' && n.level === 4 && String(n.parent_id) === String(curL3) && String(n.id) !== String(lid));
+  var targetIds = [curL3, ...siblingItems.map(x => x.id)];
+  var toUpsert = [];
+
+  targetIds.forEach((tid, tIdx) => {
+    srcQs.forEach((sq, sIdx) => {
+      var existing = questions.find(q => q && String(q.node_id) === String(tid) && norm(q.question_text) === norm(sq.question_text));
+      var qObj = {
+        id: existing ? existing.id : ('q_sync_' + tid + '_' + (sIdx + 1) + '_' + Date.now() + '_' + tIdx),
+        node_id: tid,
+        question_text: sq.question_text,
+        question_type: sq.question_type,
+        options: Array.isArray(sq.options) ? sq.options.slice() : [],
+        is_required: sq.is_required !== false,
+        order_index: sq.order_index || (sIdx + 1)
+      };
+      var idxInArr = questions.findIndex(x => String(x.id) === String(qObj.id));
+      if(idxInArr > -1) questions[idxInArr] = qObj;
+      else questions.push(qObj);
+      toUpsert.push(qObj);
+    });
+  });
+
+  if(sb && toUpsert.length){
+    var res = await sb.from('questions').upsert(toUpsert, { onConflict: 'id' });
+    if(res && res.error) return showToast('Supabase Sync Error: ' + res.error.message, false);
+  }
+  renderDashboard();
+  showToast('Synced ' + srcQs.length + ' questions to ' + targetIds.length + ' nodes ✓', true);
+}
+
 function renderQuestions(){
   var lid=leafId(); if(!lid)return;
   questions = Array.isArray(questions) ? questions : [];
@@ -1545,7 +1588,7 @@ function renderQuestions(){
   var noteEl = document.getElementById('devMultiItemNote');
   if(noteEl) noteEl.classList.toggle('hidden', curMain !== 'development');
 
-  var qs=questions.filter(q=>q && q.node_id===lid).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
+  var qs=questions.filter(q=>q && String(q.node_id)===String(lid)).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
   document.getElementById('qCount').textContent=qs.length;
   document.getElementById('qList').innerHTML=qs.map((q,i)=>'<div class="rounded-xl border p-3 bg-white flex flex-wrap justify-between gap-2"><div><b>'+(i+1)+'. '+q.question_text+'</b><div class="text-xs text-slate-400">'+q.question_type+'</div></div><div class="flex flex-wrap gap-1"><button type="button" onclick="moveQ(\''+q.id+'\',-1)" class="btn btn-ghost px-2 py-1 text-xs">↑</button><button type="button" onclick="moveQ(\''+q.id+'\',1)" class="btn btn-ghost px-2 py-1 text-xs">↓</button><button type="button" onclick="copyQuestionItem(\''+q.id+'\')" class="btn btn-ghost px-2 py-1 text-xs text-indigo-700">Copy</button><button type="button" onclick="editQ(\''+q.id+'\')" class="btn btn-ghost px-2 py-1 text-xs">Edit</button><button type="button" onclick="delQ(\''+q.id+'\')" class="text-red-500 text-xs px-2">Delete</button></div></div>').join('')||'<div class="text-xs text-slate-400">No questions</div>';
 
@@ -1560,7 +1603,7 @@ function renderQuestions(){
   }
 }
 async function moveQ(id, dir){
-  var lid=leafId(); var qs=questions.filter(q=>q && q.node_id===lid).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
+  var lid=leafId(); var qs=questions.filter(q=>q && String(q.node_id)===String(lid)).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
   let idx=qs.findIndex(q=>q.id===id), nIdx=idx+dir; if(nIdx<0||nIdx>=qs.length)return;
   let t=qs[idx]; qs[idx]=qs[nIdx]; qs[nIdx]=t;
   for(let i=0;i<qs.length;i++){ let q=questions.find(x=>x.id===qs[i].id); if(q){ q.order_index=i+1; if(sb) await sb.from('questions').update({order_index:q.order_index}).eq('id',q.id); } }
@@ -1568,22 +1611,58 @@ async function moveQ(id, dir){
 }
 document.getElementById('qForm').addEventListener('submit', async function(e){
   e.preventDefault();
-  var lid=leafId(); if(!lid)return;
-  var id=document.getElementById('qId').value;
-  var existingQ = id ? questions.find(q=>q.id===id) : null;
-  var payload={id:id||'q'+Date.now(),node_id:lid,question_text:document.getElementById('qText').value.trim(),question_type:document.getElementById('qType').value,options:curOptions.slice(),is_required:document.getElementById('qReq').value==='1',order_index:existingQ?existingQ.order_index:questions.filter(q=>q.node_id===lid).length+1};
-  if(id){let idx=questions.findIndex(q=>q.id===id);if(idx>-1)questions[idx]=payload;}else questions.push(payload);
-  if(sb) await sb.from('questions').upsert(payload, { onConflict: 'id' });
-  resetQ(); renderQuestions(); showToast('Saved ✓',true);
+  var lid=leafId(); if(!lid)return showToast('Please select a node first', false);
+  var btn = document.getElementById('saveQBtn');
+  if(btn) btn.disabled = true;
+  try{
+    var id=document.getElementById('qId').value;
+    var existingQ = id ? questions.find(q=>q.id===id) : null;
+    var typeVal = document.getElementById('qType').value;
+    var pendingOpt = document.getElementById('optInput') ? document.getElementById('optInput').value.trim() : '';
+    if(pendingOpt && ['multiple_choice','checkbox','dropdown'].includes(typeVal)){
+      curOptions.push(pendingOpt);
+      document.getElementById('optInput').value = '';
+    }
+    var payload={
+      id:id||'q_'+lid+'_'+Date.now(),
+      node_id:lid,
+      question_text:document.getElementById('qText').value.trim(),
+      question_type:typeVal,
+      options:Array.isArray(curOptions)?curOptions.slice():[],
+      is_required:document.getElementById('qReq').value==='1',
+      order_index:existingQ?existingQ.order_index:questions.filter(q=>q && String(q.node_id)===String(lid)).length+1
+    };
+    if(id){let idx=questions.findIndex(q=>q.id===id);if(idx>-1)questions[idx]=payload;else questions.push(payload);}else questions.push(payload);
+    if(sb){
+      var upRes = await sb.from('questions').upsert(payload, { onConflict: 'id' }).select();
+      if(upRes && upRes.error){
+        showToast('Supabase Error: ' + upRes.error.message, false);
+      } else if(upRes && Array.isArray(upRes.data) && upRes.data[0]){
+        var idx2 = questions.findIndex(q=>q.id===payload.id);
+        if(idx2>-1) questions[idx2] = Object.assign({}, payload, upRes.data[0]);
+      }
+    }
+    resetQ();
+    renderQuestions();
+    renderDashboard();
+    showToast('Question Saved & Reloaded ✓',true);
+  } finally {
+    if(btn) btn.disabled = false;
+  }
 });
-function editQ(id){var q=questions.find(x=>x.id===id);if(!q)return;document.getElementById('qId').value=q.id;document.getElementById('qText').value=q.question_text;document.getElementById('qType').value=q.question_type;document.getElementById('qReq').value=q.is_required?'1':'0';curOptions=(q.options||[]).slice();renderOpts();onQType();}
-async function delQ(id){if(!await profConfirm('Delete this question?'))return;questions=questions.filter(x=>x.id!==id);if(sb) await sb.from('questions').delete().eq('id',id);renderQuestions();}
-function loadDevTemplate(){
+function editQ(id){var q=questions.find(x=>x.id===id);if(!q)return;document.getElementById('qId').value=q.id;document.getElementById('qText').value=q.question_text;document.getElementById('qType').value=q.question_type;document.getElementById('qReq').value=q.is_required?'1':'0';curOptions=Array.isArray(q.options)?q.options.slice():[];renderOpts();onQType();}
+async function delQ(id){if(!await profConfirm('Delete this question?'))return;questions=questions.filter(x=>x.id!==id);if(sb) await sb.from('questions').delete().eq('id',id);renderQuestions();renderDashboard();}
+async function loadDevTemplate(){
   var lid=leafId(); if(!lid)return;
-  questions = questions.filter(q => !(q && q.node_id === lid));
+  var oldQs = questions.filter(q => q && String(q.node_id) === String(lid));
+  questions = questions.filter(q => !(q && String(q.node_id) === String(lid)));
+  if(sb && oldQs.length){
+    await sb.from('questions').delete().eq('node_id', lid);
+  }
+  var batch = [];
   DEV_DEFAULT_QUESTIONS.forEach((t,i)=>{
     let q={
-      id:'q_dev_'+lid+'_'+(i+1)+'_'+Date.now(),
+      id:'q_dev_'+lid+'_'+(i+1),
       node_id:lid,
       question_text:t.text,
       question_type:t.type,
@@ -1592,10 +1671,12 @@ function loadDevTemplate(){
       order_index:i+1
     };
     questions.push(q);
-    if(sb) sb.from('questions').upsert(q, { onConflict: 'id' });
+    batch.push(q);
   });
+  if(sb && batch.length) await sb.from('questions').upsert(batch, { onConflict: 'id' });
   renderQuestions();
-  showToast('Development Default Questions Loaded ✓', true);
+  renderDashboard();
+  showToast('Development Default Questions (7) Loaded ✓', true);
 }
 function loadExtTemplate(){var lid=leafId();if(!lid)return;[['Cultivated Extent','number',[]]].forEach((t,i)=>{let q={id:'q'+Date.now()+i,node_id:lid,question_text:t[0],question_type:t[1],options:t[2],is_required:true,order_index:questions.filter(x=>x.node_id===lid).length+1};questions.push(q);if(sb)sb.from('questions').upsert(q, { onConflict: 'id' });});renderQuestions();}
 async function finishWizard(){ renderDashboard(); goNav('dashboard'); }
@@ -1910,6 +1991,7 @@ function resolveQuestionColumnTitle(rawKey, isDev){
   if(!qTextByIdMap || !qTextByOrderMap) buildQuestionLookupMaps();
   var k = String(rawKey || '').trim();
   if(!k) return '';
+  if(norm(k) === 'tpl_contrib' || norm(k).startsWith('__item_contrib_')) return 'ගොවි දායකත්වය';
   if(qTextByIdMap.has(k)) return qTextByIdMap.get(k);
 
   var tplMatch = k.match(/^tpl_def_(\d+)$/i);
@@ -2017,9 +2099,13 @@ function getOrderedDevQuestionColumns(devExpandedRows){
   DEV_FIXED_ORDER_TITLES.forEach(fixedTitle => {
     var normT = norm(fixedTitle);
     var found = titleToKeys.get(normT);
+    var keysList = found ? found.keys.slice() : [];
+    if(normT === norm('ගොවි දායකත්වය') && !keysList.includes('tpl_contrib')){
+      keysList.unshift('tpl_contrib');
+    }
     orderedCols.push({
       title: fixedTitle,
-      keys: found ? found.keys : []
+      keys: keysList
     });
   });
 
@@ -2076,6 +2162,19 @@ function getColumnValueFromAnswers(ans, col){
     for(var i = 0; i < col.keys.length; i++){
       var v = ans[col.keys[i]];
       if(isNonEmptyCellValue(v)) return formatCellVal(v);
+    }
+  }
+  if(norm(col.title) === norm('ගොවි දායකත්වය')){
+    if(isNonEmptyCellValue(ans.tpl_contrib)) return formatCellVal(ans.tpl_contrib);
+    if(ans.__item_specific && typeof ans.__item_specific === 'object'){
+      for(var ik in ans.__item_specific){
+        var spObj = ans.__item_specific[ik];
+        if(spObj && typeof spObj === 'object'){
+          for(var sk in spObj){
+            if(isNonEmptyCellValue(spObj[sk])) return formatCellVal(spObj[sk]);
+          }
+        }
+      }
     }
   }
   var matchingQs = (questions || []).filter(q => norm(q.question_text) === norm(col.title));
@@ -2515,6 +2614,7 @@ async function sbSync(){
     document.getElementById('sbStatus').textContent='Error';
   }
   renderDashboard(); renderData(); renderUsers(); renderAdminPivTable();
+  if(curStep === 6 && leafId()) renderQuestions();
 }
 
 fillDataFilters();

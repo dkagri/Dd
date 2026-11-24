@@ -894,364 +894,330 @@ function getFilteredExtensionRows(){
   var allRows = window._allTargetRows || [];
   var selSeason = (document.getElementById('extSeasonFilter') || {}).value || '';
   var q = norm((document.getElementById('tSearch') || {}).value || '');
-  return allRows.filter(r => r.main_type === 'extension' && (!selSeason || norm(r.level1) === norm(selSeason)) && (!q || [r.level1,r.level2,r.level3].some(v => norm(v).includes(q))));
+  return allRows.filter(r => r.main_type === 'extension' && (!selSeason || norm(r.level1) === norm(selSeason)) && (!q || [r.level1,r.level2,r.level3].some(x => norm(x).includes(q))));
 }
 
 function getFilteredDevelopmentRows(){
   var allRows = window._allTargetRows || [];
   var selYear = (document.getElementById('devYearFilter') || {}).value || '';
   var q = norm((document.getElementById('tSearch') || {}).value || '');
-  return allRows.filter(r => r.main_type === 'development' && (!selYear || norm(r.level1) === norm(selYear)) && (!q || [r.level1,r.level2,r.level3,r.item_name].some(v => norm(v).includes(q))));
+  return allRows.filter(r => r.main_type === 'development' && (!selYear || norm(r.level1) === norm(selYear)) && (!q || [r.level1,r.level2,r.level3,r.item_name].some(x => norm(x).includes(q))));
 }
 
-function refreshExtensionSheetFilters(){
-  var rows = getFilteredExtensionRows();
-  populateSelectOptions('extFilterMainProg', [...new Set(rows.map(r => r.level2).filter(Boolean))], 'All Main Programs');
+function syncExtensionSheetFilters(){
+  var base = getFilteredExtensionRows();
+  populateSelectOptions('extFilterMainProg', [...new Set(base.map(r => r.level2 || 'General'))], 'All Main Programs');
   var mp = (document.getElementById('extFilterMainProg') || {}).value || '';
-  populateSelectOptions('extFilterSubProg', [...new Set(rows.filter(r => !mp || norm(r.level2) === norm(mp)).map(r => r.level3).filter(Boolean))], 'All Sub Programs');
+  var subBase = base.filter(r => !mp || norm(r.level2 || 'General') === norm(mp));
+  populateSelectOptions('extFilterSubProg', [...new Set(subBase.map(r => r.level3 || '-'))], 'All Sub Programs');
 }
-function onExtMainProgChange(){ document.getElementById('extFilterSubProg').value = ''; refreshExtensionSheetFilters(); renderExtensionSheet(); }
+
+function onExtMainProgChange(){ var sEl = document.getElementById('extFilterSubProg'); if(sEl) sEl.value = ''; syncExtensionSheetFilters(); renderExtensionSheet(); }
 
 function renderExtensionSheet(){
-  refreshExtensionSheetFilters();
-  var rows = getFilteredExtensionRows();
+  syncExtensionSheetFilters();
+  var base = getFilteredExtensionRows();
   var mp = (document.getElementById('extFilterMainProg') || {}).value || '';
   var sp = (document.getElementById('extFilterSubProg') || {}).value || '';
-  var filtered = rows.filter(r => (!mp || norm(r.level2) === norm(mp)) && (!sp || norm(r.level3) === norm(sp)))
-    .sort((a,b) => (a.mainRank - b.mainRank) || (a.subRank - b.subRank) || (a.orderIndex - b.orderIndex));
-
+  var rows = base.filter(r => (!mp || norm(r.level2 || 'General') === norm(mp)) && (!sp || norm(r.level3 || '-') === norm(sp)));
+  rows.sort((a,b) => (a.mainRank - b.mainRank) || (a.subRank - b.subRank) || (a.orderIndex - b.orderIndex));
   var tbody = document.getElementById('extTargetMatrixBody');
   if(!tbody) return;
-  if(!filtered.length){ tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-slate-400 text-xs">No Extension records</td></tr>'; window._extSheetExportRows = []; return; }
+  if(!rows.length){ tbody.innerHTML = '<tr><td colspan="6" class="text-center text-slate-400 py-6">No Extension targets/progress found</td></tr>'; return; }
 
   var groups = [], gMap = new Map();
-  filtered.forEach(r => {
-    var key = norm(r.level2 || 'General');
-    if(!gMap.has(key)){ var grp = { mainProg: r.level2 || 'General', items: [] }; gMap.set(key, grp); groups.push(grp); }
-    gMap.get(key).items.push(r);
+  rows.forEach(r => {
+    var mName = r.level2 || 'General';
+    if(!gMap.has(mName)){ var grp = { mainProg: mName, items: [] }; gMap.set(mName, grp); groups.push(grp); }
+    gMap.get(mName).items.push(r);
   });
 
-  var html = '', exportRows = [], totT = 0, totC = 0;
-  groups.forEach(g => {
-    var rowSpan = g.items.length;
-    g.items.forEach((it, idx) => {
-      var rem = Math.max(0, it.target - it.covered);
-      var pct = it.target > 0 ? Math.min(100, Math.round((it.covered / it.target) * 100)) : (it.covered > 0 ? 100 : 0);
-      totT += it.target; totC += it.covered;
+  var html = '', gTgt = 0, gCov = 0;
+  groups.forEach(grp => {
+    var mTgt = 0, mCov = 0;
+    grp.items.forEach((it, idx) => {
+      var tgt = Number(it.target||0), cov = Number(it.covered||0), rem = Math.max(0, tgt - cov);
+      var pct = tgt > 0 ? Math.min(100, Math.round((cov/tgt)*100)) : (cov > 0 ? 100 : 0);
+      mTgt += tgt; mCov += cov;
       html += '<tr>';
-      if(idx === 0) html += '<td rowspan="' + rowSpan + '" class="matrix-main-cell">' + g.mainProg + '</td>';
-      html += '<td class="matrix-sub-cell">' + (it.level3 || '-') + '</td>' +
-        '<td class="text-right font-semibold">' + it.target.toLocaleString() + '</td>' +
-        '<td class="text-right font-bold text-indigo-700">' + it.covered.toLocaleString() + '</td>' +
-        '<td class="text-right font-semibold text-amber-700">' + rem.toLocaleString() + '</td>' +
-        '<td class="text-right font-bold">' + pct + '%</td></tr>';
-      exportRows.push({ 'Main Program': g.mainProg, 'Sub Program': it.level3 || '-', 'Target': it.target, 'Progress': it.covered, 'Remaining': rem, '%': pct + '%' });
+      if(idx === 0) html += '<td rowspan="' + (grp.items.length + 1) + '" class="matrix-main-cell">' + grp.mainProg + '</td>';
+      html += '<td class="text-slate-700">' + (it.level3 || '-') + '</td><td class="text-right font-semibold">' + tgt.toLocaleString() + '</td><td class="text-right font-bold text-blue-700">' + cov.toLocaleString() + '</td><td class="text-right text-slate-600">' + rem.toLocaleString() + '</td><td class="text-right font-bold">' + pct + '%</td></tr>';
     });
+    var mRem = Math.max(0, mTgt - mCov), mPct = mTgt > 0 ? Math.min(100, Math.round((mCov/mTgt)*100)) : (mCov > 0 ? 100 : 0);
+    gTgt += mTgt; gCov += mCov;
+    html += '<tr class="bg-slate-100 font-bold text-slate-800"><td>' + grp.mainProg + ' Total</td><td class="text-right">' + mTgt.toLocaleString() + '</td><td class="text-right text-blue-800">' + mCov.toLocaleString() + '</td><td class="text-right">' + mRem.toLocaleString() + '</td><td class="text-right">' + mPct + '%</td></tr>';
   });
-
-  var totRem = Math.max(0, totT - totC);
-  var totPct = totT > 0 ? Math.min(100, Math.round((totC / totT) * 100)) : (totC > 0 ? 100 : 0);
-  html += '<tr class="bg-blue-100/70 font-extrabold"><td colspan="2" class="text-right">Total</td><td class="text-right">' + totT.toLocaleString() + '</td><td class="text-right text-indigo-800">' + totC.toLocaleString() + '</td><td class="text-right text-amber-800">' + totRem.toLocaleString() + '</td><td class="text-right">' + totPct + '%</td></tr>';
+  var gRem = Math.max(0, gTgt - gCov), gPct = gTgt > 0 ? Math.min(100, Math.round((gCov/gTgt)*100)) : (gCov > 0 ? 100 : 0);
+  html += '<tr class="bg-blue-900 text-white font-extrabold"><td>Grand Total</td><td></td><td class="text-right">' + gTgt.toLocaleString() + '</td><td class="text-right">' + gCov.toLocaleString() + '</td><td class="text-right">' + gRem.toLocaleString() + '</td><td class="text-right">' + gPct + '%</td></tr>';
   tbody.innerHTML = html;
-  window._extSheetExportRows = exportRows;
 }
 
-function refreshDevelopmentSheetFilters(){
-  var rows = getFilteredDevelopmentRows();
-  populateSelectOptions('devFilterMainProg', [...new Set(rows.map(r => r.level2).filter(Boolean))], 'All Main Programs');
+function syncDevelopmentSheetFilters(){
+  var base = getFilteredDevelopmentRows();
+  populateSelectOptions('devFilterMainProg', [...new Set(base.map(r => r.level2 || 'General'))], 'All Main Programs');
   var mp = (document.getElementById('devFilterMainProg') || {}).value || '';
-  populateSelectOptions('devFilterSubProg', [...new Set(rows.filter(r => !mp || norm(r.level2) === norm(mp)).map(r => r.level3).filter(Boolean))], 'All Sub Programs');
+  var subBase = base.filter(r => !mp || norm(r.level2 || 'General') === norm(mp));
+  populateSelectOptions('devFilterSubProg', [...new Set(subBase.map(r => r.level3 || '-'))], 'All Sub Programs');
   var sp = (document.getElementById('devFilterSubProg') || {}).value || '';
-  populateSelectOptions('devFilterItem', [...new Set(rows.filter(r => (!mp || norm(r.level2) === norm(mp)) && (!sp || norm(r.level3) === norm(sp))).map(r => r.item_name).filter(Boolean))], 'All Items');
+  var itemBase = subBase.filter(r => !sp || norm(r.level3 || '-') === norm(sp));
+  populateSelectOptions('devFilterItem', [...new Set(itemBase.map(r => r.item_name || '-'))], 'All Items');
 }
-function onDevMainProgChange(){ document.getElementById('devFilterSubProg').value = ''; document.getElementById('devFilterItem').value = ''; refreshDevelopmentSheetFilters(); renderDevelopmentSheet(); }
-function onDevSubProgChange(){ document.getElementById('devFilterItem').value = ''; refreshDevelopmentSheetFilters(); renderDevelopmentSheet(); }
+
+function onDevMainProgChange(){ var sEl = document.getElementById('devFilterSubProg'); var iEl = document.getElementById('devFilterItem'); if(sEl) sEl.value = ''; if(iEl) iEl.value = ''; syncDevelopmentSheetFilters(); renderDevelopmentSheet(); }
+function onDevSubProgChange(){ var iEl = document.getElementById('devFilterItem'); if(iEl) iEl.value = ''; syncDevelopmentSheetFilters(); renderDevelopmentSheet(); }
 
 function renderDevelopmentSheet(){
-  refreshDevelopmentSheetFilters();
-  var rows = getFilteredDevelopmentRows();
+  syncDevelopmentSheetFilters();
+  var base = getFilteredDevelopmentRows();
   var mp = (document.getElementById('devFilterMainProg') || {}).value || '';
   var sp = (document.getElementById('devFilterSubProg') || {}).value || '';
-  var itm = (document.getElementById('devFilterItem') || {}).value || '';
-  var filtered = rows.filter(r => (!mp || norm(r.level2) === norm(mp)) && (!sp || norm(r.level3) === norm(sp)) && (!itm || norm(r.item_name) === norm(itm)))
-    .sort((a,b) => (a.mainRank - b.mainRank) || (a.subRank - b.subRank) || (a.itemRank - b.itemRank) || (a.orderIndex - b.orderIndex));
-
+  var it = (document.getElementById('devFilterItem') || {}).value || '';
+  var rows = base.filter(r => (!mp || norm(r.level2 || 'General') === norm(mp)) && (!sp || norm(r.level3 || '-') === norm(sp)) && (!it || norm(r.item_name || '-') === norm(it)));
+  rows.sort((a,b) => (a.mainRank - b.mainRank) || (a.subRank - b.subRank) || (a.itemRank - b.itemRank) || (a.orderIndex - b.orderIndex));
   var tbody = document.getElementById('devTargetMatrixBody');
   if(!tbody) return;
-  if(!filtered.length){ tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-400 text-xs">No Development records</td></tr>'; window._devSheetExportRows = []; return; }
+  if(!rows.length){ tbody.innerHTML = '<tr><td colspan="7" class="text-center text-slate-400 py-6">No Development targets/progress found</td></tr>'; return; }
 
-  var mainGroups = [], mainMap = new Map();
-  filtered.forEach(r => {
-    var mKey = norm(r.level2 || 'General');
-    if(!mainMap.has(mKey)){ var mg = { mainProg: r.level2 || 'General', subMap: new Map(), subs: [], totalSpan: 0 }; mainMap.set(mKey, mg); mainGroups.push(mg); }
-    var mg = mainMap.get(mKey);
-    var sKey = norm(r.level3 || '-');
-    if(!mg.subMap.has(sKey)){ var sg = { subProg: r.level3 || '-', items: [] }; mg.subMap.set(sKey, sg); mg.subs.push(sg); }
-    mg.subMap.get(sKey).items.push(r);
-    mg.totalSpan += 1;
+  var mainGroups = [], mMap = new Map();
+  rows.forEach(r => {
+    var mName = r.level2 || 'General';
+    var sName = r.level3 || '-';
+    if(!mMap.has(mName)){ mMap.set(mName, { mainProg: mName, subMap: new Map(), subOrder: [] }); mainGroups.push(mMap.get(mName)); }
+    var mObj = mMap.get(mName);
+    if(!mObj.subMap.has(sName)){ var sObj = { subProg: sName, items: [] }; mObj.subMap.set(sName, sObj); mObj.subOrder.push(sObj); }
+    mObj.subMap.get(sName).items.push(r);
   });
 
-  var html = '', exportRows = [], totT = 0, totC = 0;
-  mainGroups.forEach(mg => {
-    var mFirst = true;
-    mg.subs.forEach(sg => {
-      sg.items.forEach((it, idx) => {
-        var rem = Math.max(0, it.target - it.covered);
-        var pct = it.target > 0 ? Math.min(100, Math.round((it.covered / it.target) * 100)) : (it.covered > 0 ? 100 : 0);
-        totT += it.target; totC += it.covered;
+  var html = '', gTgt = 0, gCov = 0;
+  mainGroups.forEach(mObj => {
+    var mainTotalRows = mObj.subOrder.reduce((acc, s) => acc + s.items.length + 1, 0) + 1;
+    var mTgt = 0, mCov = 0, firstMainCell = true;
+    mObj.subOrder.forEach(sObj => {
+      var sTgt = 0, sCov = 0;
+      sObj.items.forEach((itRow, idx) => {
+        var tgt = Number(itRow.target||0), cov = Number(itRow.covered||0), rem = Math.max(0, tgt - cov);
+        var pct = tgt > 0 ? Math.min(100, Math.round((cov/tgt)*100)) : (cov > 0 ? 100 : 0);
+        sTgt += tgt; sCov += cov;
         html += '<tr>';
-        if(mFirst){ html += '<td rowspan="' + mg.totalSpan + '" class="matrix-main-cell">' + mg.mainProg + '</td>'; mFirst = false; }
-        if(idx === 0) html += '<td rowspan="' + sg.items.length + '" class="matrix-sub-cell">' + sg.subProg + '</td>';
-        html += '<td><b>' + (it.item_name || '-') + '</b></td>' +
-          '<td class="text-right font-semibold">' + it.target.toLocaleString() + '</td>' +
-          '<td class="text-right font-bold text-emerald-700">' + it.covered.toLocaleString() + '</td>' +
-          '<td class="text-right font-semibold text-amber-700">' + rem.toLocaleString() + '</td>' +
-          '<td class="text-right font-bold">' + pct + '%</td></tr>';
-        exportRows.push({ 'Main Program': mg.mainProg, 'Sub Program': sg.subProg, 'Item': it.item_name || '-', 'Target': it.target, 'Progress': it.covered, 'Remaining': rem, '%': pct + '%' });
+        if(firstMainCell){ html += '<td rowspan="' + mainTotalRows + '" class="matrix-main-cell">' + mObj.mainProg + '</td>'; firstMainCell = false; }
+        if(idx === 0) html += '<td rowspan="' + (sObj.items.length + 1) + '" class="matrix-sub-cell">' + sObj.subProg + '</td>';
+        html += '<td class="text-slate-800">' + (itRow.item_name || '-') + '</td><td class="text-right font-semibold">' + tgt.toLocaleString() + '</td><td class="text-right font-bold text-emerald-700">' + cov.toLocaleString() + '</td><td class="text-right text-slate-600">' + rem.toLocaleString() + '</td><td class="text-right font-bold">' + pct + '%</td></tr>';
       });
+      var sRem = Math.max(0, sTgt - sCov), sPct = sTgt > 0 ? Math.min(100, Math.round((sCov/sTgt)*100)) : (sCov > 0 ? 100 : 0);
+      mTgt += sTgt; mCov += sCov;
+      html += '<tr class="bg-slate-50 font-semibold text-slate-700"><td>' + sObj.subProg + ' Total</td><td class="text-right">' + sTgt.toLocaleString() + '</td><td class="text-right text-emerald-700">' + sCov.toLocaleString() + '</td><td class="text-right">' + sRem.toLocaleString() + '</td><td class="text-right">' + sPct + '%</td></tr>';
     });
+    var mRem = Math.max(0, mTgt - mCov), mPct = mTgt > 0 ? Math.min(100, Math.round((mCov/mTgt)*100)) : (mCov > 0 ? 100 : 0);
+    gTgt += mTgt; gCov += mCov;
+    html += '<tr class="bg-emerald-100/80 font-bold text-emerald-950"><td colspan="2">' + mObj.mainProg + ' Total</td><td class="text-right">' + mTgt.toLocaleString() + '</td><td class="text-right text-emerald-900">' + mCov.toLocaleString() + '</td><td class="text-right">' + mRem.toLocaleString() + '</td><td class="text-right">' + mPct + '%</td></tr>';
   });
-
-  var totRem = Math.max(0, totT - totC);
-  var totPct = totT > 0 ? Math.min(100, Math.round((totC / totT) * 100)) : (totC > 0 ? 100 : 0);
-  html += '<tr class="bg-emerald-100/70 font-extrabold"><td colspan="3" class="text-right">Total</td><td class="text-right">' + totT.toLocaleString() + '</td><td class="text-right text-emerald-800">' + totC.toLocaleString() + '</td><td class="text-right text-amber-800">' + totRem.toLocaleString() + '</td><td class="text-right">' + totPct + '%</td></tr>';
+  var gRem = Math.max(0, gTgt - gCov), gPct = gTgt > 0 ? Math.min(100, Math.round((gCov/gTgt)*100)) : (gCov > 0 ? 100 : 0);
+  html += '<tr class="bg-emerald-900 text-white font-extrabold"><td colspan="3">Grand Total</td><td class="text-right">' + gTgt.toLocaleString() + '</td><td class="text-right">' + gCov.toLocaleString() + '</td><td class="text-right">' + gRem.toLocaleString() + '</td><td class="text-right">' + gPct + '%</td></tr>';
   tbody.innerHTML = html;
-  window._devSheetExportRows = exportRows;
-}
-
-function downloadTargetSheetExcel(type){
-  if(typeof XLSX === 'undefined') return showToast('Excel library not loaded', false);
-  var isDev = type === 'development';
-  var rows = isDev ? (window._devSheetExportRows || []) : (window._extSheetExportRows || []);
-  if(!rows.length) return showToast('No data available to export', false);
-  var ws = XLSX.utils.json_to_sheet(rows);
-  var wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, isDev ? 'Development_Targets' : 'Extension_Targets');
-  XLSX.writeFile(wb, (isDev ? 'Development' : 'Extension') + '_Target_Progress.xlsx');
 }
 
 function renderUnitTargets(){
   var allRows = buildAiTargetRows();
   window._allTargetRows = allRows;
   populateSeasonAndYearFilters(allRows);
-
   var selSeason = (document.getElementById('extSeasonFilter') || {}).value || '';
   var selYear = (document.getElementById('devYearFilter') || {}).value || '';
+  document.getElementById('extSelectedSeasonBadge').textContent = selSeason || 'All Seasons';
+  document.getElementById('devSelectedYearBadge').textContent = selYear || 'All Years';
+
   var extRows = getFilteredExtensionRows();
   var devRows = getFilteredDevelopmentRows();
 
-  document.getElementById('extSelectedSeasonBadge').textContent = selSeason || 'All';
-  document.getElementById('devSelectedYearBadge').textContent = selYear || 'All';
+  var extTgt = extRows.reduce((s,r)=>s+Number(r.target||0),0), extCov = extRows.reduce((s,r)=>s+Number(r.covered||0),0);
+  var extPct = extTgt > 0 ? Math.min(100, Math.round((extCov/extTgt)*100)) : (extCov > 0 ? 100 : 0);
+  document.getElementById('extBoxCovered').textContent = extCov.toLocaleString();
+  document.getElementById('extBoxTarget').textContent = extTgt.toLocaleString();
+  document.getElementById('extBoxPct').textContent = extPct + '%';
+  document.getElementById('extBoxBar').style.width = extPct + '%';
 
-  var extT = extRows.reduce((s,r)=>s+r.target, 0);
-  var extC = extRows.reduce((s,r)=>s+r.covered, 0);
-  var extP = extT > 0 ? Math.min(100, Math.round((extC/extT)*100)) : (extC > 0 ? 100 : 0);
-  document.getElementById('extBoxCovered').textContent = extC.toLocaleString();
-  document.getElementById('extBoxTarget').textContent = extT.toLocaleString();
-  document.getElementById('extBoxPct').textContent = extP + '%';
-  document.getElementById('extBoxBar').style.width = extP + '%';
-
-  var devT = devRows.reduce((s,r)=>s+r.target, 0);
-  var devC = devRows.reduce((s,r)=>s+r.covered, 0);
-  var devP = devT > 0 ? Math.min(100, Math.round((devC/devT)*100)) : (devC > 0 ? 100 : 0);
-  document.getElementById('devBoxCovered').textContent = devC.toLocaleString();
-  document.getElementById('devBoxTarget').textContent = devT.toLocaleString();
-  document.getElementById('devBoxPct').textContent = devP + '%';
-  document.getElementById('devBoxBar').style.width = devP + '%';
+  var devTgt = devRows.reduce((s,r)=>s+Number(r.target||0),0), devCov = devRows.reduce((s,r)=>s+Number(r.covered||0),0);
+  var devPct = devTgt > 0 ? Math.min(100, Math.round((devCov/devTgt)*100)) : (devCov > 0 ? 100 : 0);
+  document.getElementById('devBoxCovered').textContent = devCov.toLocaleString();
+  document.getElementById('devBoxTarget').textContent = devTgt.toLocaleString();
+  document.getElementById('devBoxPct').textContent = devPct + '%';
+  document.getElementById('devBoxBar').style.width = devPct + '%';
 
   document.getElementById('extTotalCount').textContent = extRows.length;
   document.getElementById('devTotalCount').textContent = devRows.length;
 
-  renderBoxGrid(extRows, 'extCardsGrid', 'btnMoreExt', showAllExtBoxes, 6, 'No Extension target boxes');
-  renderBoxGrid(devRows, 'devCardsGrid', 'btnMoreDev', showAllDevBoxes, 6, 'No Development target boxes');
-  renderExtensionSheet();
-  renderDevelopmentSheet();
+  renderBoxGrid(extRows, 'extCardsGrid', 'btnMoreExt', showAllExtBoxes, 3, 'No Extension target boxes for selected season');
+  renderBoxGrid(devRows, 'devCardsGrid', 'btnMoreDev', showAllDevBoxes, 3, 'No Development target boxes for selected year');
+  renderExtensionSheet(); renderDevelopmentSheet();
+}
+
+function downloadTargetSheetExcel(type){
+  if(typeof XLSX === 'undefined') return showToast('Excel library not loaded', false);
+  var isDev = type === 'development';
+  var rows = isDev ? getFilteredDevelopmentRows() : getFilteredExtensionRows();
+  if(!rows.length) return showToast('No data to export', false);
+  var ws = XLSX.utils.json_to_sheet(rows.map(r => {
+    var tgt = Number(r.target||0), cov = Number(r.covered||0), rem = Math.max(0, tgt - cov);
+    var pct = tgt > 0 ? Math.min(100, Math.round((cov/tgt)*100)) : (cov > 0 ? 100 : 0);
+    return isDev
+      ? { 'Year': r.level1||'', 'Main Program': r.level2||'', 'Sub Program': r.level3||'', 'Item': r.item_name||'', 'Target': tgt, 'Progress': cov, 'Remaining': rem, 'Progress %': pct+'%' }
+      : { 'Season': r.level1||'', 'Main Program': r.level2||'', 'Sub Program': r.level3||'', 'Target': tgt, 'Progress': cov, 'Remaining': rem, 'Progress %': pct+'%' };
+  }));
+  var wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, isDev ? 'Dev_Targets' : 'Ext_Targets');
+  XLSX.writeFile(wb, (isDev ? 'Development' : 'Extension') + '_Target_Progress.xlsx');
 }
 
 function openFormFromTarget(mainType, l1Enc, l2Enc, l3Enc, itemEnc){
-  showSection('form');
-  uSelectMain(mainType || 'extension');
-  var l1Val = decodeURIComponent(l1Enc || '');
-  var l2Val = decodeURIComponent(l2Enc || '');
-  var l3Val = decodeURIComponent(l3Enc || '');
-  var itemVal = decodeURIComponent(itemEnc || '');
-
-  var n1 = (nodes||[]).find(n => norm(n.main_type)===norm(mainType) && n.level===1 && norm(n.title)===norm(l1Val));
-  if(n1){ curL1 = n1.id; document.getElementById('uL1').value = n1.id; uPickL1(); }
-  var n2 = (nodes||[]).find(n => norm(n.main_type)===norm(mainType) && n.level===2 && norm(n.title)===norm(l2Val) && (!curL1 || n.parent_id===curL1));
-  if(n2){ curL2 = n2.id; document.getElementById('uL2').value = n2.id; uPickL2(); }
-  if(mainType === 'development'){
-    var n3 = (nodes||[]).find(n => n.main_type==='development' && n.level===3 && norm(n.title)===norm(l3Val) && (!curL2 || n.parent_id===curL2));
-    if(n3){
-      curL3 = n3.id;
-      document.getElementById('uL3').value = n3.id;
-      uPickL3(itemVal ? [itemVal] : []);
-    }
+  showSection('form'); uSelectMain(mainType);
+  var l1Val = decodeURIComponent(l1Enc||''), l2Val = decodeURIComponent(l2Enc||''), l3Val = decodeURIComponent(l3Enc||''), itVal = decodeURIComponent(itemEnc||'');
+  var l1Node = (nodes||[]).find(n => norm(n.main_type)===norm(mainType) && n.level===1 && norm(n.title)===norm(l1Val));
+  if(l1Node){ curL1 = l1Node.id; document.getElementById('uL1').value = curL1; uPickL1(); }
+  var l2Node = (nodes||[]).find(n => norm(n.main_type)===norm(mainType) && n.level===2 && norm(n.title)===norm(l2Val) && (!curL1 || String(n.parent_id)===String(curL1)));
+  if(l2Node){ curL2 = l2Node.id; document.getElementById('uL2').value = curL2; uPickL2(); }
+  if(mainType === 'extension'){
+    var sNode = (nodes||[]).find(n => norm(n.main_type)==='extension' && n.level===3 && norm(n.title)===norm(l3Val) && (!curL2 || String(n.parent_id)===String(curL2)));
+    if(sNode){ curSub = sNode.id; document.getElementById('uSub').value = curSub; uPickSub(); }
   } else {
-    var ns = (nodes||[]).find(n => n.main_type==='extension' && n.level===3 && norm(n.title)===norm(l3Val) && (!curL2 || n.parent_id===curL2));
-    if(ns){ curSub = ns.id; document.getElementById('uSub').value = ns.id; uPickSub(); }
+    var l3Node = (nodes||[]).find(n => norm(n.main_type)==='development' && n.level===3 && norm(n.title)===norm(l3Val) && (!curL2 || String(n.parent_id)===String(curL2)));
+    if(l3Node){ curL3 = l3Node.id; document.getElementById('uL3').value = curL3; uPickL3(); }
+    if(itVal){
+      var itNode = (nodes||[]).find(n => norm(n.main_type)==='development' && n.level===4 && norm(n.title)===norm(itVal) && (!curL3 || String(n.parent_id)===String(curL3)));
+      curItem = itNode ? itNode.id : null;
+      curSelectedItems = [itVal];
+      renderMultiItemSelector(); uPickItem();
+    }
   }
 }
 
-/* ================= DATA ENTRY FORM (Extension Sub Program + Multi-Item Separate Rows) ================= */
+/* ================= Form Builder & Data Entry ================= */
 function uSelectMain(m){
   curMain=m; curL1=null; curL2=null; curL3=null; curSub=null; curItem=null; curSelectedItems=[];
   document.getElementById('uExt').className='py-3 rounded-xl font-semibold '+(m==='extension'?'bg-indigo-600 text-white':'bg-slate-100');
   document.getElementById('uDev').className='py-3 rounded-xl font-semibold '+(m==='development'?'bg-emerald-600 text-white':'bg-slate-100');
   document.getElementById('uL1Label').textContent=m==='extension'?'2. Season *':'2. Year *';
+  document.getElementById('uL2Label').textContent='3. Main Program *';
   document.getElementById('uL3Wrap').classList.toggle('hidden',m!=='development');
   document.getElementById('uSubWrap').classList.toggle('hidden',m!=='extension');
   document.getElementById('uItemWrap').classList.add('hidden');
-  document.getElementById('uItemMultiBox').innerHTML='';
-  document.getElementById('uSelectedItemsSummary').textContent='None';
+  document.getElementById('uTargetProgressBox').classList.add('hidden');
   renderUSelects();
 }
 
+function uChildren(pid,level){
+  return (nodes||[]).filter(n=>n.main_type===curMain&&n.level===level&&n.is_published&&(pid?String(n.parent_id)===String(pid):!n.parent_id)).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+}
+
 function renderUSelects(){
-  document.getElementById('uL3Wrap').classList.toggle('hidden',curMain!=='development');
-  document.getElementById('uSubWrap').classList.toggle('hidden',curMain!=='extension');
-  var l1s=(nodes||[]).filter(n=>n.main_type===curMain&&n.level===1&&n.is_published!==false).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  var l1s=uChildren(null,1);
   document.getElementById('uL1').innerHTML='<option value="">-- Select --</option>'+l1s.map(n=>'<option value="'+n.id+'">'+n.title+'</option>').join('');
   if(curL1) document.getElementById('uL1').value=curL1;
-  uPickL1(true);
+  renderL2Sel();
 }
 
-function uPickL1(keepChild){
-  curL1=document.getElementById('uL1').value||null;
-  if(!keepChild){ curL2=null; curL3=null; curSub=null; curItem=null; curSelectedItems=[]; }
-  var l2s=curL1?(nodes||[]).filter(n=>n.main_type===curMain&&n.level===2&&String(n.parent_id)===String(curL1)&&n.is_published!==false).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)):[];
+function uPickL1(){ curL1=document.getElementById('uL1').value||null; curL2=null; curL3=null; curSub=null; curItem=null; curSelectedItems=[]; renderL2Sel(); }
+
+function renderL2Sel(){
+  var l2s=curL1?uChildren(curL1,2):[];
   document.getElementById('uL2').innerHTML='<option value="">-- Select --</option>'+l2s.map(n=>'<option value="'+n.id+'">'+n.title+'</option>').join('');
   if(curL2) document.getElementById('uL2').value=curL2;
-  uPickL2(keepChild);
+  if(curMain==='development') renderL3Sel(); else renderSubSel();
 }
 
-function uPickL2(keepChild){
-  curL2=document.getElementById('uL2').value||null;
-  if(!keepChild){ curL3=null; curSub=null; curItem=null; curSelectedItems=[]; }
-  if(curMain==='development'){
-    document.getElementById('uL3Wrap').classList.remove('hidden');
-    document.getElementById('uSubWrap').classList.add('hidden');
-    var l3s=curL2?(nodes||[]).filter(n=>n.main_type==='development'&&n.level===3&&String(n.parent_id)===String(curL2)&&n.is_published!==false).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)):[];
-    document.getElementById('uL3').innerHTML='<option value="">-- Select Sub Program --</option>'+l3s.map(n=>'<option value="'+n.id+'">'+n.title+'</option>').join('');
-    if(curL3) document.getElementById('uL3').value=curL3;
-    uPickL3(keepChild ? curSelectedItems : []);
-  } else {
-    document.getElementById('uSubWrap').classList.remove('hidden');
-    document.getElementById('uL3Wrap').classList.add('hidden');
-    var subs=curL2?(nodes||[]).filter(n=>n.main_type==='extension'&&n.level===3&&String(n.parent_id)===String(curL2)&&n.is_published!==false).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)):[];
-    document.getElementById('uSub').innerHTML='<option value="">-- Select Sub Program --</option>'+subs.map(n=>'<option value="'+n.id+'">'+n.title+'</option>').join('');
-    if(curSub) document.getElementById('uSub').value=curSub;
-    uPickSub();
-  }
+function uPickL2(){ curL2=document.getElementById('uL2').value||null; curL3=null; curSub=null; curItem=null; curSelectedItems=[]; if(curMain==='development') renderL3Sel(); else renderSubSel(); }
+
+function renderL3Sel(){
+  var l3s=curL2?uChildren(curL2,3):[];
+  document.getElementById('uL3').innerHTML='<option value="">-- Select --</option>'+l3s.map(n=>'<option value="'+n.id+'">'+n.title+'</option>').join('');
+  if(curL3) document.getElementById('uL3').value=curL3;
+  renderMultiItemSelector();
 }
 
-function getDevelopmentItemsForSub(subId){
-  if(!subId) return [];
-  var itemNodes = (nodes||[]).filter(n => n.main_type==='development' && n.level===4 && String(n.parent_id)===String(subId) && n.is_published!==false).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
-  if(itemNodes.length) return itemNodes.map(n => n.title);
-  var n1 = (nodes||[]).find(x=>String(x.id)===String(curL1)), n2 = (nodes||[]).find(x=>String(x.id)===String(curL2)), n3 = (nodes||[]).find(x=>String(x.id)===String(subId));
-  var fromTargets = (targetRecords||[]).filter(t =>
-    norm(t.main_type)==='development' &&
-    (!n1 || norm(t.level1)===norm(n1.title)) &&
-    (!n2 || norm(t.level2)===norm(n2.title)) &&
-    (!n3 || norm(t.level3)===norm(n3.title)) &&
-    t.item_name
-  ).map(t => t.item_name);
-  return [...new Set(fromTargets)];
-}
+function uPickL3(){ curL3=document.getElementById('uL3').value||null; curItem=null; curSelectedItems=[]; renderMultiItemSelector(); }
 
-function uPickL3(preselectTitles){
-  curL3 = document.getElementById('uL3').value || null;
-  curItem = null;
-  var items = getDevelopmentItemsForSub(curL3);
-  var wrap = document.getElementById('uItemWrap');
-  if(!curL3){
-    wrap.classList.add('hidden');
-    curSelectedItems = [];
-    updateTargetProgressBox();
-    renderUForm();
-    return;
-  }
-  wrap.classList.remove('hidden');
-  if(Array.isArray(preselectTitles) && preselectTitles.length){
-    curSelectedItems = items.filter(it => preselectTitles.some(p => norm(p) === norm(it)));
-  } else if(!curSelectedItems.length && items.length === 1){
-    curSelectedItems = [items[0]];
-  } else {
-    curSelectedItems = curSelectedItems.filter(it => items.some(x => norm(x) === norm(it)));
-  }
-  if(curSelectedItems.length) curItem = curSelectedItems[0];
-  uRenderItemMultiBox(items);
-  updateTargetProgressBox();
+function renderSubSel(){
+  var subs=curL2?uChildren(curL2,3):[];
+  document.getElementById('uSub').innerHTML='<option value="">-- Select --</option>'+subs.map(n=>'<option value="'+n.id+'">'+n.title+'</option>').join('');
+  if(curSub) document.getElementById('uSub').value=curSub;
   renderUForm();
 }
 
-function uRenderItemMultiBox(items){
-  var box = document.getElementById('uItemMultiBox');
-  var sumEl = document.getElementById('uSelectedItemsSummary');
-  if(!items || !items.length){
-    box.innerHTML = '<div class="text-xs text-slate-400 col-span-full">No items configured under this Sub Program</div>';
-    sumEl.textContent = 'None';
-    return;
-  }
-  box.innerHTML = items.map((itTitle, idx) => {
-    var checked = curSelectedItems.some(s => norm(s) === norm(itTitle));
-    return '<label class="flex items-center gap-2 rounded-xl border p-2.5 cursor-pointer transition text-xs font-bold ' + (checked ? 'bg-emerald-600 text-white border-emerald-700 shadow-sm' : 'bg-white text-slate-800 border-slate-200 hover:border-emerald-400') + '">' +
-      '<input type="checkbox" id="uChkItem_' + idx + '" ' + (checked ? 'checked' : '') + ' onchange="uToggleItemSelection(\'' + encodeURIComponent(itTitle) + '\', this.checked)" class="!w-4 !h-4 rounded shrink-0">' +
-      '<span class="truncate">' + itTitle + '</span>' +
-    '</label>';
-  }).join('');
-  curItem = curSelectedItems[0] || null;
-  sumEl.textContent = curSelectedItems.length ? curSelectedItems.join(', ') : 'None';
+function uPickSub(){ curSub=document.getElementById('uSub').value||null; renderUForm(); }
+
+function getAvailableItemsForCurL3(){
+  if(!curL3) return [];
+  var itemNodes = uChildren(curL3, 4);
+  var titles = itemNodes.map(n => n.title).filter(Boolean);
+  var n1 = (nodes||[]).find(x=>String(x.id)===String(curL1));
+  var n2 = (nodes||[]).find(x=>String(x.id)===String(curL2));
+  var n3 = (nodes||[]).find(x=>String(x.id)===String(curL3));
+  (targetRecords||[]).forEach(t => {
+    if(norm(t.main_type)==='development' && t.item_name && (!n1 || norm(t.level1)===norm(n1.title)) && (!n2 || norm(t.level2)===norm(n2.title)) && (!n3 || norm(t.level3)===norm(n3.title))){
+      if(!titles.some(x => norm(x) === norm(t.item_name))) titles.push(t.item_name);
+    }
+  });
+  return titles;
 }
 
-function uToggleItemSelection(encodedTitle, isChecked){
+function renderMultiItemSelector(){
+  var wrap = document.getElementById('uItemWrap');
+  var box = document.getElementById('uItemMultiBox');
+  if(!curL3){ wrap.classList.add('hidden'); curSelectedItems = []; renderUForm(); return; }
+  var items = getAvailableItemsForCurL3();
+  if(!items.length){ wrap.classList.add('hidden'); curSelectedItems = []; renderUForm(); return; }
+  wrap.classList.remove('hidden');
+  curSelectedItems = curSelectedItems.filter(it => items.some(avail => norm(avail) === norm(it)));
+  if(!curSelectedItems.length && items.length === 1) curSelectedItems = [items[0]];
+
+  box.innerHTML = items.map(itTitle => {
+    var checked = curSelectedItems.some(s => norm(s) === norm(itTitle));
+    var safeVal = encodeURIComponent(itTitle);
+    return '<label class="flex items-center gap-2 rounded-xl border bg-white px-3 py-2 text-xs font-bold text-slate-800 cursor-pointer hover:border-emerald-500">' +
+      '<input type="checkbox" value="' + safeVal + '" ' + (checked ? 'checked' : '') + ' onchange="onToggleMultiItem(\'' + safeVal + '\', this.checked)" class="w-4 h-4 accent-emerald-600">' +
+      '<span>' + itTitle + '</span>' +
+    '</label>';
+  }).join('');
+  updateSelectedItemsSummary(); uPickItem();
+}
+
+function onToggleMultiItem(encodedTitle, isChecked){
   var title = decodeURIComponent(encodedTitle);
   if(isChecked){
     if(!curSelectedItems.some(s => norm(s) === norm(title))) curSelectedItems.push(title);
   } else {
     curSelectedItems = curSelectedItems.filter(s => norm(s) !== norm(title));
   }
-  curItem = curSelectedItems[0] || null;
-  var items = getDevelopmentItemsForSub(curL3);
-  uRenderItemMultiBox(items);
-  updateTargetProgressBox();
-  renderUForm();
+  updateSelectedItemsSummary(); uPickItem();
 }
 
 function uSelectAllItems(selectAll){
-  var items = getDevelopmentItemsForSub(curL3);
+  var items = getAvailableItemsForCurL3();
   curSelectedItems = selectAll ? items.slice() : [];
-  curItem = curSelectedItems[0] || null;
-  uRenderItemMultiBox(items);
-  updateTargetProgressBox();
-  renderUForm();
+  renderMultiItemSelector();
 }
 
-function uPickSub(){
-  curSub = document.getElementById('uSub').value || null;
-  updateTargetProgressBox();
-  renderUForm();
+function updateSelectedItemsSummary(){
+  var sumEl = document.getElementById('uSelectedItemsSummary');
+  if(sumEl) sumEl.textContent = curSelectedItems.length ? curSelectedItems.join(', ') : 'None';
 }
 
-function getTargetAndCoveredForSelection(l1Title, l2Title, l3Title, itemTitle){
-  var myMine = getMyResponses();
+function getTargetForPath(mainType, l1Title, l2Title, l3Title, itemTitle){
   var myTgts = (targetRecords||[]).filter(t => {
-    if(norm(t.main_type) !== norm(curMain)) return false;
+    if(norm(t.main_type) !== norm(mainType)) return false;
     if(l1Title && norm(t.level1) !== norm(l1Title)) return false;
     if(l2Title && norm(t.level2) !== norm(l2Title)) return false;
     if(l3Title && norm(t.level3) !== norm(l3Title)) return false;
-    if(itemTitle !== undefined){
-      if(norm(t.item_name || '') !== norm(itemTitle || '')) return false;
-    }
+    if(itemTitle && norm(t.item_name) !== norm(itemTitle)) return false;
+    if(!itemTitle && t.item_name) return false;
     if(!myDiv) return true;
     var cleanOff = norm(t.office).replace(/\s*\(unit\)/gi, '');
     return norm(t.division) === norm(myDiv) || cleanOff.includes(norm(myDiv)) || norm(myDiv).includes(norm(t.division));
   });
+  return myTgts.reduce((s,t)=>s+Number(t.target_value||0),0);
+}
 
-  var targetVal = myTgts.reduce((s, t) => s + (Number(t.target_value) || 0), 0);
-  var matchedResp = myMine.filter(r => {
-    if(norm(r.main_type) !== norm(curMain)) return false;
+function getCoveredForPath(mainType, l1Title, l2Title, l3Title, itemTitle){
+  var myMine = getMyResponses();
+  var matched = myMine.filter(r => {
+    if(norm(r.main_type) !== norm(mainType)) return false;
     if(l1Title && norm(r.level1) !== norm(l1Title)) return false;
     if(l2Title && norm(r.level2) !== norm(l2Title)) return false;
     if(l3Title && norm(r.level3) !== norm(l3Title)) return false;
@@ -1263,991 +1229,749 @@ function getTargetAndCoveredForSelection(l1Title, l2Title, l3Title, itemTitle){
     }
     return true;
   });
-  var coveredVal = matchedResp.reduce((s, r) => s + (itemTitle ? getProgressedQtyForEntry(r, itemTitle) : getProgressedQtyForEntry(r)), 0);
-  return { target: targetVal, covered: coveredVal };
+  return matched.reduce((s,r)=>s + (itemTitle ? getProgressedQtyForEntry(r, itemTitle) : getProgressedQtyForEntry(r)), 0);
 }
 
-function updateTargetProgressBox(){
+function uPickItem(){
+  var firstTitle = curSelectedItems[0] || '';
+  var itNode = (nodes||[]).find(n => n.main_type==='development' && n.level===4 && String(n.parent_id)===String(curL3) && norm(n.title)===norm(firstTitle));
+  curItem = itNode ? itNode.id : null;
+  renderTargetProgressBox(); renderUForm();
+}
+
+function renderTargetProgressBox(){
   var box = document.getElementById('uTargetProgressBox');
-  var cardsEl = document.getElementById('uPerItemTargetCards');
-  var badgeEl = document.getElementById('uTargetBoxCountBadge');
-  var pathEl = document.getElementById('uTargetPathLabel');
-  if(!box || !cardsEl) return;
+  var cardsWrap = document.getElementById('uPerItemTargetCards');
+  var badge = document.getElementById('uTargetBoxCountBadge');
+  var n1 = (nodes||[]).find(x=>String(x.id)===String(curL1));
+  var n2 = (nodes||[]).find(x=>String(x.id)===String(curL2));
+  var n3 = (nodes||[]).find(x=>String(x.id)===String(curL3));
+  var nSub = (nodes||[]).find(x=>String(x.id)===String(curSub));
 
-  var n1 = (nodes||[]).find(n=>String(n.id)===String(curL1));
-  var n2 = (nodes||[]).find(n=>String(n.id)===String(curL2));
-  var n3 = (nodes||[]).find(n=>String(n.id)===String(curL3));
-  var ns = (nodes||[]).find(n=>String(n.id)===String(curSub));
-
-  if(curMain === 'development'){
-    if(!curL3 || !curSelectedItems.length){
-      box.classList.add('hidden');
-      cardsEl.innerHTML = '';
-      return;
-    }
+  if(curMain === 'extension'){
+    if(!curL1 || !curL2 || !curSub){ box.classList.add('hidden'); return; }
+    var tgt = getTargetForPath('extension', n1?n1.title:'', n2?n2.title:'', nSub?nSub.title:'', '');
+    var cov = getCoveredForPath('extension', n1?n1.title:'', n2?n2.title:'', nSub?nSub.title:'', '');
+    var rem = Math.max(0, tgt - cov);
+    var pct = tgt > 0 ? Math.min(100, Math.round((cov/tgt)*100)) : (cov > 0 ? 100 : 0);
+    document.getElementById('uTargetPathLabel').textContent = [n1?n1.title:'', n2?n2.title:'', nSub?nSub.title:''].filter(Boolean).join(' → ');
+    if(badge) badge.textContent = '1 Box';
     box.classList.remove('hidden');
-    pathEl.textContent = [n1&&n1.title, n2&&n2.title, n3&&n3.title].filter(Boolean).join(' → ');
-    badgeEl.textContent = curSelectedItems.length + (curSelectedItems.length > 1 ? ' Item Boxes' : ' Item Box');
-
-    cardsEl.innerHTML = curSelectedItems.map((itName, idx) => {
-      var stats = getTargetAndCoveredForSelection(n1&&n1.title, n2&&n2.title, n3&&n3.title, itName);
-      var rem = Math.max(0, stats.target - stats.covered);
-      var pct = stats.target > 0 ? Math.min(100, Math.round((stats.covered / stats.target) * 100)) : (stats.covered > 0 ? 100 : 0);
-      return '<div class="rounded-2xl bg-white border border-indigo-200 p-3.5 shadow-sm">' +
-        '<div class="flex flex-wrap justify-between items-center gap-2">' +
-          '<div class="font-bold text-sm text-indigo-950">📦 ' + (idx + 1) + '. ' + itName + '</div>' +
-          '<span class="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-xs font-extrabold">' + pct + '%</span>' +
-        '</div>' +
-        '<div class="grid grid-cols-3 gap-2 mt-2.5 text-center">' +
-          '<div class="rounded-xl bg-slate-50 border p-2"><div class="text-[10px] text-slate-500 font-semibold">Target</div><div class="text-sm font-extrabold text-slate-900">' + stats.target.toLocaleString() + '</div></div>' +
-          '<div class="rounded-xl bg-emerald-50 border border-emerald-200 p-2"><div class="text-[10px] text-emerald-700 font-semibold">Completed</div><div class="text-sm font-extrabold text-emerald-800">' + stats.covered.toLocaleString() + '</div></div>' +
-          '<div class="rounded-xl bg-amber-50 border border-amber-200 p-2"><div class="text-[10px] text-amber-800 font-semibold">Remaining</div><div class="text-sm font-extrabold text-amber-900">' + rem.toLocaleString() + '</div></div>' +
-        '</div>' +
-        '<div class="mt-2.5 w-full bg-slate-200 rounded-full h-2 overflow-hidden"><div class="bg-indigo-600 h-full rounded-full transition-all duration-300" style="width:' + pct + '%"></div></div>' +
-      '</div>';
-    }).join('');
-  } else {
-    var leaf = curSub || curL2;
-    if(!leaf){
-      box.classList.add('hidden');
-      cardsEl.innerHTML = '';
-      return;
-    }
-    box.classList.remove('hidden');
-    pathEl.textContent = [n1&&n1.title, n2&&n2.title, ns&&ns.title].filter(Boolean).join(' → ');
-    badgeEl.textContent = '1 Box';
-    var st = getTargetAndCoveredForSelection(n1&&n1.title, n2&&n2.title, ns&&ns.title, undefined);
-    var remS = Math.max(0, st.target - st.covered);
-    var pctS = st.target > 0 ? Math.min(100, Math.round((st.covered / st.target) * 100)) : (st.covered > 0 ? 100 : 0);
-    cardsEl.innerHTML = '<div class="rounded-2xl bg-white border border-indigo-200 p-3.5 shadow-sm">' +
-      '<div class="flex justify-between items-center"><div class="font-bold text-sm text-indigo-950">🌾 ' + ((ns && ns.title) || (n2 && n2.title) || 'Extension Target') + '</div><span class="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-xs font-extrabold">' + pctS + '%</span></div>' +
-      '<div class="grid grid-cols-3 gap-2 mt-2.5 text-center">' +
-        '<div class="rounded-xl bg-slate-50 border p-2"><div class="text-[10px] text-slate-500 font-semibold">Target</div><div class="text-sm font-extrabold text-slate-900">' + st.target.toLocaleString() + '</div></div>' +
-        '<div class="rounded-xl bg-emerald-50 border border-emerald-200 p-2"><div class="text-[10px] text-emerald-700 font-semibold">Completed</div><div class="text-sm font-extrabold text-emerald-800">' + st.covered.toLocaleString() + '</div></div>' +
-        '<div class="rounded-xl bg-amber-50 border border-amber-200 p-2"><div class="text-[10px] text-amber-800 font-semibold">Remaining</div><div class="text-sm font-extrabold text-amber-900">' + remS.toLocaleString() + '</div></div>' +
-      '</div>' +
-      '<div class="mt-2.5 w-full bg-slate-200 rounded-full h-2 overflow-hidden"><div class="bg-indigo-600 h-full rounded-full transition-all duration-300" style="width:' + pctS + '%"></div></div>' +
-    '</div>';
-  }
-}
-
-function getEffectiveQuestionsForNode(nid, isDev){
-  if(!nid) return [];
-  var qs = (questions||[]).filter(q => String(q.node_id) === String(nid)).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
-  if(qs.length) return qs;
-  if(isDev){
-    return DEV_DEFAULT_QUESTIONS.map((tpl, idx) => ({
-      id: 'tpl_def_' + idx,
-      node_id: nid,
-      question_text: tpl.text,
-      question_type: tpl.type,
-      options: (tpl.options || []).slice(),
-      is_required: tpl.required !== false,
-      order_index: idx + 1
-    }));
-  }
-  return [];
-}
-
-function isContributionQuestion(q){
-  var t = String(q.question_text || '').trim();
-  return t === 'ගොවි දායකත්වය' || norm(t).includes('farmer contribution');
-}
-
-function renderQuestionInputHtml(q, inputNameOrId, isRequiredOverride){
-  var reqAttr = (isRequiredOverride !== undefined ? isRequiredOverride : q.is_required) ? 'required' : '';
-  var reqStar = (isRequiredOverride !== undefined ? isRequiredOverride : q.is_required) ? ' <span class="text-red-500">*</span>' : '';
-  var opts = Array.isArray(q.options) ? q.options : [];
-  var ctrl = '';
-
-  if(q.question_type==='paragraph') {
-    ctrl = '<textarea name="' + inputNameOrId + '" rows="3" ' + reqAttr + ' class="mt-1 bg-white"></textarea>';
-  } else if(q.question_type==='number') {
-    ctrl = '<input type="number" step="any" name="' + inputNameOrId + '" ' + reqAttr + ' class="mt-1 bg-white">';
-  } else if(q.question_type==='date') {
-    ctrl = '<input type="date" name="' + inputNameOrId + '" ' + reqAttr + ' class="mt-1 bg-white">';
-  } else if(q.question_type==='multiple_choice') {
-    ctrl = '<div class="space-y-2 mt-2">' + opts.map((o, idx) =>
-      '<label class="option-label flex items-center gap-2.5 p-2.5 rounded-xl border bg-white cursor-pointer text-sm">' +
-        '<input type="radio" name="' + inputNameOrId + '" value="' + String(o).replace(/"/g, '&quot;') + '" ' + (idx===0 && reqAttr ? 'required' : '') + ' class="!w-4 !h-4">' +
-        '<span>' + o + '</span>' +
-      '</label>'
-    ).join('') + '</div>';
-  } else if(q.question_type==='checkbox') {
-    ctrl = '<div class="space-y-2 mt-2">' + opts.map(o =>
-      '<label class="flex items-center gap-2.5 p-2 rounded-xl border bg-white cursor-pointer text-sm">' +
-        '<input type="checkbox" name="' + inputNameOrId + '" value="' + String(o).replace(/"/g, '&quot;') + '" class="!w-4 !h-4 rounded">' +
-        '<span>' + o + '</span>' +
-      '</label>'
-    ).join('') + '</div>';
-  } else if(q.question_type==='dropdown') {
-    ctrl = '<select name="' + inputNameOrId + '" ' + reqAttr + ' class="mt-1 bg-white"><option value="">-- Select --</option>' + opts.map(o => '<option value="' + String(o).replace(/"/g, '&quot;') + '">' + o + '</option>').join('') + '</select>';
-  } else if(q.question_type==='yes_no') {
-    ctrl = '<div class="flex gap-3 mt-2">' +
-      '<label class="option-label flex-1 flex items-center justify-center gap-2 p-2.5 rounded-xl border bg-white cursor-pointer text-sm font-semibold"><input type="radio" name="' + inputNameOrId + '" value="Yes" ' + (reqAttr?'required':'') + ' class="!w-4 !h-4"><span>Yes</span></label>' +
-      '<label class="option-label flex-1 flex items-center justify-center gap-2 p-2.5 rounded-xl border bg-white cursor-pointer text-sm font-semibold"><input type="radio" name="' + inputNameOrId + '" value="No" class="!w-4 !h-4"><span>No</span></label>' +
-    '</div>';
-  } else if(q.question_type==='scale') {
-    ctrl = '<div class="flex gap-2 mt-2">' + [1,2,3,4,5].map((n, idx) =>
-      '<label class="option-label flex-1 flex items-center justify-center gap-1 p-2 rounded-xl border bg-white cursor-pointer text-sm font-bold"><input type="radio" name="' + inputNameOrId + '" value="' + n + '" ' + (idx===0 && reqAttr?'required':'') + ' class="!w-4 !h-4"><span>' + n + '</span></label>'
-    ).join('') + '</div>';
-  } else {
-    ctrl = '<input type="text" name="' + inputNameOrId + '" ' + reqAttr + ' class="mt-1 bg-white">';
-  }
-
-  return '<div class="rounded-2xl border p-4 bg-slate-50/70"><label class="font-semibold text-sm block">' + q.question_text + reqStar + '</label>' + ctrl + '</div>';
-}
-
-function getExtraQuestionsForItemNode(itemTitle, fallbackNodeId){
-  var matchedItemNode = (nodes||[]).find(n =>
-    n.main_type==='development' &&
-    n.level===4 &&
-    (!curL3 || String(n.parent_id)===String(curL3)) &&
-    norm(n.title)===norm(itemTitle)
-  );
-  var candidateIds = [];
-  if(matchedItemNode) candidateIds.push(matchedItemNode.id);
-  if(fallbackNodeId && !candidateIds.includes(fallbackNodeId)) candidateIds.push(fallbackNodeId);
-
-  var allQs = [];
-  var seenQIds = new Set();
-  candidateIds.forEach(nid => {
-    var qs = (questions||[]).filter(q => String(q.node_id) === String(nid)).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
-    qs.forEach(q => {
-      if(seenQIds.has(String(q.id))) return;
-      seenQIds.add(String(q.id));
-      var isDefaultTitle = DEV_FIXED_ORDER_TITLES.some(dt => norm(dt) === norm(q.question_text));
-      if(!isDefaultTitle){
-        allQs.push(q);
-      }
-    });
-  });
-  return allQs;
-}
-
-function renderUForm(){
-  var wrap=document.getElementById('uFormWrap'), empty=document.getElementById('uEmpty');
-  var lid = curMain==='development' ? curL3 : (curSub||curL2);
-  if(!lid){ wrap.innerHTML=''; empty.classList.add('hidden'); return; }
-
-  if(curMain==='development' && (!curSelectedItems || !curSelectedItems.length)){
-    wrap.innerHTML = '<div class="rounded-xl bg-amber-50 border border-amber-200 p-4 text-xs font-semibold text-amber-900">Please select one or more items above to view the form.</div>';
-    empty.classList.add('hidden');
+    cardsWrap.innerHTML = '<div class="rounded-xl bg-white border border-indigo-200 p-3.5"><div class="grid grid-cols-3 gap-2 text-center"><div class="rounded-xl bg-white p-2.5 border"><div class="text-[11px] text-slate-500">Target</div><div class="text-lg font-extrabold text-indigo-900">' + tgt.toLocaleString() + '</div></div><div class="rounded-xl bg-white p-2.5 border"><div class="text-[11px] text-slate-500">Completed</div><div class="text-lg font-extrabold text-emerald-700">' + cov.toLocaleString() + '</div></div><div class="rounded-xl bg-white p-2.5 border"><div class="text-[11px] text-slate-500">Remaining</div><div class="text-lg font-extrabold text-amber-700">' + rem.toLocaleString() + '</div></div></div><div class="mt-2.5 w-full bg-slate-200 rounded-full h-2.5 overflow-hidden"><div class="bg-indigo-600 h-full rounded-full transition-all duration-300" style="width:' + pct + '%"></div></div><div class="text-right text-[11px] font-bold text-indigo-800 mt-1">' + pct + '% Completed</div></div>';
     return;
   }
 
-  var qs = getEffectiveQuestionsForNode(lid, curMain==='development');
-  if(!qs.length && curMain!=='development'){ wrap.innerHTML=''; empty.classList.remove('hidden'); return; }
-  empty.classList.add('hidden');
+  if(!curL1 || !curL2 || !curL3 || !curSelectedItems.length){ box.classList.add('hidden'); return; }
+  box.classList.remove('hidden');
+  if(badge) badge.textContent = curSelectedItems.length + (curSelectedItems.length === 1 ? ' Item Box' : ' Item Boxes');
+  document.getElementById('uTargetPathLabel').textContent = [n1?n1.title:'', n2?n2.title:'', n3?n3.title:''].filter(Boolean).join(' → ');
 
-  var html = '<form id="dynForm" onsubmit="return submitForm(event)" class="space-y-4">';
+  cardsWrap.innerHTML = curSelectedItems.map(itTitle => {
+    var tgt = getTargetForPath('development', n1?n1.title:'', n2?n2.title:'', n3?n3.title:'', itTitle);
+    var cov = getCoveredForPath('development', n1?n1.title:'', n2?n2.title:'', n3?n3.title:'', itTitle);
+    var rem = Math.max(0, tgt - cov);
+    var pct = tgt > 0 ? Math.min(100, Math.round((cov/tgt)*100)) : (cov > 0 ? 100 : 0);
+    return '<div class="rounded-xl bg-white border border-indigo-200 p-3.5"><div class="font-bold text-sm text-indigo-950 mb-2">📦 ' + itTitle + '</div><div class="grid grid-cols-3 gap-2 text-center"><div class="rounded-xl bg-slate-50 p-2.5 border"><div class="text-[11px] text-slate-500">Target</div><div class="text-lg font-extrabold text-indigo-900">' + tgt.toLocaleString() + '</div></div><div class="rounded-xl bg-slate-50 p-2.5 border"><div class="text-[11px] text-slate-500">Completed</div><div class="text-lg font-extrabold text-emerald-700">' + cov.toLocaleString() + '</div></div><div class="rounded-xl bg-slate-50 p-2.5 border"><div class="text-[11px] text-slate-500">Remaining</div><div class="text-lg font-extrabold text-amber-700">' + rem.toLocaleString() + '</div></div></div><div class="mt-2.5 w-full bg-slate-200 rounded-full h-2.5 overflow-hidden"><div class="bg-emerald-600 h-full rounded-full transition-all duration-300" style="width:' + pct + '%"></div></div><div class="text-right text-[11px] font-bold text-emerald-800 mt-1">' + pct + '% Completed</div></div>';
+  }).join('');
+}
 
-  if(curMain==='development'){
-    var activeItems = curSelectedItems.slice();
-
-    // 1) Progress Box per selected item
-    html += '<div class="rounded-2xl border-2 border-emerald-300 bg-emerald-50/50 p-4 space-y-3">';
-    html += '<div class="font-bold text-sm text-emerald-950">📊 Progress Quantity (Per Selected Item)</div>';
-    activeItems.forEach((itName, idx) => {
-      html += '<div class="rounded-xl bg-white border border-emerald-200 p-3">' +
-        '<label class="font-bold text-xs text-emerald-950 block">' + (idx + 1) + '. ' + itName + ' — Progress Quantity <span class="text-red-500">*</span></label>' +
-        '<input type="number" step="any" min="0.01" name="__item_qty_' + encodeURIComponent(itName) + '" required placeholder="Enter completed quantity for ' + itName + '" class="mt-1.5 bg-slate-50 font-semibold">' +
-      '</div>';
-    });
-    html += '</div>';
-
-    // 2) Common questions shown ONCE
-    var commonQs = qs.filter(q => !isContributionQuestion(q));
-    commonQs.forEach(q => {
-      html += renderQuestionInputHtml(q, q.id, q.is_required);
-    });
-
-    // 3) Per-item ගොවි දායකත්වය (radio) + item-specific extra questions
-    var contribTemplate = qs.find(q => isContributionQuestion(q)) || {
-      id: 'tpl_contrib',
-      question_text: 'ගොවි දායකත්වය',
-      question_type: 'multiple_choice',
-      options: ['නොමිලේ', 'ගොවි දායකත්වය - 25%', 'ගොවි දායකත්වය - 50%'],
-      is_required: true
-    };
-
-    activeItems.forEach((itName, idx) => {
-      var extraItemQs = getExtraQuestionsForItemNode(itName, lid);
-      html += '<div class="rounded-2xl border-2 border-indigo-200 bg-indigo-50/40 p-4 space-y-3">';
-      html += '<div class="font-bold text-sm text-indigo-950">📦 Item ' + (idx + 1) + ': ' + itName + '</div>';
-      html += renderQuestionInputHtml(contribTemplate, '__item_contrib_' + encodeURIComponent(itName), true);
-
-      if(extraItemQs.length){
-        extraItemQs.forEach(eq => {
-          html += renderQuestionInputHtml(eq, '__item_extra_' + encodeURIComponent(itName) + '__' + eq.id, eq.is_required);
+function getEffectiveQuestionsForNode(nodeId, isDev){
+  var qs = (questions||[]).filter(q => String(q.node_id) === String(nodeId)).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
+  if(isDev){
+    var merged = qs.slice();
+    DEV_DEFAULT_QUESTIONS.forEach((t, i) => {
+      var exists = merged.some(m => norm(m.question_text) === norm(t.text));
+      if(!exists){
+        merged.push({
+          id: 'tpl_def_' + i,
+          node_id: nodeId,
+          question_text: t.text,
+          question_type: t.type,
+          options: t.options || [],
+          is_required: t.required !== false,
+          order_index: i + 1
         });
       }
-      html += '</div>';
     });
-  } else {
-    html += '<div class="rounded-2xl border-2 border-indigo-200 bg-indigo-50/60 p-4"><label class="font-bold text-sm text-indigo-950 block">📊 Progress Quantity (Completed Extent / Count) <span class="text-red-500">*</span></label><input type="number" step="any" min="0.01" name="__progress_qty" required placeholder="Enter completed progress quantity..." class="mt-1.5 bg-white font-semibold"></div>';
-    qs.forEach(q => {
-      html += renderQuestionInputHtml(q, q.id, q.is_required);
-    });
+    return merged;
   }
-
-  html += '<button class="btn btn-primary w-full py-3.5 text-[15px]">✓ Submit Data</button></form>';
-  wrap.innerHTML=html;
+  return qs;
 }
 
-function collectFieldValueByName(form, fieldName){
-  var els = Array.from(form.querySelectorAll('[name="' + CSS.escape(fieldName) + '"]'));
-  if(!els.length) return undefined;
-  var type = els[0].type;
-  if(type==='checkbox') return els.filter(c=>c.checked).map(c=>c.value);
-  if(type==='radio'){ var ch=els.find(r=>r.checked); return ch?ch.value:''; }
-  return els[0].value;
+function renderSingleQuestionControl(q, inputName, isRequired){
+  var opts = Array.isArray(q.options) ? q.options : [];
+  if(q.question_type==='multiple_choice'){
+    return '<div class="mt-2 space-y-2">' + opts.map((o, idx) => '<label class="option-label flex items-center gap-3 rounded-xl border border-slate-200 p-2.5 cursor-pointer bg-slate-50/70 hover:bg-indigo-50/60"><input type="radio" name="' + inputName + '" id="' + inputName + '_' + idx + '" value="' + String(o).replace(/"/g,'&quot;') + '" ' + (isRequired?'required':'') + ' class="w-4 h-4 text-indigo-600"><span class="text-xs font-medium">' + o + '</span></label>').join('') + '</div>';
+  }
+  if(q.question_type==='checkbox'){
+    return '<div class="mt-2 space-y-2">' + opts.map((o, idx) => '<label class="option-label flex items-center gap-3 rounded-xl border border-slate-200 p-2.5 cursor-pointer bg-slate-50/70 hover:bg-indigo-50/60"><input type="checkbox" name="' + inputName + '" id="' + inputName + '_' + idx + '" value="' + String(o).replace(/"/g,'&quot;') + '" class="w-4 h-4 text-indigo-600 rounded"><span class="text-xs font-medium">' + o + '</span></label>').join('') + '</div>';
+  }
+  if(q.question_type==='dropdown'){
+    return '<select id="' + inputName + '" class="mt-1 bg-white text-xs" ' + (isRequired?'required':'') + '><option value="">-- Select --</option>' + opts.map(o => '<option value="' + String(o).replace(/"/g,'&quot;') + '">' + o + '</option>').join('') + '</select>';
+  }
+  if(q.question_type==='yes_no'){
+    return '<div class="mt-2 flex gap-4"><label class="flex items-center gap-2 text-xs"><input type="radio" name="' + inputName + '" value="Yes" ' + (isRequired?'required':'') + ' class="w-4 h-4">Yes</label><label class="flex items-center gap-2 text-xs"><input type="radio" name="' + inputName + '" value="No" class="w-4 h-4">No</label></div>';
+  }
+  if(q.question_type==='scale'){
+    return '<div class="mt-2 flex gap-3">' + [1,2,3,4,5].map(n => '<label class="flex items-center gap-1 text-xs"><input type="radio" name="' + inputName + '" value="' + n + '" ' + (isRequired?'required':'') + ' class="w-4 h-4">' + n + '</label>').join('') + '</div>';
+  }
+  if(q.question_type==='number') return '<input type="number" step="any" id="' + inputName + '" class="mt-1 bg-white text-xs" ' + (isRequired?'required':'') + '>';
+  if(q.question_type==='date') return '<input type="date" id="' + inputName + '" class="mt-1 bg-white text-xs" ' + (isRequired?'required':'') + '>';
+  if(q.question_type==='paragraph') return '<textarea id="' + inputName + '" rows="2" class="mt-1 bg-white text-xs" ' + (isRequired?'required':'') + '></textarea>';
+  return '<input type="text" id="' + inputName + '" class="mt-1 bg-white text-xs" ' + (isRequired?'required':'') + '>';
 }
 
-async function submitForm(e){
-  e.preventDefault();
-  var form = e.target;
-  var n1=(nodes||[]).find(n=>String(n.id)===String(curL1)), n2=(nodes||[]).find(n=>String(n.id)===String(curL2)), n3=(nodes||[]).find(n=>String(n.id)===String(curL3)), ns=(nodes||[]).find(n=>String(n.id)===String(curSub));
-  var lid = curMain==='development' ? curL3 : (curSub||curL2);
-  var qs = getEffectiveQuestionsForNode(lid, curMain==='development');
-  var activeOfficerName = getActiveOfficerName();
-  var nowBase = Date.now();
-  var nowIso = new Date().toISOString();
+function renderUForm(){
+  var wrap=document.getElementById('uFormWrap'), emp=document.getElementById('uEmpty');
+  var isDev = curMain === 'development';
 
-  if(curMain==='development'){
-    var activeItems = curSelectedItems.slice();
-    if(!activeItems.length) return showToast('Please select at least one item', false);
+  if(!curL1 || !curL2){ wrap.innerHTML=''; emp.classList.add('hidden'); return; }
+  if(isDev && (!curL3 || !curSelectedItems.length)){ wrap.innerHTML=''; emp.classList.add('hidden'); return; }
+  if(!isDev && !curSub){ wrap.innerHTML=''; emp.classList.add('hidden'); return; }
 
-    // Collect shared common answers once
-    var commonAns = {};
-    qs.filter(q => !isContributionQuestion(q)).forEach(q => {
-      var val = collectFieldValueByName(form, q.id);
-      if(val !== undefined) commonAns[q.id] = val;
-    });
+  var baseNodeId = isDev ? (curItem || curL3) : curSub;
+  var qs = getEffectiveQuestionsForNode(baseNodeId, isDev);
+  if(!qs.length){ wrap.innerHTML=''; emp.classList.remove('hidden'); return; }
+  emp.classList.add('hidden');
 
-    var contribTemplate = qs.find(q => isContributionQuestion(q)) || { id: 'tpl_contrib' };
-    var recordsToInsert = [];
-    var grandTotalQty = 0;
+  var contribTemplate = qs.find(q => norm(q.question_text) === norm('ගොවි දායකත්වය')) || {
+    id: 'tpl_contrib',
+    question_text: 'ගොවි දායකත්වය',
+    question_type: 'multiple_choice',
+    options: ['නොමිලේ', 'ගොවි දායකත්වය - 25%', 'ගොවි දායකත්වය - 50%'],
+    is_required: true
+  };
 
-    // Save EACH selected item as its OWN separate row in responses
-    activeItems.forEach((itName, idx) => {
-      var qVal = parseFloat(collectFieldValueByName(form, '__item_qty_' + encodeURIComponent(itName)) || 0) || 0;
-      grandTotalQty += qVal;
+  var commonQs = isDev ? qs.filter(q => norm(q.question_text) !== norm('ගොවි දායකත්වය')) : qs;
 
-      var itemAns = Object.assign({
-        __user: myUser,
-        __officer_name: activeOfficerName,
-        __selected_items: [itName],
-        __item_name: itName,
-        __progress_qty: qVal,
-        __per_item_qty: { [itName]: qVal },
-        __item_specific: {}
-      }, commonAns);
+  var html='<form id="uRespForm" class="space-y-4">';
 
-      var perItemMap = {};
-      var cVal = collectFieldValueByName(form, '__item_contrib_' + encodeURIComponent(itName));
-      if(cVal !== undefined){
-        perItemMap[contribTemplate.id] = cVal;
-        itemAns[contribTemplate.id] = cVal;
+  if(isDev && curSelectedItems.length > 1){
+    html += '<div class="rounded-2xl border-2 border-emerald-200 bg-emerald-50/40 p-4 space-y-4">' +
+      '<div class="text-xs font-bold text-emerald-900 uppercase">📦 Per-Item Selection & Farmer Contribution (' + curSelectedItems.length + ' Items)</div>';
+
+    curSelectedItems.forEach((itName, idx) => {
+      var safeItKey = encodeURIComponent(itName);
+      var itemExtraQs = (questions||[]).filter(q => {
+        var itNode = (nodes||[]).find(n => n.main_type==='development' && n.level===4 && String(n.parent_id)===String(curL3) && norm(n.title)===norm(itName));
+        return itNode && String(q.node_id) === String(itNode.id) && !DEV_DEFAULT_QUESTIONS.some(d => norm(d.text) === norm(q.question_text));
+      });
+
+      html += '<div class="rounded-xl border bg-white p-3.5 space-y-3">' +
+        '<div class="flex flex-wrap items-center justify-between gap-2 border-b pb-2">' +
+          '<label class="flex items-center gap-2 text-sm font-bold text-emerald-950 cursor-pointer">' +
+            '<input type="checkbox" id="itemActive_' + idx + '" data-item-title="' + safeItKey + '" checked onchange="onItemCheckboxToggle(' + idx + ', this.checked)" class="w-4 h-4 accent-emerald-600">' +
+            '<span>' + (idx + 1) + '. ' + itName + '</span>' +
+          '</label>' +
+          '<div class="flex items-center gap-2">' +
+            '<label class="text-[11px] font-bold text-slate-600">Qty:</label>' +
+            '<input type="number" step="any" min="0" id="itemQty_' + idx + '" value="1" class="!w-24 !py-1 text-xs font-bold bg-slate-50">' +
+          '</div>' +
+        '</div>' +
+        '<div id="itemBody_' + idx + '" class="space-y-3">' +
+          '<div><label class="text-xs font-bold text-slate-800">' + contribTemplate.question_text + ' <span class="text-red-500">*</span></label>' +
+            renderSingleQuestionControl(contribTemplate, 'itemContrib_' + idx, true) +
+          '</div>';
+
+      if(itemExtraQs.length){
+        html += '<div class="pl-3 border-l-2 border-emerald-200 space-y-2.5">' +
+          '<div class="text-[11px] font-bold text-emerald-700 uppercase">Item-Specific Questions (' + itName + ')</div>';
+        itemExtraQs.forEach((eq, eIdx) => {
+          html += '<div><label class="text-xs font-semibold">' + eq.question_text + (eq.is_required?' <span class="text-red-500">*</span>':'') + '</label>' +
+            renderSingleQuestionControl(eq, 'itemExtra_' + idx + '_' + eIdx, !!eq.is_required) +
+          '</div>';
+        });
+        html += '</div>';
       }
 
-      var extraItemQs = getExtraQuestionsForItemNode(itName, lid);
-      extraItemQs.forEach(eq => {
-        var eVal = collectFieldValueByName(form, '__item_extra_' + encodeURIComponent(itName) + '__' + eq.id);
-        if(eVal !== undefined){
-          perItemMap[eq.id] = eVal;
-          itemAns[eq.id] = eVal;
-        }
-      });
-
-      itemAns.__item_specific[itName] = perItemMap;
-
-      var pathParts = [
-        'Development',
-        n1 && n1.title,
-        n2 && n2.title,
-        n3 && n3.title,
-        itName
-      ].filter(Boolean);
-
-      recordsToInsert.push({
-        id: 'r' + nowBase + '_' + (idx + 1) + '_' + Math.floor(Math.random() * 1000),
-        main_type: 'development',
-        level1: n1 ? n1.title : '',
-        level2: n2 ? n2.title : '',
-        level3: n3 ? n3.title : '',
-        node_path: pathParts.join(' → '),
-        sub_office_id: mySubId,
-        division: myDiv,
-        office: myOffice,
-        answers: itemAns,
-        created_at: new Date(nowBase + idx).toISOString()
-      });
+      html += '</div></div>';
     });
 
-    recordsToInsert.forEach(rec => responses.unshift(rec));
-    if(sb){
-      var insRes = await sb.from('responses').insert(recordsToInsert);
-      if(insRes && insRes.error) return showToast('Supabase Save Error: ' + insRes.error.message, false);
-    }
-    showToast('Submitted ' + recordsToInsert.length + ' item row(s) ✓ (Total: ' + grandTotalQty + ')', true);
-  } else {
-    var totalQty = parseFloat(collectFieldValueByName(form, '__progress_qty') || 0) || 0;
-    var ans = {
-      __user: myUser,
-      __officer_name: activeOfficerName,
-      __progress_qty: totalQty
-    };
-    qs.forEach(q => {
-      var val = collectFieldValueByName(form, q.id);
-      if(val !== undefined) ans[q.id] = val;
-    });
-
-    var pathParts = ['Extension', n1 && n1.title, n2 && n2.title, ns && ns.title].filter(Boolean);
-    var rec = {
-      id: 'r' + nowBase + '_' + Math.floor(Math.random() * 1000),
-      main_type: 'extension',
-      level1: n1 ? n1.title : '',
-      level2: n2 ? n2.title : '',
-      level3: ns ? ns.title : '',
-      node_path: pathParts.join(' → '),
-      sub_office_id: mySubId,
-      division: myDiv,
-      office: myOffice,
-      answers: ans,
-      created_at: nowIso
-    };
-
-    responses.unshift(rec);
-    if(sb){
-      var insExt = await sb.from('responses').insert(rec);
-      if(insExt && insExt.error) return showToast('Supabase Save Error: ' + insExt.error.message, false);
-    }
-    showToast('Submitted ✓ (' + totalQty + ')', true);
+    html += '</div>';
   }
 
-  resetFormInputsOnly();
-  updateTargetProgressBox();
-  renderUnitTargets();
-  return false;
+  commonQs.forEach(function(q, qIdx){
+    var inputName = 'q_' + q.id + '_' + qIdx;
+    html+='<div class="rounded-xl border p-3.5 bg-white"><label class="text-xs font-semibold">'+(qIdx+1)+'. '+q.question_text+(q.is_required?' <span class="text-red-500">*</span>':'')+'</label>';
+    html += renderSingleQuestionControl(q, inputName, !!q.is_required);
+    html+='</div>';
+  });
+
+  if(isDev && curSelectedItems.length === 1){
+    html += '<div class="rounded-xl border p-3.5 bg-white"><label class="text-xs font-semibold">' + contribTemplate.question_text + ' <span class="text-red-500">*</span></label>' +
+      renderSingleQuestionControl(contribTemplate, 'singleItemContrib_0', true) +
+    '</div>';
+  }
+
+  var progLabel = isDev
+    ? (curSelectedItems.length > 1 ? 'Total Progress Quantity (Across Selected Items)' : 'Progress Quantity (Completed Units for Selected Item)')
+    : 'Progress Quantity (Completed Units)';
+  var defProgVal = isDev && curSelectedItems.length > 1 ? curSelectedItems.length : 1;
+
+  html+='<div class="rounded-xl border-2 border-emerald-200 bg-emerald-50/50 p-3.5"><label class="text-xs font-bold text-emerald-950">'+progLabel+' *</label><input type="number" step="any" min="0" id="uProgQty" value="'+defProgVal+'" required class="mt-1 bg-white font-bold"></div>';
+  html+='<button type="submit" id="uSubmitBtn" class="btn btn-primary w-full py-3">✓ Submit Data & Update Progress</button></form>';
+  wrap.innerHTML=html;
+
+  document.getElementById('uRespForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    var btn=document.getElementById('uSubmitBtn'); btn.disabled=true; btn.textContent='Submitting...';
+    var ans={};
+
+    commonQs.forEach(function(q, qIdx){
+      var inputName = 'q_' + q.id + '_' + qIdx;
+      if(q.question_type==='multiple_choice'||q.question_type==='yes_no'||q.question_type==='scale'){
+        var el=document.querySelector('input[name="'+inputName+'"]:checked');
+        ans[q.id]=el?el.value:'';
+      } else if(q.question_type==='checkbox'){
+        var arr=[]; document.querySelectorAll('input[name="'+inputName+'"]:checked').forEach(function(c){arr.push(c.value);});
+        ans[q.id]=arr;
+      } else {
+        var el2=document.getElementById(inputName);
+        ans[q.id]=el2?el2.value:'';
+      }
+    });
+
+    var activeItems = [];
+    var perItemQty = {};
+    var itemSpecificMap = {};
+
+    if(isDev && curSelectedItems.length > 1){
+      curSelectedItems.forEach((itName, idx) => {
+        var cb = document.getElementById('itemActive_' + idx);
+        if(cb && !cb.checked) return;
+        activeItems.push(itName);
+        var qtyEl = document.getElementById('itemQty_' + idx);
+        var qVal = qtyEl ? (parseFloat(qtyEl.value) || 0) : 1;
+        perItemQty[itName] = qVal;
+
+        var cChecked = document.querySelector('input[name="itemContrib_' + idx + '"]:checked');
+        var cVal = cChecked ? cChecked.value : '';
+        var spObj = {};
+        if(cVal) spObj[contribTemplate.id] = cVal;
+
+        var itNode = (nodes||[]).find(n => n.main_type==='development' && n.level===4 && String(n.parent_id)===String(curL3) && norm(n.title)===norm(itName));
+        var itemExtraQs = itNode ? (questions||[]).filter(q => String(q.node_id) === String(itNode.id) && !DEV_DEFAULT_QUESTIONS.some(d => norm(d.text) === norm(q.question_text))) : [];
+        itemExtraQs.forEach((eq, eIdx) => {
+          var eName = 'itemExtra_' + idx + '_' + eIdx;
+          if(eq.question_type==='multiple_choice'||eq.question_type==='yes_no'||eq.question_type==='scale'){
+            var re = document.querySelector('input[name="'+eName+'"]:checked');
+            spObj[eq.id] = re ? re.value : '';
+          } else if(eq.question_type==='checkbox'){
+            var chArr = []; document.querySelectorAll('input[name="'+eName+'"]:checked').forEach(c => chArr.push(c.value));
+            spObj[eq.id] = chArr;
+          } else {
+            var ie = document.getElementById(eName);
+            spObj[eq.id] = ie ? ie.value : '';
+          }
+        });
+        itemSpecificMap[itName] = spObj;
+      });
+    } else if(isDev && curSelectedItems.length === 1){
+      activeItems = [curSelectedItems[0]];
+      var sChecked = document.querySelector('input[name="singleItemContrib_0"]:checked');
+      if(sChecked){
+        ans[contribTemplate.id] = sChecked.value;
+        itemSpecificMap[curSelectedItems[0]] = { [contribTemplate.id]: sChecked.value };
+      }
+    }
+
+    var progQty = parseFloat(document.getElementById('uProgQty').value) || 0;
+    if(isDev && curSelectedItems.length > 1 && activeItems.length > 0){
+      var sumPerItem = activeItems.reduce((s, k) => s + (Number(perItemQty[k]) || 0), 0);
+      if(sumPerItem > 0) progQty = sumPerItem;
+      else activeItems.forEach(k => { perItemQty[k] = progQty / activeItems.length; });
+    } else if(isDev && activeItems.length === 1){
+      perItemQty[activeItems[0]] = progQty;
+    }
+
+    var n1=(nodes||[]).find(x=>String(x.id)===String(curL1)), n2=(nodes||[]).find(x=>String(x.id)===String(curL2)), n3=(nodes||[]).find(x=>String(x.id)===String(curL3)), nSub=(nodes||[]).find(x=>String(x.id)===String(curSub));
+    var pathParts=[n1?n1.title:'',n2?n2.title:'',isDev?(n3?n3.title:''):(nSub?nSub.title:''),isDev?activeItems.join(', '):''].filter(Boolean);
+
+    ans.__progress_qty = progQty;
+    ans.__officer_name = getActiveOfficerName();
+    ans.__user = myUser;
+    if(isDev && activeItems.length){
+      ans.__selected_items = activeItems;
+      ans.__item_name = activeItems.join(', ');
+      ans.__per_item_qty = perItemQty;
+      ans.__item_specific = itemSpecificMap;
+    }
+
+    var rec={id:'r'+Date.now(),main_type:curMain,node_id:baseNodeId,node_path:pathParts.join(' → '),level1:n1?n1.title:'',level2:n2?n2.title:'',level3:isDev?(n3?n3.title:''):(nSub?nSub.title:''),division:myDiv,office:myOffice,answers:ans,created_at:new Date().toISOString()};
+    responses.unshift(rec);
+    if(sb){ var res=await sb.from('responses').insert(rec); if(res.error) showToast('Saved locally (DB: '+res.error.message+')',false); }
+    showToast('Data Submitted & Progress Updated ✓',true);
+    btn.disabled=false; btn.textContent='✓ Submit Data & Update Progress';
+    resetFormInputsOnly(); renderTargetProgressBox(); renderUnitTargets();
+  });
+}
+
+function onItemCheckboxToggle(idx, checked){
+  var body = document.getElementById('itemBody_' + idx);
+  if(body) body.classList.toggle('opacity-40', !checked);
 }
 
 function resetFormInputsOnly(){
-  var df=document.getElementById('dynForm');
-  if(df) df.reset();
+  var f=document.getElementById('uRespForm');
+  if(f) f.reset();
+  if(curMain==='development' && curSelectedItems.length > 1){
+    curSelectedItems.forEach((_, idx) => {
+      var cb = document.getElementById('itemActive_' + idx);
+      if(cb) cb.checked = true;
+      var qEl = document.getElementById('itemQty_' + idx);
+      if(qEl) qEl.value = '1';
+      var body = document.getElementById('itemBody_' + idx);
+      if(body) body.classList.remove('opacity-40');
+    });
+    var pEl = document.getElementById('uProgQty');
+    if(pEl) pEl.value = String(curSelectedItems.length);
+  }
 }
 
-/* ================= MY DATA (Per-Item Row Expansion + Ordered Columns + Extra Questions) ================= */
-function getQuestionLabelByKey(key){
-  var q=(questions||[]).find(x=>String(x.id)===String(key));
+/* ================= My Data (Extension & Development Tables + Excel + Edit/Delete) ================= */
+function onMyFilterChange(){
+  var fL1 = document.getElementById('myFilterL1');
+  var fL2 = document.getElementById('myFilterL2');
+  var fL3 = document.getElementById('myFilterL3');
+  if(fL1) fL1.value = '';
+  if(fL2) fL2.value = '';
+  if(fL3) fL3.value = '';
+  renderMy();
+}
+
+function populateMyFilters(mine){
+  var selMain = (document.getElementById('myFilterMain') || {}).value || '';
+  var base = mine.filter(r => !selMain || norm(r.main_type) === norm(selMain));
+
+  var l1Vals = [...new Set(base.map(r => r.level1).filter(Boolean))];
+  var l2Vals = [...new Set(base.map(r => r.level2).filter(Boolean))];
+  var l3Vals = [];
+  base.forEach(r => {
+    if(r.level3) l3Vals.push(r.level3);
+    var it = getItemNameForEntry(r);
+    if(it) it.split(',').map(x=>x.trim()).filter(Boolean).forEach(x=>l3Vals.push(x));
+  });
+  l3Vals = [...new Set(l3Vals)];
+
+  populateSelectOptions('myFilterL1', l1Vals, 'All Season / Year');
+  populateSelectOptions('myFilterL2', l2Vals, 'All Main Programs');
+  populateSelectOptions('myFilterL3', l3Vals, 'All Sub Prog / Items');
+}
+
+function getQuestionLabelByKey(key, sampleVal){
+  if(!key) return '';
+  if(norm(key) === 'tpl_contrib' || norm(key).startsWith('__item_contrib_')) return 'ගොවි දායකත්වය';
+  var q = (questions||[]).find(x => String(x.id) === String(key));
   if(q && q.question_text) return q.question_text;
-  var tplMatch = String(key||'').match(/^tpl_def_(\d+)$/i);
-  if(tplMatch && DEV_DEFAULT_QUESTIONS[parseInt(tplMatch[1],10)]) return DEV_DEFAULT_QUESTIONS[parseInt(tplMatch[1],10)].text;
-  var qNumMatch = String(key||'').match(/^q_dev_.*_(\d+)$/i);
-  if(qNumMatch && DEV_DEFAULT_QUESTIONS[parseInt(qNumMatch[1],10)-1]) return DEV_DEFAULT_QUESTIONS[parseInt(qNumMatch[1],10)-1].text;
-  return '';
+
+  var tplDefMatch = String(key).match(/^tpl_def_(\d+)$/);
+  if(tplDefMatch){
+    var dIdx = parseInt(tplDefMatch[1], 10);
+    if(DEV_DEFAULT_QUESTIONS[dIdx]) return DEV_DEFAULT_QUESTIONS[dIdx].text;
+  }
+
+  var qMatch = String(key).match(/^q_.*?_(\d+)$/);
+  if(qMatch){
+    var idx = parseInt(qMatch[1], 10) - 1;
+    if(idx >= 0 && idx < DEV_DEFAULT_QUESTIONS.length) return DEV_DEFAULT_QUESTIONS[idx].text;
+  }
+
+  var valStr = Array.isArray(sampleVal) ? sampleVal.join(', ') : String(sampleVal || '');
+  if(valStr.includes('නොමිලේ') || valStr.includes('ගොවි දායකත්වය')) return 'ගොවි දායකත්වය';
+
+  return String(key);
 }
 
-function isNonEmptyVal(v){
-  if(v === undefined || v === null) return false;
-  if(Array.isArray(v)) return v.some(x => String(x||'').trim() !== '');
-  return String(v).trim() !== '' && String(v).trim() !== '-';
+function formatAnswerCell(val){
+  if(val === undefined || val === null || val === '') return '-';
+  if(Array.isArray(val)) return val.length ? val.join(', ') : '-';
+  return String(val);
 }
 
-function formatAnswerDisplay(v){
-  if(v === undefined || v === null || v === '') return '-';
-  if(Array.isArray(v)) return v.length ? v.join(', ') : '-';
-  return String(v);
-}
-
-function expandMyDevEntries(list){
+function expandMyDevEntries(devList){
   var rows = [];
-  list.forEach(r => {
+  devList.forEach(r => {
     var ans = (r && r.answers && typeof r.answers === 'object') ? r.answers : {};
     var selItems = Array.isArray(ans.__selected_items) && ans.__selected_items.length
-      ? ans.__selected_items.filter(Boolean)
-      : (getItemNameForEntry(r) ? getItemNameForEntry(r).split(',').map(s=>s.trim()).filter(Boolean) : ['-']);
+      ? ans.__selected_items
+      : (getItemNameForEntry(r) ? getItemNameForEntry(r).split(',').map(x=>x.trim()).filter(Boolean) : []);
 
-    if(selItems.length <= 1){
-      var singleIt = selItems[0] || '-';
-      var mergedSingle = Object.assign({}, ans);
-      if(ans.__item_specific && ans.__item_specific[singleIt]){
-        Object.keys(ans.__item_specific[singleIt]).forEach(k => { mergedSingle[k] = ans.__item_specific[singleIt][k]; });
-      }
-      var qtySingle = (singleIt !== '-' && ans.__per_item_qty && ans.__per_item_qty[singleIt] !== undefined)
-        ? Number(ans.__per_item_qty[singleIt])
-        : getProgressedQtyForEntry(r);
-      rows.push({
-        raw: r,
-        itemName: singleIt,
-        qty: qtySingle,
-        answers: mergedSingle
+    if(selItems.length > 1){
+      selItems.forEach(itName => {
+        var mergedAns = Object.assign({}, ans);
+        var sp = (ans.__item_specific && typeof ans.__item_specific === 'object') ? ans.__item_specific[itName] : null;
+        if(sp && typeof sp === 'object'){
+          Object.keys(sp).forEach(sk => { mergedAns[sk] = sp[sk]; });
+        }
+        var perQty = (ans.__per_item_qty && ans.__per_item_qty[itName] !== undefined)
+          ? Number(ans.__per_item_qty[itName])
+          : (getProgressedQtyForEntry(r) / selItems.length);
+        mergedAns.__item_name = itName;
+        mergedAns.__progress_qty = perQty;
+        rows.push(Object.assign({}, r, { _singleItem: itName, _displayQty: perQty, answers: mergedAns }));
       });
     } else {
-      selItems.forEach(itName => {
-        var mergedIt = Object.assign({}, ans);
-        if(ans.__item_specific && ans.__item_specific[itName]){
-          Object.keys(ans.__item_specific[itName]).forEach(k => { mergedIt[k] = ans.__item_specific[itName][k]; });
-        }
-        var qtyIt = (ans.__per_item_qty && ans.__per_item_qty[itName] !== undefined)
-          ? Number(ans.__per_item_qty[itName])
-          : getProgressedQtyForEntry(r, itName);
-        rows.push({
-          raw: r,
-          itemName: itName,
-          qty: qtyIt,
-          answers: mergedIt
+      var singleName = selItems[0] || getItemNameForEntry(r) || '-';
+      var mergedSingle = Object.assign({}, ans);
+      if(ans.__item_specific && singleName && ans.__item_specific[singleName]){
+        Object.keys(ans.__item_specific[singleName]).forEach(sk => {
+          mergedSingle[sk] = ans.__item_specific[singleName][sk];
         });
-      });
+      }
+      rows.push(Object.assign({}, r, { _singleItem: singleName, _displayQty: getProgressedQtyForEntry(r, singleName), answers: mergedSingle }));
     }
   });
   return rows;
 }
 
 function getOrderedDevColumnsForMyData(devRows){
-  var skip = new Set(['__item_name','__selected_items','__item_specific','__item_quantities','__progress_qty','__officer_name','__user','__per_item_qty','__per_item_answers']);
-  var titleToKeys = new Map();
-  var extraOrder = [];
+  var colMap = new Map();
+  DEV_FIXED_ORDER_TITLES.forEach(t => colMap.set(norm(t), { title: t, keys: [] }));
 
-  function addCol(title, key){
-    var nt = norm(title);
-    if(!nt) return;
-    if(!titleToKeys.has(nt)){
-      titleToKeys.set(nt, { title: title, keys: [] });
-      if(!DEV_FIXED_ORDER_TITLES.some(ft => norm(ft) === nt)){
-        extraOrder.push(nt);
-      }
-    }
-    var entry = titleToKeys.get(nt);
-    if(key && !entry.keys.includes(key)) entry.keys.push(key);
-  }
-
-  devRows.forEach(er => {
-    var ans = er.answers || {};
+  devRows.forEach(r => {
+    var ans = r.answers || {};
     Object.keys(ans).forEach(k => {
-      if(skip.has(k)) return;
-      var lbl = getQuestionLabelByKey(k);
-      if(lbl) addCol(lbl, k);
+      if(k.startsWith('__')) return;
+      var lbl = getQuestionLabelByKey(k, ans[k]);
+      var nLbl = norm(lbl);
+      if(!colMap.has(nLbl)) colMap.set(nLbl, { title: lbl, keys: [] });
+      var col = colMap.get(nLbl);
+      if(!col.keys.includes(k)) col.keys.push(k);
     });
   });
-
-  (questions||[]).forEach(q => {
-    if(!q || !q.question_text) return;
-    if(DEV_FIXED_ORDER_TITLES.some(ft => norm(ft) === norm(q.question_text))){
-      addCol(q.question_text, String(q.id));
-    }
-  });
-
-  var cols = [];
-  DEV_FIXED_ORDER_TITLES.forEach(ft => {
-    var found = titleToKeys.get(norm(ft));
-    cols.push({ title: ft, keys: found ? found.keys : [] });
-  });
-
-  extraOrder.forEach(en => {
-    var ex = titleToKeys.get(en);
-    if(ex && ex.keys.length){
-      var hasAny = devRows.some(er => ex.keys.some(k => isNonEmptyVal((er.answers||{})[k])));
-      if(hasAny) cols.push(ex);
-    }
-  });
-
-  return cols;
+  return Array.from(colMap.values());
 }
 
 function getValFromCol(ans, col){
-  if(!ans || !col) return '-';
-  for(var i = 0; i < (col.keys||[]).length; i++){
-    var v = ans[col.keys[i]];
-    if(isNonEmptyVal(v)) return formatAnswerDisplay(v);
+  if(!ans) return '';
+  for(var i=0; i<col.keys.length; i++){
+    var k = col.keys[i];
+    if(ans[k] !== undefined && ans[k] !== null && ans[k] !== '') return ans[k];
   }
-  var qsMatch = (questions||[]).filter(q => norm(q.question_text) === norm(col.title));
-  for(var j = 0; j < qsMatch.length; j++){
-    var v2 = ans[String(qsMatch[j].id)];
-    if(isNonEmptyVal(v2)) return formatAnswerDisplay(v2);
+  if(norm(col.title) === norm('ගොවි දායකත්වය')){
+    if(ans['tpl_contrib']) return ans['tpl_contrib'];
+    var itName = ans.__item_name || '';
+    if(ans.__item_specific && itName && ans.__item_specific[itName]){
+      var sp = ans.__item_specific[itName];
+      for(var sk in sp){
+        if(norm(sk) === 'tpl_contrib' || String(sp[sk]).includes('නොමිලේ') || String(sp[sk]).includes('ගොවි දායකත්වය')){
+          return sp[sk];
+        }
+      }
+    }
   }
-  return '-';
-}
-
-function onMyFilterChange(){
-  document.getElementById('myFilterL1').value = '';
-  document.getElementById('myFilterL2').value = '';
-  document.getElementById('myFilterL3').value = '';
-  renderMy();
-}
-
-function populateMyFilters(mine){
-  var mainSel = document.getElementById('myFilterMain').value;
-  var base = mine.filter(r => !mainSel || norm(r.main_type) === norm(mainSel));
-  populateSelectOptions('myFilterL1', [...new Set(base.map(r => r.level1).filter(Boolean))], 'All Seasons / Years');
-  var l1 = document.getElementById('myFilterL1').value;
-  populateSelectOptions('myFilterL2', [...new Set(base.filter(r => !l1 || norm(r.level1)===norm(l1)).map(r => r.level2).filter(Boolean))], 'All Main Programs');
-  var l2 = document.getElementById('myFilterL2').value;
-  var l3Opts = new Set();
-  base.filter(r => (!l1 || norm(r.level1)===norm(l1)) && (!l2 || norm(r.level2)===norm(l2))).forEach(r => {
-    if(r.level3) l3Opts.add(r.level3);
-    var it = getItemNameForEntry(r);
-    if(it) it.split(',').forEach(s => { if(s.trim()) l3Opts.add(s.trim()); });
-  });
-  populateSelectOptions('myFilterL3', Array.from(l3Opts), 'All Sub Programs / Items');
+  return '';
 }
 
 function renderMy(){
   var mine = getMyResponses();
   populateMyFilters(mine);
-  var fMain = document.getElementById('myFilterMain').value;
-  var fL1 = document.getElementById('myFilterL1').value;
-  var fL2 = document.getElementById('myFilterL2').value;
-  var fL3 = document.getElementById('myFilterL3').value;
-  var q = norm(document.getElementById('mySearch').value);
+
+  var fMain = (document.getElementById('myFilterMain') || {}).value || '';
+  var fL1 = (document.getElementById('myFilterL1') || {}).value || '';
+  var fL2 = (document.getElementById('myFilterL2') || {}).value || '';
+  var fL3 = (document.getElementById('myFilterL3') || {}).value || '';
+  var q = norm((document.getElementById('mySearch') || {}).value || '');
 
   var filtered = mine.filter(r => {
-    var itStr = getItemNameForEntry(r);
-    var matchesL3 = !fL3 || norm(r.level3)===norm(fL3) || itStr.split(',').some(s=>norm(s)===norm(fL3));
-    var matchesQ = !q || JSON.stringify(r).toLowerCase().includes(q);
-    return (!fMain || norm(r.main_type)===norm(fMain)) &&
-           (!fL1 || norm(r.level1)===norm(fL1)) &&
-           (!fL2 || norm(r.level2)===norm(fL2)) &&
-           matchesL3 && matchesQ;
+    if(fMain && norm(r.main_type) !== norm(fMain)) return false;
+    if(fL1 && norm(r.level1) !== norm(fL1)) return false;
+    if(fL2 && norm(r.level2) !== norm(fL2)) return false;
+    if(fL3){
+      var itStr = getItemNameForEntry(r);
+      if(norm(r.level3) !== norm(fL3) && !norm(itStr).includes(norm(fL3))) return false;
+    }
+    if(q){
+      var blob = [r.level1, r.level2, r.level3, getItemNameForEntry(r), getOfficerForEntry(r), JSON.stringify(r.answers||{})].join(' ');
+      if(!norm(blob).includes(q)) return false;
+    }
+    return true;
   });
 
-  var extList = filtered.filter(r => norm(r.main_type) === 'extension');
-  var devList = filtered.filter(r => norm(r.main_type) === 'development');
-  var devExpandedRows = expandMyDevEntries(devList);
+  var extRows = filtered.filter(r => norm(r.main_type) === 'extension');
+  var devRows = expandMyDevEntries(filtered.filter(r => norm(r.main_type) === 'development'));
 
   document.getElementById('extDataSection').classList.toggle('hidden', fMain === 'development');
   document.getElementById('devDataSection').classList.toggle('hidden', fMain === 'extension');
-  document.getElementById('extDataCount').textContent = extList.length;
-  document.getElementById('devDataCount').textContent = devExpandedRows.length;
+  document.getElementById('extDataCount').textContent = extRows.length;
+  document.getElementById('devDataCount').textContent = devRows.length;
 
-  // Extension Table
-  var extKeySet = [], extSeen = new Set();
-  extList.forEach(r => {
+  // Render Extension Table
+  var extQKeys = [];
+  extRows.forEach(r => {
     Object.keys(r.answers||{}).forEach(k => {
-      if(['__item_name','__selected_items','__item_specific','__item_quantities','__progress_qty','__officer_name','__user','__per_item_qty','__per_item_answers'].includes(k)) return;
-      if(!isNonEmptyVal((r.answers||{})[k])) return;
-      var lbl = getQuestionLabelByKey(k);
-      if(!lbl || extSeen.has(k)) return;
-      extSeen.add(k);
-      extKeySet.push({ key: k, label: lbl });
+      if(!k.startsWith('__') && !extQKeys.includes(k)) extQKeys.push(k);
     });
   });
+  document.getElementById('extMyThead').innerHTML = '<tr><th>Season</th><th>Main Program</th><th>Sub Program</th><th>Qty</th>' +
+    extQKeys.map(k => '<th>' + getQuestionLabelByKey(k) + '</th>').join('') + '<th>Date</th><th>Action</th></tr>';
 
-  document.getElementById('extMyThead').innerHTML = '<tr><th>Main Program</th><th>Season</th><th>Sub Program</th><th>Officer</th><th>Progress</th>' + extKeySet.map(x => '<th>' + x.label + '</th>').join('') + '<th>Date</th><th>Actions</th></tr>';
-  document.getElementById('extMyTbody').innerHTML = extList.length ? extList.map(r => {
-    var qty = getProgressedQtyForEntry(r);
-    return '<tr><td class="text-xs font-bold">' + (r.level2||'-') + '</td><td class="text-xs">' + (r.level1||'-') + '</td><td class="text-xs">' + (r.level3||'-') + '</td><td class="text-xs">' + getOfficerForEntry(r) + '</td><td class="text-xs font-extrabold text-indigo-700">' + qty + '</td>' +
-      extKeySet.map(x => '<td class="text-xs">' + formatAnswerDisplay((r.answers||{})[x.key]) + '</td>').join('') +
-      '<td class="text-xs">' + (r.created_at?new Date(r.created_at).toLocaleDateString():'') + '</td>' +
-      '<td class="whitespace-nowrap space-x-2"><button onclick="openMyEdit(\'' + r.id + '\',\'\')" class="text-indigo-600 font-semibold text-xs">Edit</button><button onclick="delMy(\'' + r.id + '\')" class="text-red-500 text-xs">Delete</button></td></tr>';
-  }).join('') : '<tr><td colspan="' + (7 + extKeySet.length) + '" class="text-center text-xs text-slate-400 py-5">No Extension data</td></tr>';
+  document.getElementById('extMyTbody').innerHTML = extRows.length ? extRows.map(r => {
+    var dt = r.created_at ? new Date(r.created_at).toLocaleDateString() : '-';
+    return '<tr><td>' + (r.level1||'-') + '</td><td>' + (r.level2||'-') + '</td><td>' + (r.level3||'-') + '</td><td class="font-bold text-blue-700">' + getProgressedQtyForEntry(r) + '</td>' +
+      extQKeys.map(k => '<td>' + formatAnswerCell((r.answers||{})[k]) + '</td>').join('') +
+      '<td class="text-xs text-slate-500">' + dt + '</td>' +
+      '<td class="whitespace-nowrap"><button onclick="openMyEdit(\'' + r.id + '\',\'\')" class="text-indigo-600 font-bold text-xs mr-2">Edit</button><button onclick="deleteMyRow(\'' + r.id + '\')" class="text-red-600 font-bold text-xs">Del</button></td></tr>';
+  }).join('') : '<tr><td colspan="' + (6 + extQKeys.length) + '" class="text-center py-6 text-slate-400">No Extension records found</td></tr>';
 
-  // Development Table: one row per item, ordered 7 default questions + extra questions
-  var devCols = getOrderedDevColumnsForMyData(devExpandedRows);
-  document.getElementById('devMyThead').innerHTML = '<tr>' +
-    '<th>Main Program</th>' +
-    '<th>Year</th>' +
-    '<th>Sub Program</th>' +
-    '<th>Item</th>' +
-    '<th>Officer</th>' +
-    '<th>Progress</th>' +
-    devCols.map(c => '<th>' + c.title + '</th>').join('') +
-    '<th>Date</th>' +
-    '<th>Actions</th>' +
-    '</tr>';
+  // Render Development Table
+  var devCols = getOrderedDevColumnsForMyData(devRows);
+  document.getElementById('devMyThead').innerHTML = '<tr><th>Year</th><th>Main Program</th><th>Sub Program</th><th>Item</th><th>Qty</th>' +
+    devCols.map(c => '<th>' + c.title + '</th>').join('') + '<th>Date</th><th>Action</th></tr>';
 
-  document.getElementById('devMyTbody').innerHTML = devExpandedRows.length ? devExpandedRows.map(er => {
-    var r = er.raw;
-    return '<tr>' +
-      '<td class="text-xs font-bold">' + (r.level2||'-') + '</td>' +
-      '<td class="text-xs">' + (r.level1||'-') + '</td>' +
-      '<td class="text-xs">' + (r.level3||'-') + '</td>' +
-      '<td class="text-xs font-bold text-emerald-900">' + er.itemName + '</td>' +
-      '<td class="text-xs">' + getOfficerForEntry(r) + '</td>' +
-      '<td class="text-xs font-extrabold text-emerald-700">' + er.qty + '</td>' +
-      devCols.map(c => '<td class="text-xs">' + getValFromCol(er.answers, c) + '</td>').join('') +
-      '<td class="text-xs">' + (r.created_at?new Date(r.created_at).toLocaleDateString():'') + '</td>' +
-      '<td class="whitespace-nowrap space-x-2"><button onclick="openMyEdit(\'' + r.id + '\',\'' + encodeURIComponent(er.itemName||'') + '\')" class="text-indigo-600 font-semibold text-xs">Edit</button><button onclick="delMy(\'' + r.id + '\')" class="text-red-500 text-xs">Delete</button></td>' +
-      '</tr>';
-  }).join('') : '<tr><td colspan="' + (8 + devCols.length) + '" class="text-center text-xs text-slate-400 py-5">No Development data</td></tr>';
-
-  window._myExtExport = extList.map(r => {
-    var row = { 'Main Program': r.level2||'', 'Season': r.level1||'', 'Sub Program': r.level3||'', 'Officer': getOfficerForEntry(r), 'Progress': getProgressedQtyForEntry(r) };
-    extKeySet.forEach(x => { row[x.label] = formatAnswerDisplay((r.answers||{})[x.key]); });
-    row['Date'] = r.created_at ? new Date(r.created_at).toLocaleDateString() : '';
-    return row;
-  });
-
-  window._myDevExport = devExpandedRows.map(er => {
-    var r = er.raw;
-    var row = { 'Main Program': r.level2||'', 'Year': r.level1||'', 'Sub Program': r.level3||'', 'Item': er.itemName, 'Officer': getOfficerForEntry(r), 'Progress': er.qty };
-    devCols.forEach(c => { row[c.title] = getValFromCol(er.answers, c); });
-    row['Date'] = r.created_at ? new Date(r.created_at).toLocaleDateString() : '';
-    return row;
-  });
+  document.getElementById('devMyTbody').innerHTML = devRows.length ? devRows.map(r => {
+    var dt = r.created_at ? new Date(r.created_at).toLocaleDateString() : '-';
+    var safeIt = encodeURIComponent(r._singleItem || '');
+    return '<tr><td>' + (r.level1||'-') + '</td><td>' + (r.level2||'-') + '</td><td>' + (r.level3||'-') + '</td><td class="font-semibold">' + (r._singleItem||'-') + '</td><td class="font-bold text-emerald-700">' + (r._displayQty||0) + '</td>' +
+      devCols.map(c => '<td>' + formatAnswerCell(getValFromCol(r.answers, c)) + '</td>').join('') +
+      '<td class="text-xs text-slate-500">' + dt + '</td>' +
+      '<td class="whitespace-nowrap"><button onclick="openMyEdit(\'' + r.id + '\',\'' + safeIt + '\')" class="text-indigo-600 font-bold text-xs mr-2">Edit</button><button onclick="deleteMyRow(\'' + r.id + '\')" class="text-red-600 font-bold text-xs">Del</button></td></tr>';
+  }).join('') : '<tr><td colspan="' + (7 + devCols.length) + '" class="text-center py-6 text-slate-400">No Development records found</td></tr>';
 }
 
-function downloadFilteredMyExcel(){
-  if(typeof XLSX === 'undefined') return showToast('Excel library not loaded', false);
-  var fMain = document.getElementById('myFilterMain').value;
-  var wb = XLSX.utils.book_new();
-  var added = 0;
-  if(fMain !== 'development' && (window._myExtExport||[]).length){ XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(window._myExtExport), 'Extension_Data'); added++; }
-  if(fMain !== 'extension' && (window._myDevExport||[]).length){ XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(window._myDevExport), 'Development_Data'); added++; }
-  if(!added) return showToast('No data available to export', false);
-  XLSX.writeFile(wb, 'Unit_My_Data.xlsx');
-}
+function openMyEdit(id, itemEnc){
+  var r = (responses||[]).find(x => String(x.id) === String(id));
+  if(!r) return;
+  editingId = id;
+  editingItemName = itemEnc ? decodeURIComponent(itemEnc) : null;
+  document.getElementById('myEditRowBadge').textContent = (r.level2||'') + (editingItemName ? ' → ' + editingItemName : '');
+  document.getElementById('myEditQty').value = editingItemName ? getProgressedQtyForEntry(r, editingItemName) : getProgressedQtyForEntry(r);
 
-function openMyEdit(id, encItemName){
-  var r=(responses||[]).find(x=>String(x.id)===String(id)); if(!r)return;
-  editingId=id;
-  var targetItem = decodeURIComponent(encItemName || '');
-  if(!targetItem) targetItem = getItemNameForEntry(r);
-  editingItemName = (targetItem && targetItem !== '-') ? targetItem : '';
-
-  var badgeEl = document.getElementById('myEditRowBadge');
-  if(badgeEl){
-    var parts = [r.level2, r.level3, editingItemName].filter(Boolean);
-    badgeEl.textContent = parts.length ? '(' + parts.join(' • ') + ')' : '';
-  }
-
-  var ans = Object.assign({}, r.answers || {});
-  if(editingItemName && ans.__item_specific && ans.__item_specific[editingItemName]){
-    Object.keys(ans.__item_specific[editingItemName]).forEach(k => {
-      ans[k] = ans.__item_specific[editingItemName][k];
-    });
-  }
-
-  var rowQty = editingItemName ? getProgressedQtyForEntry(r, editingItemName) : getProgressedQtyForEntry(r);
-  document.getElementById('myEditQty').value = rowQty;
-
-  var skipKeys = new Set(['__item_name','__selected_items','__item_specific','__item_quantities','__progress_qty','__officer_name','__user','__per_item_qty','__per_item_answers']);
-  var keys = Object.keys(ans).filter(k => !skipKeys.has(k) && getQuestionLabelByKey(k));
-
-  document.getElementById('myEditFields').innerHTML = keys.map(k => {
-    var val = ans[k];
-    var strVal = Array.isArray(val) ? val.join(', ') : (val || '');
-    return '<div><label class="text-xs font-semibold">' + getQuestionLabelByKey(k) + '</label><input type="text" data-k="' + k + '" data-arr="' + (Array.isArray(val)?'1':'0') + '" value="' + String(strVal).replace(/"/g,'&quot;') + '" class="mt-1 bg-white"></div>';
-  }).join('');
-
+  var ans = r.answers || {};
+  var fieldsHtml = '';
+  Object.keys(ans).forEach(k => {
+    if(k.startsWith('__')) return;
+    var lbl = getQuestionLabelByKey(k, ans[k]);
+    var val = Array.isArray(ans[k]) ? ans[k].join(', ') : (ans[k] || '');
+    fieldsHtml += '<div><label class="text-xs font-semibold">' + lbl + '</label><input type="text" data-edit-key="' + k + '" value="' + String(val).replace(/"/g,'&quot;') + '" class="mt-1 bg-white text-xs"></div>';
+  });
+  document.getElementById('myEditFields').innerHTML = fieldsHtml;
   document.getElementById('myEditBox').classList.remove('hidden');
-  document.getElementById('myEditBox').scrollIntoView({behavior:'smooth'});
 }
 
 function closeMyEdit(){
-  editingId=null;
-  editingItemName=null;
-  var badgeEl = document.getElementById('myEditRowBadge');
-  if(badgeEl) badgeEl.textContent = '';
+  editingId = null; editingItemName = null;
   document.getElementById('myEditBox').classList.add('hidden');
 }
 
 async function saveMyEdit(){
-  if(!editingId)return;
-  var r=(responses||[]).find(x=>String(x.id)===String(editingId)); if(!r)return;
-  var newAns = Object.assign({}, r.answers || {});
-  var newQty = parseFloat(document.getElementById('myEditQty').value);
-
-  var itemSpecMap = (newAns.__item_specific && typeof newAns.__item_specific === 'object')
-    ? Object.assign({}, newAns.__item_specific)
-    : {};
-  var perItemQtyMap = (newAns.__per_item_qty && typeof newAns.__per_item_qty === 'object')
-    ? Object.assign({}, newAns.__per_item_qty)
-    : {};
-
-  var curItemSpec = (editingItemName && itemSpecMap[editingItemName] && typeof itemSpecMap[editingItemName] === 'object')
-    ? Object.assign({}, itemSpecMap[editingItemName])
-    : {};
-
-  document.querySelectorAll('#myEditFields [data-k]').forEach(inp => {
-    var k = inp.dataset.k;
-    var parsedVal = inp.dataset.arr === '1' ? inp.value.split(',').map(s=>s.trim()).filter(Boolean) : inp.value;
-    if(editingItemName){
-      curItemSpec[k] = parsedVal;
-      if(!Array.isArray(newAns.__selected_items) || newAns.__selected_items.length <= 1){
-        newAns[k] = parsedVal;
-      }
-    } else {
-      newAns[k] = parsedVal;
-    }
+  if(!editingId) return;
+  var r = (responses||[]).find(x => String(x.id) === String(editingId));
+  if(!r) return;
+  var newQty = parseFloat(document.getElementById('myEditQty').value) || 0;
+  var ans = Object.assign({}, r.answers || {});
+  document.querySelectorAll('#myEditFields input[data-edit-key]').forEach(inp => {
+    ans[inp.getAttribute('data-edit-key')] = inp.value;
   });
-
-  if(editingItemName){
-    itemSpecMap[editingItemName] = curItemSpec;
-    newAns.__item_specific = itemSpecMap;
-    if(!isNaN(newQty)){
-      perItemQtyMap[editingItemName] = newQty;
-      newAns.__per_item_qty = perItemQtyMap;
-      if(!Array.isArray(newAns.__selected_items) || newAns.__selected_items.length <= 1){
-        newAns.__progress_qty = newQty;
-      }
-    }
+  if(editingItemName && ans.__per_item_qty){
+    ans.__per_item_qty[editingItemName] = newQty;
+    ans.__progress_qty = Object.values(ans.__per_item_qty).reduce((s,v)=>s+(Number(v)||0), 0);
   } else {
-    if(!isNaN(newQty)) newAns.__progress_qty = newQty;
+    ans.__progress_qty = newQty;
   }
-
-  r.answers = newAns;
+  r.answers = ans;
   if(sb){
-    var updRes = await sb.from('responses').update({answers:newAns}).eq('id',editingId);
-    if(updRes && updRes.error) return showToast('Supabase Update Error: ' + updRes.error.message, false);
+    var res = await sb.from('responses').update({ answers: ans }).eq('id', r.id);
+    if(res.error) return showToast('Update error: ' + res.error.message, false);
   }
-  closeMyEdit(); renderMy(); renderUnitTargets(); showToast('Updated ✓',true);
+  showToast('Row updated ✓', true);
+  closeMyEdit(); renderMy(); renderUnitTargets();
 }
 
-async function delMy(id){
-  if(!await profConfirm('Delete this entry?'))return;
-  responses=(responses||[]).filter(x=>String(x.id)!==String(id));
-  if(sb) await sb.from('responses').delete().eq('id',id);
-  renderMy(); renderUnitTargets(); showToast('Deleted ✓',true);
+async function deleteMyRow(id){
+  var ok = await profConfirm('Delete this record permanently?', 'Delete Record');
+  if(!ok) return;
+  responses = (responses||[]).filter(r => String(r.id) !== String(id));
+  if(sb){
+    var res = await sb.from('responses').delete().eq('id', id);
+    if(res.error) showToast('DB Delete error: ' + res.error.message, false);
+  }
+  showToast('Deleted ✓', true);
+  renderMy(); renderUnitTargets();
 }
 
-/* ================= SECTION 4: VIEW ITEM PRICE LIST ================= */
-function getPriceGovAmount(p){
-  if(p.gov_price !== undefined && p.gov_price !== null && p.gov_price !== '') return parseNum(p.gov_price);
-  if(p.government_price !== undefined && p.government_price !== null && p.government_price !== '') return parseNum(p.government_price);
-  return Math.max(0, parseNum(p.unit_price) - getPriceFarmerAmount(p));
+function downloadFilteredMyExcel(){
+  if(typeof XLSX === 'undefined') return showToast('Excel library not loaded', false);
+  var wb = XLSX.utils.book_new();
+  var mine = getMyResponses();
+  var extRows = mine.filter(r => norm(r.main_type) === 'extension').map(r => {
+    var obj = { Season: r.level1||'', Main_Program: r.level2||'', Sub_Program: r.level3||'', Qty: getProgressedQtyForEntry(r) };
+    Object.keys(r.answers||{}).forEach(k => { if(!k.startsWith('__')) obj[getQuestionLabelByKey(k)] = formatAnswerCell(r.answers[k]); });
+    return obj;
+  });
+  var devRows = expandMyDevEntries(mine.filter(r => norm(r.main_type) === 'development')).map(r => {
+    var obj = { Year: r.level1||'', Main_Program: r.level2||'', Sub_Program: r.level3||'', Item: r._singleItem||'', Qty: r._displayQty||0 };
+    Object.keys(r.answers||{}).forEach(k => { if(!k.startsWith('__')) obj[getQuestionLabelByKey(k, r.answers[k])] = formatAnswerCell(r.answers[k]); });
+    return obj;
+  });
+  if(extRows.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(extRows), 'Extension_Data');
+  if(devRows.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(devRows), 'Development_Data');
+  if(!extRows.length && !devRows.length) return showToast('No data to export', false);
+  XLSX.writeFile(wb, 'Unit_My_Data.xlsx');
 }
-function getPriceFarmerAmount(p){
-  if(p.farmer_price !== undefined && p.farmer_price !== null && p.farmer_price !== '') return parseNum(p.farmer_price);
-  if(p.farmers_price !== undefined && p.farmers_price !== null && p.farmers_price !== '') return parseNum(p.farmers_price);
-  return 0;
-}
+
+/* ================= Section 4: Item Price List ================= */
 function renderPriceListSection(){
-  var list = Array.isArray(itemPrices) ? itemPrices : [];
-  populateSelectOptions('plFilterYear', [...new Set(list.map(x => x.year).filter(Boolean))], 'All Years');
-  var fy = document.getElementById('plFilterYear').value;
-  populateSelectOptions('plFilterMainProg', [...new Set(list.filter(x => !fy || norm(x.year)===norm(fy)).map(x => x.program || x.main_program).filter(Boolean))], 'All Main Programs');
-  var fp = document.getElementById('plFilterMainProg').value;
-  populateSelectOptions('plFilterSubProg', [...new Set(list.filter(x => (!fy || norm(x.year)===norm(fy)) && (!fp || norm(x.program || x.main_program)===norm(fp))).map(x => x.sub_program).filter(Boolean))], 'All Sub Programs');
+  var years = [...new Set((itemPrices||[]).map(p => p.year).filter(Boolean))];
+  populateSelectOptions('plFilterYear', years, 'All Years');
+  onPriceYearChange();
+}
+function onPriceYearChange(){
+  var y = document.getElementById('plFilterYear').value;
+  var base = (itemPrices||[]).filter(p => !y || norm(p.year) === norm(y));
+  populateSelectOptions('plFilterMainProg', [...new Set(base.map(p => p.main_program).filter(Boolean))], 'All Main Programs');
+  onPriceMainProgChange();
+}
+function onPriceMainProgChange(){
+  var y = document.getElementById('plFilterYear').value;
+  var mp = document.getElementById('plFilterMainProg').value;
+  var base = (itemPrices||[]).filter(p => (!y || norm(p.year)===norm(y)) && (!mp || norm(p.main_program)===norm(mp)));
+  populateSelectOptions('plFilterSubProg', [...new Set(base.map(p => p.sub_program).filter(Boolean))], 'All Sub Programs');
   renderPriceListTable();
 }
-function onPriceYearChange(){ document.getElementById('plFilterMainProg').value = ''; document.getElementById('plFilterSubProg').value = ''; renderPriceListSection(); }
-function onPriceMainProgChange(){ document.getElementById('plFilterSubProg').value = ''; renderPriceListSection(); }
 function renderPriceListTable(){
-  var list = Array.isArray(itemPrices) ? itemPrices : [];
-  var fy = document.getElementById('plFilterYear').value;
-  var fp = document.getElementById('plFilterMainProg').value;
-  var fs = document.getElementById('plFilterSubProg').value;
-  var filtered = list.filter(x => (!fy || norm(x.year)===norm(fy)) && (!fp || norm(x.program || x.main_program)===norm(fp)) && (!fs || norm(x.sub_program)===norm(fs)));
+  var y = document.getElementById('plFilterYear').value;
+  var mp = document.getElementById('plFilterMainProg').value;
+  var sp = document.getElementById('plFilterSubProg').value;
+  var rows = (itemPrices||[]).filter(p => (!y || norm(p.year)===norm(y)) && (!mp || norm(p.main_program)===norm(mp)) && (!sp || norm(p.sub_program)===norm(sp)));
   var tbody = document.getElementById('itemPriceListTbody');
-  if(!filtered.length){ tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-400 text-xs">No price items</td></tr>'; window._priceListExportRows = []; return; }
-  var exportRows = [];
-  tbody.innerHTML = filtered.map(p => {
-    var prog = p.program || p.main_program || '-';
-    var subP = p.sub_program || '-';
-    var itm = p.item_name || p.item || '-';
-    var unitP = parseNum(p.unit_price);
-    var subRate = p.subsidy || '-';
-    var govP = getPriceGovAmount(p);
-    var farmP = getPriceFarmerAmount(p);
-    exportRows.push({ 'Program': prog, 'Sub Program': subP, 'Item': itm, 'Unit Price': unitP, 'Subsidy': subRate, 'Government Price': govP, 'Farmers Price': farmP });
-    return '<tr><td class="font-semibold">' + prog + '</td><td>' + subP + '</td><td><b>' + itm + '</b></td><td class="text-right">Rs. ' + unitP.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) + '</td><td class="text-center"><span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold text-xs">' + subRate + '</span></td><td class="text-right font-bold text-emerald-700">Rs. ' + govP.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) + '</td><td class="text-right font-bold text-indigo-700">Rs. ' + farmP.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) + '</td></tr>';
-  }).join('');
-  window._priceListExportRows = exportRows;
+  tbody.innerHTML = rows.length ? rows.map(p => '<tr><td>'+(p.main_program||'-')+'</td><td>'+(p.sub_program||'-')+'</td><td class="font-semibold">'+(p.item_name||'-')+'</td><td class="text-right">Rs. '+parseNum(p.unit_price).toFixed(2)+'</td><td class="text-right">'+(p.subsidy_pct||0)+'%</td><td class="text-right text-emerald-700 font-semibold">Rs. '+parseNum(p.gov_price).toFixed(2)+'</td><td class="text-right text-indigo-700 font-bold">Rs. '+parseNum(p.farmer_price).toFixed(2)+'</td></tr>').join('') : '<tr><td colspan="7" class="text-center py-6 text-slate-400">No price list items found</td></tr>';
 }
 function downloadPriceListExcel(){
   if(typeof XLSX === 'undefined') return showToast('Excel library not loaded', false);
-  var rows = window._priceListExportRows || [];
-  if(!rows.length) return showToast('No price data to export', false);
-  var ws = XLSX.utils.json_to_sheet(rows);
-  var wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Item_Price_List');
-  XLSX.writeFile(wb, 'Admin_Item_Price_List.xlsx');
+  if(!(itemPrices||[]).length) return showToast('No data to export', false);
+  var ws = XLSX.utils.json_to_sheet(itemPrices.map(p => ({ Year: p.year, Main_Program: p.main_program, Sub_Program: p.sub_program, Item: p.item_name, Unit_Price: p.unit_price, Subsidy: p.subsidy_pct, Gov_Price: p.gov_price, Farmer_Price: p.farmer_price })));
+  var wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Price_List');
+  XLSX.writeFile(wb, 'Item_Price_List.xlsx');
 }
 
-/* ================= SECTION 5: PIV SUBMITTING (SUPABASE ONLY) ================= */
-function getMatchedPriceForPiv(yr, prog, subP, itm){
-  var list = Array.isArray(itemPrices) ? itemPrices : [];
-  return list.find(p => (!yr || norm(p.year)===norm(yr)) && (!prog || norm(p.program || p.main_program)===norm(prog)) && (!subP || norm(p.sub_program)===norm(subP)) && norm(p.item_name || p.item)===norm(itm))
-    || list.find(p => (!prog || norm(p.program || p.main_program)===norm(prog)) && norm(p.item_name || p.item)===norm(itm))
-    || list.find(p => norm(p.item_name || p.item)===norm(itm)) || null;
-}
+/* ================= Section 5: PIV Submitting ================= */
 function renderPivSection(){
-  var devYears = (nodes||[]).filter(n => n.main_type==='development' && n.level===1 && n.is_published).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
-  var yearTitles = [...new Set([...devYears.map(y=>y.title), ...(itemPrices||[]).map(p=>p.year)].filter(Boolean))];
-  populateSelectOptions('pivYear', yearTitles, '-- Select Year --');
-  if(!document.getElementById('pivYear').value && yearTitles.length) document.getElementById('pivYear').value = yearTitles[0];
-  onPivYearChange(); renderPivSubmissionsTable();
+  var devYears = [...new Set((nodes||[]).filter(n => n.main_type==='development' && n.level===1 && n.is_published).map(n => n.title))];
+  populateSelectOptions('pivYear', devYears, '-- Select Year --');
+  renderPivTable();
 }
 function onPivYearChange(){
-  var yr = document.getElementById('pivYear').value;
-  var yNode = (nodes||[]).find(n => n.main_type==='development' && n.level===1 && norm(n.title)===norm(yr));
-  var progNodes = yNode ? (nodes||[]).filter(n => n.main_type==='development' && n.level===2 && n.parent_id===yNode.id && n.is_published) : [];
-  var progs = [...new Set([...progNodes.map(p=>p.title), ...(itemPrices||[]).filter(p=>!yr || norm(p.year)===norm(yr)).map(p=>p.program || p.main_program)].filter(Boolean))];
-  populateSelectOptions('pivMainProg', progs, '-- Select Main Program --');
-  if(!document.getElementById('pivMainProg').value && progs.length) document.getElementById('pivMainProg').value = progs[0];
+  var y = document.getElementById('pivYear').value;
+  var yNode = (nodes||[]).find(n => n.main_type==='development' && n.level===1 && norm(n.title)===norm(y));
+  var mps = yNode ? (nodes||[]).filter(n => n.level===2 && String(n.parent_id)===String(yNode.id) && n.is_published).map(n => n.title) : [];
+  populateSelectOptions('pivMainProg', mps, '-- Select Main Program --');
   onPivMainChange();
 }
 function onPivMainChange(){
-  var yr = document.getElementById('pivYear').value, prog = document.getElementById('pivMainProg').value;
-  var yNode = (nodes||[]).find(n => n.main_type==='development' && n.level===1 && norm(n.title)===norm(yr));
-  var pNode = yNode ? (nodes||[]).find(n => n.main_type==='development' && n.level===2 && n.parent_id===yNode.id && norm(n.title)===norm(prog)) : null;
-  var subNodes = pNode ? (nodes||[]).filter(n => n.main_type==='development' && n.level===3 && n.parent_id===pNode.id && n.is_published) : [];
-  var subs = [...new Set([...subNodes.map(s=>s.title), ...(itemPrices||[]).filter(p=>(!yr || norm(p.year)===norm(yr)) && (!prog || norm(p.program || p.main_program)===norm(prog))).map(p=>p.sub_program)].filter(Boolean))];
-  populateSelectOptions('pivSubProg', subs, '-- Select Sub Program --');
-  if(!document.getElementById('pivSubProg').value && subs.length) document.getElementById('pivSubProg').value = subs[0];
+  var mp = document.getElementById('pivMainProg').value;
+  var mpNode = (nodes||[]).find(n => n.main_type==='development' && n.level===2 && norm(n.title)===norm(mp));
+  var sps = mpNode ? (nodes||[]).filter(n => n.level===3 && String(n.parent_id)===String(mpNode.id) && n.is_published).map(n => n.title) : [];
+  populateSelectOptions('pivSubProg', sps, '-- Select Sub Program --');
   onPivSubChange();
 }
 function onPivSubChange(){
-  var yr = document.getElementById('pivYear').value, prog = document.getElementById('pivMainProg').value, subP = document.getElementById('pivSubProg').value;
-  var yNode = (nodes||[]).find(n => n.main_type==='development' && n.level===1 && norm(n.title)===norm(yr));
-  var pNode = yNode ? (nodes||[]).find(n => n.main_type==='development' && n.level===2 && n.parent_id===yNode.id && norm(n.title)===norm(prog)) : null;
-  var sNode = pNode ? (nodes||[]).find(n => n.main_type==='development' && n.level===3 && n.parent_id===pNode.id && norm(n.title)===norm(subP)) : null;
-  var itemNodes = sNode ? (nodes||[]).filter(n => n.main_type==='development' && n.level===4 && n.parent_id===sNode.id && n.is_published) : [];
-  var priceItems = (itemPrices||[]).filter(p=>(!yr || norm(p.year)===norm(yr)) && (!prog || norm(p.program || p.main_program)===norm(prog)) && (!subP || norm(p.sub_program)===norm(subP))).map(p=>p.item_name || p.item);
-  var items = [...new Set([...itemNodes.map(i=>i.title), ...priceItems].filter(Boolean))];
+  var sp = document.getElementById('pivSubProg').value;
+  var spNode = (nodes||[]).find(n => n.main_type==='development' && n.level===3 && norm(n.title)===norm(sp));
+  var items = spNode ? (nodes||[]).filter(n => n.level===4 && String(n.parent_id)===String(spNode.id) && n.is_published).map(n => n.title) : [];
   populateSelectOptions('pivItem', items, '-- Select Item --');
-  if(!document.getElementById('pivItem').value && items.length) document.getElementById('pivItem').value = items[0];
   onPivItemChange();
 }
-function onPivItemChange(){ recalcPivPaymentAmount(); }
-function recalcPivPaymentAmount(){
-  var yr = document.getElementById('pivYear').value, prog = document.getElementById('pivMainProg').value, subP = document.getElementById('pivSubProg').value, itm = document.getElementById('pivItem').value;
-  var units = parseNum(document.getElementById('pivUnits').value);
-  var matched = getMatchedPriceForPiv(yr, prog, subP, itm);
-  var farmerRate = matched ? getPriceFarmerAmount(matched) : 0;
-  var totalAmt = units * farmerRate;
-  document.getElementById('pivFarmerUnitRate').textContent = 'Rs. ' + farmerRate.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
-  document.getElementById('pivPaymentAmountDisplay').value = 'Rs. ' + totalAmt.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
-  return { farmerRate, totalAmt };
+function onPivItemChange(){
+  var y = document.getElementById('pivYear').value;
+  var it = document.getElementById('pivItem').value;
+  var pr = (itemPrices||[]).find(p => (!y || norm(p.year)===norm(y)) && norm(p.item_name)===norm(it));
+  window._curPivFarmerRate = pr ? parseNum(pr.farmer_price) : 0;
+  document.getElementById('pivFarmerUnitRate').textContent = 'Rs. ' + window._curPivFarmerRate.toFixed(2);
+  recalcPivPaymentAmount();
 }
-function generateAutoUnitNumber(){
-  var aiCode = (myDiv || myOffice || 'UNIT').replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0,6) || 'UNIT';
-  var now = new Date(), stamp = String(now.getFullYear()).slice(-2) + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0');
-  var seq = (pivRecords||[]).length + 1;
-  return 'PIV-' + aiCode + '-' + stamp + '-' + String(seq).padStart(3,'0');
+function recalcPivPaymentAmount(){
+  var u = parseFloat(document.getElementById('pivUnits').value) || 0;
+  var amt = u * (window._curPivFarmerRate || 0);
+  document.getElementById('pivPaymentAmountDisplay').value = 'Rs. ' + amt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 function resetPivForm(){
-  editingPivId = null;
   document.getElementById('pivForm').reset();
-  document.getElementById('pivAutoUnitNoPreview').value = '';
-  document.getElementById('pivSubmitBtn').textContent = '💾 Submit PIV & Generate Unit Number';
-  recalcPivPaymentAmount();
+  window._curPivFarmerRate = 0;
+  document.getElementById('pivFarmerUnitRate').textContent = 'Rs. 0.00';
+  document.getElementById('pivPaymentAmountDisplay').value = 'Rs. 0.00';
 }
 async function submitPivEntry(e){
   e.preventDefault();
-  var yr = document.getElementById('pivYear').value.trim(), prog = document.getElementById('pivMainProg').value.trim(), subP = document.getElementById('pivSubProg').value.trim(), itm = document.getElementById('pivItem').value.trim();
-  var units = parseNum(document.getElementById('pivUnits').value), bankedDate = document.getElementById('pivBankedDate').value, submitDate = document.getElementById('pivSubmitDate').value, pivNo = document.getElementById('pivNumber').value.trim();
-  if(!yr || !prog || !subP || !itm) return showToast('Please select Year, Main Program, Sub Program and Item', false);
-  if(units <= 0) return showToast('Please enter valid No of Units', false);
-  if(!bankedDate || !submitDate || !pivNo) return showToast('Please fill Banked Date, PIV Submitting Date and PIV No', false);
-
-  var calc = recalcPivPaymentAmount(), nowIso = new Date().toISOString();
-  if(editingPivId){
-    var existing = (pivRecords||[]).find(x => String(x.id) === String(editingPivId));
-    if(existing){
-      var updatedFields = { year: yr, main_program: prog, sub_program: subP, item_name: itm, no_of_units: units, farmer_unit_price: calc.farmerRate, payment_amount: calc.totalAmt, banked_date: bankedDate, piv_submit_date: submitDate, piv_no: pivNo, officer_name: getActiveOfficerName(), updated_at: nowIso };
-      if(sb){ var updRes = await sb.from('piv_submissions').update(updatedFields).eq('id', existing.id); if(updRes.error) return showToast('Supabase Error: ' + updRes.error.message, false); }
-      Object.assign(existing, updatedFields);
-      document.getElementById('pivAutoUnitNoPreview').value = existing.auto_unit_no;
-      showToast('PIV Updated (' + existing.auto_unit_no + ') ✓', true);
-    }
-    editingPivId = null; document.getElementById('pivSubmitBtn').textContent = '💾 Submit PIV & Generate Unit Number';
-  } else {
-    var autoNo = generateAutoUnitNumber();
-    while((pivRecords||[]).some(x => norm(x.auto_unit_no) === norm(autoNo))){ autoNo = autoNo + '-' + Math.floor(Math.random()*90+10); }
-    var rec = { id: 'piv_' + Date.now() + '_' + Math.floor(Math.random()*1000), auto_unit_no: autoNo, sub_office_id: mySubId, ad_office: mySubName, division: myDiv, office: myOffice, user: myUser, officer_name: getActiveOfficerName(), year: yr, main_program: prog, sub_program: subP, item_name: itm, no_of_units: units, farmer_unit_price: calc.farmerRate, payment_amount: calc.totalAmt, banked_date: bankedDate, piv_submit_date: submitDate, piv_no: pivNo, ad_approval_status: 'Pending', dd_approval_status: 'Pending', dd_approval_date: '', created_at: nowIso };
-    if(sb){ var insRes = await sb.from('piv_submissions').insert(rec); if(insRes.error) return showToast('Supabase Save Error: ' + insRes.error.message, false); }
-    pivRecords.unshift(rec);
-    document.getElementById('pivAutoUnitNoPreview').value = autoNo;
-    showToast('PIV Submitted • Auto Unit No: ' + autoNo + ' ✓', true);
+  var btn = document.getElementById('pivSubmitBtn'); btn.disabled = true; btn.textContent = 'Saving...';
+  var units = parseFloat(document.getElementById('pivUnits').value) || 0;
+  var amt = units * (window._curPivFarmerRate || 0);
+  var autoNo = 'PIV-' + String(Date.now()).slice(-6);
+  var rec = {
+    id: 'piv_' + Date.now(),
+    auto_unit_no: autoNo,
+    year: document.getElementById('pivYear').value,
+    main_program: document.getElementById('pivMainProg').value,
+    sub_program: document.getElementById('pivSubProg').value,
+    item_name: document.getElementById('pivItem').value,
+    no_of_units: units,
+    payment_amount: amt,
+    banked_date: document.getElementById('pivBankedDate').value,
+    piv_submit_date: document.getElementById('pivSubmitDate').value,
+    piv_no: document.getElementById('pivNumber').value,
+    division: myDiv,
+    office: myOffice,
+    ad_status: 'Pending',
+    dd_status: 'Pending',
+    created_at: new Date().toISOString()
+  };
+  pivRecords.unshift(rec);
+  if(sb){
+    var res = await sb.from('piv_submissions').insert(rec);
+    if(res.error) showToast('Saved locally (DB: ' + res.error.message + ')', false);
   }
-  renderPivSubmissionsTable();
-  return false;
+  document.getElementById('pivAutoUnitNoPreview').value = autoNo;
+  showToast('PIV Submitted ✓ (' + autoNo + ')', true);
+  btn.disabled = false; btn.textContent = '💾 Submit PIV & Generate Unit Number';
+  renderPivTable();
 }
-function editPivRecord(id){
-  var rec = (pivRecords||[]).find(x => String(x.id) === String(id)); if(!rec) return;
-  editingPivId = rec.id;
-  document.getElementById('pivYear').value = rec.year || ''; onPivYearChange();
-  document.getElementById('pivMainProg').value = rec.main_program || ''; onPivMainChange();
-  document.getElementById('pivSubProg').value = rec.sub_program || ''; onPivSubChange();
-  document.getElementById('pivItem').value = rec.item_name || '';
-  document.getElementById('pivUnits').value = rec.no_of_units || '';
-  document.getElementById('pivBankedDate').value = rec.banked_date || '';
-  document.getElementById('pivSubmitDate').value = rec.piv_submit_date || '';
-  document.getElementById('pivNumber').value = rec.piv_no || '';
-  document.getElementById('pivAutoUnitNoPreview').value = rec.auto_unit_no || '';
-  document.getElementById('pivSubmitBtn').textContent = '💾 Update PIV Record';
-  recalcPivPaymentAmount();
-  document.getElementById('pivForm').scrollIntoView({behavior:'smooth'});
-}
-async function submitPivToAdOffice(id){
-  var rec = (pivRecords||[]).find(x => String(x.id) === String(id)); if(!rec) return;
-  var nowIso = new Date().toISOString(), todayStr = nowIso.slice(0,10);
-  var patch = { ad_approval_status: 'Approved', ad_approved_at: nowIso, ad_office_submit_date: rec.piv_submit_date || todayStr, dd_office_submit_date: todayStr, updated_at: nowIso };
-  if(sb){ var res = await sb.from('piv_submissions').update(patch).eq('id', rec.id); if(res.error) return showToast('Supabase Error: ' + res.error.message, false); }
-  Object.assign(rec, patch);
-  renderPivSubmissionsTable();
-  showToast('Submitted to AD Office & Forwarded to DD Office ✓', true);
-}
-async function deletePivRecord(id){
-  if(!await profConfirm('Delete this PIV record?')) return;
-  if(sb){ var res = await sb.from('piv_submissions').delete().eq('id', id); if(res.error) return showToast('Supabase Delete Error: ' + res.error.message, false); }
-  pivRecords = (pivRecords||[]).filter(x => String(x.id) !== String(id));
-  renderPivSubmissionsTable();
-  showToast('PIV Record Deleted ✓', true);
-}
-function getMyPivRecords(){
-  return (pivRecords||[]).filter(r => (!myDiv || norm(r.division)===norm(myDiv) || norm(r.office)===norm(myDiv)) && (!myUser || !r.user || norm(r.user)===norm(myUser) || norm(r.division)===norm(myDiv))).sort((a,b) => String(b.created_at||'').localeCompare(String(a.created_at||'')));
-}
-function renderPivSubmissionsTable(){
-  var list = getMyPivRecords();
-  document.getElementById('pivRecordsCount').textContent = list.length;
+function renderPivTable(){
+  var myPivs = (pivRecords||[]).filter(p => !myDiv || norm(p.division) === norm(myDiv));
+  document.getElementById('pivRecordsCount').textContent = myPivs.length;
   var tbody = document.getElementById('pivSubmissionsTbody');
-  if(!list.length){ tbody.innerHTML = '<tr><td colspan="13" class="text-center py-6 text-slate-400 text-xs">No PIV records submitted yet</td></tr>'; return; }
-  tbody.innerHTML = list.map(r => {
-    var adApproved = norm(r.ad_approval_status)==='approved' || norm(r.ad_approval_status)==='submitted_to_dd' || Boolean(r.dd_office_submit_date);
-    var ddApproved = norm(r.dd_approval_status)==='approved' || norm(r.main_admin_status)==='approved';
-    var adBadge = adApproved ? '<span class="px-2 py-1 rounded-full text-[11px] font-bold bg-blue-600 text-white whitespace-nowrap">Approved</span>' : '<span class="px-2 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300 whitespace-nowrap">Pending</span>';
-    var ddBadge = ddApproved ? '<span class="px-2 py-1 rounded-full text-[11px] font-bold bg-emerald-600 text-white whitespace-nowrap">Approved' + (r.dd_approval_date ? ' ('+r.dd_approval_date+')' : '') + '</span>' : '<span class="px-2 py-1 rounded-full text-[11px] font-bold bg-slate-200 text-slate-700 whitespace-nowrap">Pending</span>';
-    var submitAdBtn = !adApproved ? '<button onclick="submitPivToAdOffice(\'' + r.id + '\')" class="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold whitespace-nowrap">Submit to AD Office</button>' : '<span class="text-[11px] font-bold text-blue-700 whitespace-nowrap">Sent to DD</span>';
-    return '<tr><td class="font-extrabold text-indigo-950 whitespace-nowrap">' + (r.auto_unit_no||'-') + '</td><td>' + (r.year||'-') + '</td><td class="font-semibold">' + (r.main_program||'-') + '</td><td>' + (r.sub_program||'-') + '</td><td><b>' + (r.item_name||'-') + '</b></td><td class="text-right font-bold">' + parseNum(r.no_of_units).toLocaleString() + '</td><td class="text-right font-extrabold text-emerald-700 whitespace-nowrap">Rs. ' + parseNum(r.payment_amount).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) + '</td><td class="whitespace-nowrap">' + (r.banked_date||'-') + '</td><td class="whitespace-nowrap">' + (r.piv_submit_date||'-') + '</td><td class="font-bold whitespace-nowrap">' + (r.piv_no||'-') + '</td><td class="text-center">' + adBadge + '</td><td class="text-center">' + ddBadge + '</td><td class="whitespace-nowrap space-x-1.5">' + submitAdBtn + ' <button onclick="editPivRecord(\'' + r.id + '\')" class="text-indigo-600 font-semibold text-xs">Edit</button> <button onclick="deletePivRecord(\'' + r.id + '\')" class="text-red-500 text-xs">Delete</button></td></tr>';
-  }).join('');
+  tbody.innerHTML = myPivs.length ? myPivs.map(p => '<tr><td class="font-bold text-indigo-700">'+(p.auto_unit_no||'-')+'</td><td>'+(p.year||'-')+'</td><td>'+(p.main_program||'-')+'</td><td>'+(p.sub_program||'-')+'</td><td>'+(p.item_name||'-')+'</td><td class="text-right font-bold">'+(p.no_of_units||0)+'</td><td class="text-right font-bold">Rs. '+parseNum(p.payment_amount).toFixed(2)+'</td><td>'+(p.banked_date||'-')+'</td><td>'+(p.piv_submit_date||'-')+'</td><td class="font-semibold">'+(p.piv_no||'-')+'</td><td><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">'+(p.ad_status||'Pending')+'</span></td><td><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">'+(p.dd_status||'Pending')+'</span></td><td><button onclick="deletePivRow(\''+p.id+'\')" class="text-red-600 font-bold text-xs">Del</button></td></tr>').join('') : '<tr><td colspan="13" class="text-center py-6 text-slate-400">No PIV records submitted</td></tr>';
+}
+async function deletePivRow(id){
+  var ok = await profConfirm('Delete this PIV record?', 'Delete PIV');
+  if(!ok) return;
+  pivRecords = (pivRecords||[]).filter(p => String(p.id) !== String(id));
+  if(sb) await sb.from('piv_submissions').delete().eq('id', id);
+  showToast('PIV Deleted ✓', true);
+  renderPivTable();
 }
 
-async function logout(){
-  try{ if(sb) await sb.auth.signOut(); }catch(e){}
-  ['role','user','fw_session','user_subOfficeId','user_subOfficeName','user_division','user_office','user_name','user_officer_name'].forEach(k=>localStorage.removeItem(k));
+/* ================= Supabase Sync & Auth ================= */
+async function sbSyncAll(){
+  var st = document.getElementById('sbSyncStatus');
+  if(st) st.textContent = 'Syncing Data...';
+  if(!sb){ if(st) st.textContent = 'Offline Mode'; return; }
+  try{
+    var [nRes, qRes, rRes, pRes, tRes, pivRes] = await Promise.all([
+      sb.from('nodes').select('*'),
+      sb.from('questions').select('*'),
+      sb.from('responses').select('*').order('created_at', { ascending: false }),
+      sb.from('item_prices').select('*'),
+      sb.from('targets').select('*'),
+      sb.from('piv_submissions').select('*').order('created_at', { ascending: false })
+    ]);
+    if(nRes.data) nodes = nRes.data;
+    if(qRes.data) questions = qRes.data;
+    if(rRes.data) responses = rRes.data;
+    if(pRes.data) itemPrices = pRes.data;
+    if(tRes.data) targetRecords = tRes.data;
+    if(pivRes.data) pivRecords = pivRes.data;
+    if(st) st.textContent = 'Synced ✓ (' + new Date().toLocaleTimeString() + ')';
+    renderUnitTargets();
+  }catch(e){
+    if(st) st.textContent = 'Sync Error';
+  }
+}
+
+function logout(){
+  localStorage.removeItem('fw_session');
   window.location.replace('index.html');
 }
 
-async function sbSyncAll(){
-  if(!sb){ document.getElementById('sbSyncStatus').textContent='Offline Mode'; renderUnitTargets(); return; }
-  document.getElementById('sbSyncStatus').textContent='Syncing...';
-  try{
-    var n=await sb.from('nodes').select('*').order('sort_order'); if(Array.isArray(n.data)) nodes=n.data;
-    var q=await sb.from('questions').select('*').order('order_index'); if(Array.isArray(q.data)) questions=q.data;
-    var r=await sb.from('responses').select('*').order('created_at',{ascending:false}); if(Array.isArray(r.data)) responses=r.data;
-    var t=await sb.from('targets').select('*'); if(Array.isArray(t.data)) targetRecords=t.data;
-    var p=await sb.from('item_prices').select('*'); if(Array.isArray(p.data)) itemPrices=p.data;
-    var piv=await sb.from('piv_submissions').select('*').order('created_at',{ascending:false});
-    if(piv && Array.isArray(piv.data) && !piv.error) pivRecords = piv.data; else pivRecords = [];
-
-    if(myUser){
-      var profRes = await sb.from('profiles').select('*').ilike('username', myUser).limit(1);
-      if(profRes && Array.isArray(profRes.data) && profRes.data[0]){
-        var pr = profRes.data[0];
-        if(pr.officer_name){ myOfficer = pr.officer_name; localStorage.setItem('user_officer_name', pr.officer_name); }
-        if(pr.name){ myName = pr.name; localStorage.setItem('user_name', pr.name); }
-        if(pr.division){ myDiv = pr.division; localStorage.setItem('user_division', pr.division); }
-        if(pr.office){ myOffice = pr.office; localStorage.setItem('user_office', pr.office); }
-        if(pr.sub_office_id){ mySubId = pr.sub_office_id; localStorage.setItem('user_subOfficeId', pr.sub_office_id); }
-      }
-    }
-    refreshOfficerProfileDisplay();
-    document.getElementById('sbSyncStatus').textContent='Data Synced ✓';
-  }catch(e){
-    console.error(e);
-    document.getElementById('sbSyncStatus').textContent='Sync Error';
-  }
-  renderUnitTargets();
-  if(!document.getElementById('panel-form').classList.contains('hidden')) renderUSelects();
-  if(!document.getElementById('panel-mydata').classList.contains('hidden')) renderMy();
-  if(!document.getElementById('panel-pricelist').classList.contains('hidden')) renderPriceListSection();
-  if(!document.getElementById('panel-piv').classList.contains('hidden')) renderPivSection();
-}
-
-renderUSelects();
 sbSyncAll();
 </script>
 </body>
