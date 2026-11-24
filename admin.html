@@ -1,5 +1,8 @@
 <!DOCTYPE html>
-<html lang="si"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -20,7 +23,19 @@
 .switch:after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:999px;background:#fff;transition:.15s}
 .switch.on{background:#059669}.switch.on:after{left:23px}
 .q-preview{border:1px dashed #94a3b8;border-radius:14px;padding:14px;background:#f8fafc}
-</style><script>window.addEventListener('error',function(e){var d=document.getElementById('jsError');if(!d){d=document.createElement('div');d.id='jsError';d.style.cssText='background:#fef2f2;color:#b91c1c;padding:12px;margin:12px;border-radius:12px;font-size:13px';document.body.prepend(d);}d.textContent='JS Error: '+(e.message||'unknown')+' — Screenshot එකක් යවන්න';});</script>
+</style>
+<script>
+window.addEventListener('error',function(e){
+  var d=document.getElementById('jsError');
+  if(!d){
+    d=document.createElement('div');
+    d.id='jsError';
+    d.style.cssText='background:#fef2f2;color:#b91c1c;padding:12px;margin:12px;border-radius:12px;font-size:13px';
+    document.body.prepend(d);
+  }
+  d.textContent='JS Error: '+(e.message||'unknown');
+});
+</script>
 <style>
 .modal-back{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(2px);z-index:100;display:none;align-items:flex-end;justify-content:center;padding:12px}
 .modal-back.show{display:flex}
@@ -45,28 +60,50 @@
 <!-- SIDEBAR OVERLAY -->
 <div id="sidebarOverlay" onclick="closeSidebar()" class="fixed inset-0 bg-black/50 z-[35] hidden lg:hidden"></div>
 <button id="sidebarCloseFab" onclick="closeSidebar()" class="hidden lg:hidden fixed top-3 right-3 z-[60] w-11 h-11 rounded-full bg-white shadow-xl text-xl font-bold" aria-label="Close Menu">✕</button>
+
 <!-- SIDEBAR -->
 <aside id="sidebar" class="sidebar p-5 flex flex-col">
-<div class="flex items-center gap-3"><div class="w-11 h-11 rounded-xl bg-white text-slate-900 grid place-items-center font-bold text-lg shrink-0">A</div><div class="min-w-0 flex-1"><div class="font-bold leading-tight">FieldWork OS</div><div class="text-[11px] text-slate-400">DD Kandy • Admin Dashboard</div></div><button onclick="closeSidebar()" aria-label="Close Menu" class="lg:hidden shrink-0 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white text-[20px] font-bold grid place-items-center leading-none">✕</button></div>
+<div class="flex items-center gap-3">
+  <div class="w-11 h-11 rounded-xl bg-white text-slate-900 grid place-items-center font-bold text-lg shrink-0">A</div>
+  <div class="min-w-0 flex-1">
+    <div class="font-bold leading-tight">FieldWork OS</div>
+    <div class="text-[11px] text-slate-400">DD Kandy • Admin Dashboard</div>
+  </div>
+  <button onclick="closeSidebar()" aria-label="Close Menu" class="lg:hidden shrink-0 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white text-[20px] font-bold grid place-items-center leading-none">✕</button>
+</div>
 <nav class="mt-7 space-y-1 text-[14px]">
-<button data-nav="dashboard" onclick="goNav('dashboard')" class="nav-btn w-full text-left px-4 py-3 rounded-xl bg-white text-slate-900 font-semibold">🏠 Dashboard</button>
-<button data-nav="targets" onclick="goNav('targets')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">🎯 Target Setup<br><span class="text-[11px] font-normal opacity-80">Extension & Development Targets</span></button>
-<button data-nav="builder" onclick="goNav('builder')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">🧩 ප්‍රශ්න සකස් කිරීම<br><span class="text-[11px] font-normal opacity-80">Form Builder</span></button>
-<button data-nav="pricelist" onclick="goNav('pricelist')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">💰 Item Price List<br><span class="text-[11px] font-normal opacity-80">Year / Program / Item / Price</span></button>
-<button data-nav="pivapproval" onclick="goNav('pivapproval')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">🧾 PIV APPROVAL<br><span class="text-[11px] font-normal opacity-80">Unit → AD → DD Approval</span></button>
-<button data-nav="data" onclick="goNav('data')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">📊 දත්ත (Data)<br><span class="text-[11px] font-normal opacity-80">Edit / Delete / Filter</span></button>
-<button data-nav="users" onclick="goNav('users')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">👥 පරිශීලකයින් (Users)</button>
-<button data-nav="hierarchy" onclick="goNav('hierarchy')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">🏛️ කාර්යාල</button>
+  <button data-nav="dashboard" onclick="goNav('dashboard')" class="nav-btn w-full text-left px-4 py-3 rounded-xl bg-white text-slate-900 font-semibold">🏠 Dashboard</button>
+  <button data-nav="targets" onclick="goNav('targets')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">🎯 Target Setup<br><span class="text-[11px] font-normal opacity-80">Extension & Development Targets</span></button>
+  <button data-nav="builder" onclick="goNav('builder')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">🧩 Form Builder<br><span class="text-[11px] font-normal opacity-80">Create & Manage Questions</span></button>
+  <button data-nav="pricelist" onclick="goNav('pricelist')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">💰 Item Price List<br><span class="text-[11px] font-normal opacity-80">Year / Program / Item / Price</span></button>
+  <button data-nav="pivapproval" onclick="goNav('pivapproval')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">🧾 PIV Approval<br><span class="text-[11px] font-normal opacity-80">Unit → AD → DD Approval</span></button>
+  <button data-nav="data" onclick="goNav('data')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">📊 Data View<br><span class="text-[11px] font-normal opacity-80">Edit / Delete / Filter / Export</span></button>
+  <button data-nav="users" onclick="goNav('users')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">👥 Users<br><span class="text-[11px] font-normal opacity-80">Officer Name & Credentials</span></button>
+  <button data-nav="hierarchy" onclick="goNav('hierarchy')" class="nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10">🏛️ Offices<br><span class="text-[11px] font-normal opacity-80">45 Divisions & Offices</span></button>
 </nav>
 <div class="lg:hidden mt-2"><button onclick="closeSidebar()" class="w-full rounded-xl bg-white/10 py-2 text-xs font-semibold">← Back to Page</button></div>
-<div class="mt-auto rounded-2xl bg-white/10 p-4"><div class="text-sm font-semibold" id="roleLabel">Admin</div><div class="text-xs text-slate-300" id="userLabel"></div><div class="text-[11px] text-emerald-300 mt-1" id="scopeLabel"></div>
-<button onclick="logout()" class="mt-3 w-full rounded-xl bg-red-500 py-2 text-sm font-semibold">Logout</button></div>
+<div class="mt-auto rounded-2xl bg-white/10 p-4">
+  <div class="text-sm font-semibold" id="roleLabel">Admin</div>
+  <div class="text-xs text-slate-300" id="userLabel"></div>
+  <div class="text-[11px] text-emerald-300 mt-1" id="scopeLabel"></div>
+  <button onclick="logout()" class="mt-3 w-full rounded-xl bg-red-500 py-2 text-sm font-semibold">Logout</button>
+</div>
 </aside>
 
 <div class="main">
-<div class="topbar"><div class="flex items-center gap-3"><button onclick="openSidebar()" class="lg:hidden btn btn-ghost px-3">☰ Menu</button><h1 class="font-bold text-[17px] md:text-[19px]" id="pageTitle">Dashboard</h1><span class="text-[10px] px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold whitespace-nowrap">DD Kandy</span></div><div class="flex items-center gap-2"><span id="sbStatus" class="text-[11px] px-2 py-1 rounded bg-slate-100">Data...</span><button onclick="goNav('targets')" class="btn btn-primary px-4 py-2 text-xs">🎯 Target Setup</button></div></div>
+<div class="topbar">
+  <div class="flex items-center gap-3">
+    <button onclick="openSidebar()" class="lg:hidden btn btn-ghost px-3">☰ Menu</button>
+    <h1 class="font-bold text-[17px] md:text-[19px]" id="pageTitle">Dashboard</h1>
+    <span class="text-[10px] px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold whitespace-nowrap">DD Kandy</span>
+  </div>
+  <div class="flex items-center gap-2">
+    <span id="sbStatus" class="text-[11px] px-2 py-1 rounded bg-slate-100">Data...</span>
+    <button onclick="goNav('targets')" class="btn btn-primary px-4 py-2 text-xs">🎯 Target Setup</button>
+  </div>
+</div>
 
-<div class="p-4 md:p-6 max-w-[1100px] mx-auto space-y-5">
+<div class="p-4 md:p-6 max-w-[1240px] mx-auto space-y-5">
 
 <!-- ============ DASHBOARD ============ -->
 <div id="page-dashboard" class="page">
@@ -79,7 +116,7 @@
           <span class="text-4xl font-extrabold" id="extProgVal">0</span>
           <span class="text-lg font-medium text-blue-200">/ <span id="extTargetVal">0</span></span>
         </div>
-        <p class="text-xs text-blue-100 mt-1">සම්පූර්ණ වූ Extension ප්‍රමාණය (විස්තර සඳහා Click කරන්න →)</p>
+        <p class="text-xs text-blue-100 mt-1">Completed Extension Quantity (Click for details →)</p>
       </div>
       <div class="flex flex-col items-end gap-2"><div class="w-11 h-11 rounded-2xl bg-white/15 grid place-items-center text-xl">🌾</div></div>
     </div>
@@ -96,7 +133,7 @@
           <span class="text-4xl font-extrabold" id="devProgVal">0</span>
           <span class="text-lg font-medium text-emerald-200">/ <span id="devTargetVal">0</span></span>
         </div>
-        <p class="text-xs text-emerald-100 mt-1">සම්පූර්ණ වූ Development ප්‍රමාණය (විස්තර සඳහා Click කරන්න →)</p>
+        <p class="text-xs text-emerald-100 mt-1">Completed Development Quantity (Click for details →)</p>
       </div>
       <div class="flex flex-col items-end gap-2"><div class="w-11 h-11 rounded-2xl bg-white/15 grid place-items-center text-xl">🏗️</div></div>
     </div>
@@ -107,54 +144,54 @@
 </div>
 
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-5">
-<div class="card !p-4"><div class="text-xs text-slate-500">Extension අංශ</div><div class="text-2xl font-bold mt-1 text-indigo-600" id="kExt">0</div></div>
-<div class="card !p-4"><div class="text-xs text-slate-500">Development අංශ</div><div class="text-2xl font-bold mt-1 text-emerald-600" id="kDev">0</div></div>
-<div class="card !p-4"><div class="text-xs text-slate-500">මුළු ප්‍රශ්න</div><div class="text-2xl font-bold mt-1" id="kQ">0</div></div>
-<div class="card !p-4"><div class="text-xs text-slate-500">මුළු පිළිතුරු</div><div class="text-2xl font-bold mt-1" id="kR">0</div></div>
+  <div class="card !p-4"><div class="text-xs text-slate-500">Extension Nodes</div><div class="text-2xl font-bold mt-1 text-indigo-600" id="kExt">0</div></div>
+  <div class="card !p-4"><div class="text-xs text-slate-500">Development Nodes</div><div class="text-2xl font-bold mt-1 text-emerald-600" id="kDev">0</div></div>
+  <div class="card !p-4"><div class="text-xs text-slate-500">Total Questions</div><div class="text-2xl font-bold mt-1" id="kQ">0</div></div>
+  <div class="card !p-4"><div class="text-xs text-slate-500">Total Responses</div><div class="text-2xl font-bold mt-1" id="kR">0</div></div>
 </div>
 
 <div class="grid md:grid-cols-3 gap-4 mt-5">
   <div class="card !p-4 flex flex-col justify-between gap-3 border-2 border-indigo-100">
-    <div><h3 class="font-bold text-indigo-900">🎯 Target Setup</h3><p class="text-xs text-slate-500 mt-1">Season/Year, Program, Sub Program, Item සහ 45 AI Offices Target සැකසීම</p></div>
-    <button onclick="goNav('targets')" class="btn btn-primary w-full py-2.5 text-xs">Target සකසන්න →</button>
+    <div><h3 class="font-bold text-indigo-900">🎯 Target Setup</h3><p class="text-xs text-slate-500 mt-1">Configure Season/Year, Program, Sub Program, Item and 45 AI Offices Targets</p></div>
+    <button onclick="goNav('targets')" class="btn btn-primary w-full py-2.5 text-xs">Setup Targets →</button>
   </div>
   <div class="card !p-4 flex flex-col justify-between gap-3">
-    <div><h3 class="font-bold">🧩 ප්‍රශ්න සකස් කිරීම</h3><p class="text-xs text-slate-500 mt-1">Target සැකසූ අංශ සඳහා Unit ප්‍රශ්න සෑදීම</p></div>
-    <button onclick="goNav('builder')" class="btn btn-ghost w-full py-2.5 text-xs">ප්‍රශ්න සකසන්න →</button>
+    <div><h3 class="font-bold">🧩 Form Builder</h3><p class="text-xs text-slate-500 mt-1">Create Unit questions for configured targets and items</p></div>
+    <button onclick="goNav('builder')" class="btn btn-ghost w-full py-2.5 text-xs">Open Builder →</button>
   </div>
   <div class="card !p-4 flex flex-col justify-between gap-3">
-    <div><h3 class="font-bold">💰 Item Price List</h3><p class="text-xs text-slate-500 mt-1">Development Items සඳහා Subsidy, Price සහ Chart</p></div>
-    <button onclick="goNav('pricelist')" class="btn btn-success w-full py-2.5 text-xs">Price List විවෘත කරන්න →</button>
+    <div><h3 class="font-bold">💰 Item Price List</h3><p class="text-xs text-slate-500 mt-1">Manage Subsidy, Unit Price, Gov Price, Farmer Price and Chart</p></div>
+    <button onclick="goNav('pricelist')" class="btn btn-success w-full py-2.5 text-xs">Open Price List →</button>
   </div>
 </div>
 
-<div class="card mt-5"><h3 class="font-bold">දැන් Unit එකේ පෙන්වන්නේ — <span class="text-emerald-600">Published Only</span></h3><div id="publishedBox" class="grid md:grid-cols-2 gap-3 mt-4"></div></div>
-<div class="card mt-5"><h3 class="font-bold">නවතම පිළිතුරු (Latest 8)</h3><div id="recentBox" class="mt-3 space-y-2"></div><button onclick="goNav('data')" class="btn btn-ghost mt-3 text-xs">සියලු දත්ත බලන්න →</button></div>
+<div class="card mt-5"><h3 class="font-bold">Currently Shown in Unit — <span class="text-emerald-600">Published Only</span></h3><div id="publishedBox" class="grid md:grid-cols-2 gap-3 mt-4"></div></div>
+<div class="card mt-5"><h3 class="font-bold">Latest Submissions (Latest 8)</h3><div id="recentBox" class="mt-3 space-y-2"></div><button onclick="goNav('data')" class="btn btn-ghost mt-3 text-xs">View All Data →</button></div>
 </div>
 
 <!-- ============ TARGET SETUP ============ -->
 <div id="page-targets" class="page hidden space-y-5">
   <div class="card !py-3 flex flex-wrap items-center gap-2 text-[13px]">
     <span class="font-bold">🎯 Target Setup:</span>
-    <span id="tCrumb" class="text-indigo-700 font-semibold">Extension / Development තෝරන්න</span>
-    <button onclick="resetTargetWizard()" class="ml-auto btn btn-ghost px-3 py-1.5 text-xs">↺ මුල සිට</button>
+    <span id="tCrumb" class="text-indigo-700 font-semibold">Select Extension / Development</span>
+    <button onclick="resetTargetWizard()" class="ml-auto btn btn-ghost px-3 py-1.5 text-xs">↺ Start Over</button>
   </div>
 
   <div id="tw1" class="card">
-    <h2 class="font-bold text-[19px]">Step 1 — අංශය තෝරන්න (Extension / Development)</h2>
-    <p class="text-sm text-slate-500 mt-1">මෙහි සකසන ව්‍යුහය (Structure) ස්වයංක්‍රීයව ප්‍රශ්න සකස් කිරීමේ (Form Builder) සහ Price List හි දිස්වේ.</p>
+    <h2 class="font-bold text-[19px]">Step 1 — Select Category (Extension / Development)</h2>
+    <p class="text-sm text-slate-500 mt-1">Structure configured here automatically appears in Form Builder and Item Price List.</p>
     <div class="grid md:grid-cols-2 gap-4 mt-5">
       <button onclick="tPickMain('extension')" class="text-left rounded-2xl border-2 border-indigo-200 hover:border-indigo-600 p-5 bg-white transition">
         <div class="text-3xl">🌾</div>
         <div class="font-bold text-lg mt-2">Extension Target Setup</div>
         <div class="text-sm text-slate-500 mt-1">Order: Season → Main Program → Sub Program → 45 AI Offices Target</div>
-        <div class="mt-3 text-indigo-600 font-semibold text-sm">තෝරන්න →</div>
+        <div class="mt-3 text-indigo-600 font-semibold text-sm">Select →</div>
       </button>
       <button onclick="tPickMain('development')" class="text-left rounded-2xl border-2 border-emerald-200 hover:border-emerald-600 p-5 bg-white transition">
         <div class="text-3xl">🏗️</div>
         <div class="font-bold text-lg mt-2">Development Target Setup</div>
         <div class="text-sm text-slate-500 mt-1">Order: Year → Program → Sub Program → Item → 45 AI Offices Target</div>
-        <div class="mt-3 text-emerald-600 font-semibold text-sm">තෝරන්න →</div>
+        <div class="mt-3 text-emerald-600 font-semibold text-sm">Select →</div>
       </button>
     </div>
   </div>
@@ -163,7 +200,7 @@
     <h2 class="font-bold text-[19px]" id="tw2Title">Step 2 — Season / Year</h2>
     <p class="text-xs text-slate-500 mt-1">Copy All (Programs, Sub Programs, Items & Targets)</p>
     <div class="flex gap-2 mt-4">
-      <input id="tNewL1" placeholder="උදා: 2026/27 Maha හෝ 2026">
+      <input id="tNewL1" placeholder="e.g. 2026/27 Maha or 2026">
       <button onclick="tAddNode(1)" class="btn btn-primary px-4 shrink-0">+ Add</button>
     </div>
     <div id="tL1List" class="mt-4 space-y-2"></div>
@@ -177,7 +214,7 @@
     <h2 class="font-bold text-[19px]" id="tw3Title">Step 3 — Program</h2>
     <p class="text-xs text-slate-500 mt-1" id="tw3Desc">Copy All (Sub Programs, Items & Targets)</p>
     <div class="flex gap-2 mt-4">
-      <input id="tNewL2" placeholder="උදා: Paddy Cultivation හෝ PSDG / KNUCKLES">
+      <input id="tNewL2" placeholder="e.g. Paddy Cultivation or PSDG / KNUCKLES">
       <button onclick="tAddNode(2)" class="btn btn-primary px-4 shrink-0">+ Add</button>
     </div>
     <div id="tL2List" class="mt-4 space-y-2"></div>
@@ -189,9 +226,9 @@
 
   <div id="tw4" class="card hidden">
     <h2 class="font-bold text-[19px]" id="tw4Title">Step 4 — Sub Program</h2>
-    <p class="text-xs text-slate-500 mt-1" id="tw4Desc">Copy All (Items / Targets) </p>
+    <p class="text-xs text-slate-500 mt-1" id="tw4Desc">Copy All (Items / Targets)</p>
     <div class="flex gap-2 mt-4">
-      <input id="tNewL3" placeholder="Sub Program නම ඇතුළත් කරන්න">
+      <input id="tNewL3" placeholder="Enter Sub Program name">
       <button onclick="tAddNode(3)" class="btn btn-primary px-4 shrink-0">+ Add</button>
     </div>
     <div id="tL3List" class="mt-4 space-y-2"></div>
@@ -202,10 +239,10 @@
   </div>
 
   <div id="tw5" class="card hidden">
-    <h2 class="font-bold text-[19px]">Step 5 — Item තෝරන්න / එකතු කරන්න (Development)</h2>
-    <p class="text-xs text-slate-500 mt-1">Copy All (Item & AI Office Targets) • Excel Range (උදා: B5:B10) තෝරා එක් එක් පේළියේ ඇති Items වෙන වෙනම Auto එකතු කළ හැක</p>
+    <h2 class="font-bold text-[19px]">Step 5 — Select / Add Item (Development)</h2>
+    <p class="text-xs text-slate-500 mt-1">Copy All (Item & AI Office Targets) • Select Excel Range (e.g. B5:B10) to auto-add each row as an Item</p>
     <div class="flex flex-wrap gap-2 mt-4">
-      <input id="tNewL4" placeholder="උදා: Paddy Seed / Urea / Water Pump" class="flex-1 min-w-[200px]">
+      <input id="tNewL4" placeholder="e.g. Paddy Seed / Urea / Water Pump" class="flex-1 min-w-[200px]">
       <button onclick="tAddNode(4)" class="btn btn-primary px-4 shrink-0">+ Add Item</button>
       <label class="btn btn-success px-4 shrink-0 cursor-pointer">📥 Import Range (Excel)<input type="file" id="tItemExcelInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="tImportItemsExcel(event)"></label>
     </div>
@@ -216,21 +253,20 @@
     </div>
   </div>
 
-  <!-- Step 6: AI Offices Target Update (Filtered ONLY by AD Office) -->
   <div id="tw6" class="card hidden">
     <div class="flex flex-wrap justify-between items-center gap-3">
       <div>
         <h2 class="font-bold text-[19px]">🏛️ AI Office Target Update</h2>
-        <p class="text-xs text-slate-500 mt-1">AD Office → AI Office Target (Save Targets කළ විට Development ප්‍රශ්න ද ස්වයංක්‍රීයව Save වේ)</p>
+        <p class="text-xs text-slate-500 mt-1">AD Office → AI Office Target (Saving Development targets also auto-saves default questions)</p>
       </div>
       <div class="bg-indigo-50 border border-indigo-200 px-4 py-2 rounded-xl text-right">
-        <div class="text-[11px] text-indigo-600 font-semibold">මුළු Target එකතුව (Total)</div>
+        <div class="text-[11px] text-indigo-600 font-semibold">Total Target Sum</div>
         <div class="text-xl font-extrabold text-indigo-900" id="tTotalSum">0</div>
       </div>
     </div>
 
     <div class="mt-4 bg-slate-50 p-3 rounded-2xl border">
-      <label class="text-xs font-semibold text-slate-600">AD Office (Sub Office) තෝරන්න:</label>
+      <label class="text-xs font-semibold text-slate-600">Select AD Office (Sub Office):</label>
       <select id="tFilterAdOffice" onchange="renderTargetUnitsTable()" class="mt-1 bg-white"></select>
     </div>
 
@@ -254,64 +290,64 @@
   </div>
 </div>
 
-<!-- ============ BUILDER (WITH UP, DOWN, DELETE, COPY ALL SUB-NODES & EDIT) ============ -->
+<!-- ============ BUILDER ============ -->
 <div id="page-builder" class="page hidden">
-<div class="card !py-3 flex flex-wrap items-center gap-2 text-[13px]"><span class="font-bold">ඔබ සිටින්නේ:</span><span id="crumb" class="text-indigo-700 font-semibold">Extension / Development තෝරන්න</span><button onclick="resetWizard()" class="ml-auto btn btn-ghost px-3 py-1.5 text-xs">↺ මුල සිට</button></div>
+<div class="card !py-3 flex flex-wrap items-center gap-2 text-[13px]"><span class="font-bold">Current Path:</span><span id="crumb" class="text-indigo-700 font-semibold">Select Extension / Development</span><button onclick="resetWizard()" class="ml-auto btn btn-ghost px-3 py-1.5 text-xs">↺ Start Over</button></div>
 
 <div class="flex items-center gap-2 md:gap-3 text-[11px] md:text-xs font-semibold overflow-x-auto pb-1">
-<div class="flex items-center gap-2"><span class="step-dot now" id="dot1">1</span><span>අංශය</span></div><span class="text-slate-300">→</span>
+<div class="flex items-center gap-2"><span class="step-dot now" id="dot1">1</span><span>Category</span></div><span class="text-slate-300">→</span>
 <div class="flex items-center gap-2"><span class="step-dot" id="dot2">2</span><span id="lbl2">Season / Year</span></div><span class="text-slate-300">→</span>
 <div class="flex items-center gap-2"><span class="step-dot" id="dot3">3</span><span id="lbl3">Program</span></div><span class="text-slate-300">→</span>
 <div class="flex items-center gap-2" id="step4Wrap"><span class="step-dot" id="dot4">4</span><span id="lbl4">Sub Program</span></div><span class="text-slate-300" id="arrow4">→</span>
 <div class="flex items-center gap-2" id="step5Wrap"><span class="step-dot" id="dot5">5</span><span id="lbl5">Item</span></div><span class="text-slate-300" id="arrow5">→</span>
-<div class="flex items-center gap-2" id="step6Wrap"><span class="step-dot" id="dot6">6</span><span>ප්‍රශ්න</span></div>
+<div class="flex items-center gap-2" id="step6Wrap"><span class="step-dot" id="dot6">6</span><span>Questions</span></div>
 </div>
 
 <div id="w1" class="wizard-step active">
-<div class="card"><h2 class="font-bold text-[19px]">Step 1 — Extension / Development තෝරන්න</h2>
+<div class="card"><h2 class="font-bold text-[19px]">Step 1 — Select Extension / Development</h2>
 <div class="grid md:grid-cols-2 gap-4 mt-5">
-<button onclick="pickMain('extension')" class="text-left rounded-2xl border-2 border-indigo-200 hover:border-indigo-600 p-5 bg-white"><div class="text-3xl">🌾</div><div class="font-bold text-lg mt-2">Extension — කෘෂිකර්ම </div><div class="mt-3 text-indigo-600 font-semibold text-sm">තෝරන්න →</div></button>
-<button onclick="pickMain('development')" class="text-left rounded-2xl border-2 border-emerald-200 hover:border-emerald-600 p-5 bg-white"><div class="text-3xl">🏗️</div><div class="font-bold text-lg mt-2">Development — සංවර්ධන</div><div class="mt-3 text-emerald-600 font-semibold text-sm">තෝරන්න →</div></button>
+<button onclick="pickMain('extension')" class="text-left rounded-2xl border-2 border-indigo-200 hover:border-indigo-600 p-5 bg-white"><div class="text-3xl">🌾</div><div class="font-bold text-lg mt-2">Extension</div><div class="mt-3 text-indigo-600 font-semibold text-sm">Select →</div></button>
+<button onclick="pickMain('development')" class="text-left rounded-2xl border-2 border-emerald-200 hover:border-emerald-600 p-5 bg-white"><div class="text-3xl">🏗️</div><div class="font-bold text-lg mt-2">Development</div><div class="mt-3 text-emerald-600 font-semibold text-sm">Select →</div></button>
 </div></div>
 </div>
 
 <div id="w2" class="wizard-step">
-<div class="card"><div class="flex justify-between items-center"><h2 class="font-bold text-[19px]" id="w2Title">Step 2</h2><button onclick="goNav('targets')" class="btn btn-ghost text-xs">+ Target Setup වෙත</button></div>
+<div class="card"><div class="flex justify-between items-center"><h2 class="font-bold text-[19px]" id="w2Title">Step 2</h2><button onclick="goNav('targets')" class="btn btn-ghost text-xs">+ Go to Target Setup</button></div>
 <p class="text-xs text-slate-500 mt-1">Up / Down / Delete / Copy All & Edit</p>
 <div id="l1List" class="mt-4 space-y-2"></div>
 <div class="flex gap-2 mt-5"><button onclick="gotoStep(1)" class="btn btn-ghost">← Back</button><button onclick="gotoStep(3)" id="w2Next" class="btn btn-primary ml-auto" disabled>Next →</button></div></div>
 </div>
 
 <div id="w3" class="wizard-step">
-<div class="card"><h2 class="font-bold text-[19px]" id="w3Title">Step 3</h2><p class="text-xs text-slate-500 mt-1" id="w3Desc">Up / Down / Delete / Copy All (සියලුම උප කොටස් Copy වේ) & Edit</p>
+<div class="card"><h2 class="font-bold text-[19px]" id="w3Title">Step 3</h2><p class="text-xs text-slate-500 mt-1" id="w3Desc">Up / Down / Delete / Copy All & Edit</p>
 <div id="l2List" class="mt-4 space-y-2"></div>
 <div class="flex gap-2 mt-5"><button onclick="gotoStep(2)" class="btn btn-ghost">← Back</button><button onclick="w3Next()" id="w3Next" class="btn btn-primary ml-auto" disabled>Next →</button></div></div>
 </div>
 
 <div id="w4" class="wizard-step">
-<div class="card"><h2 class="font-bold text-[19px]" id="w4Title">Step 4 — Sub Program</h2><p class="text-xs text-slate-500 mt-1" id="w4Desc">Up / Down / Delete / Copy All (සියලුම උප කොටස් Copy වේ) & Edit</p>
+<div class="card"><h2 class="font-bold text-[19px]" id="w4Title">Step 4 — Sub Program</h2><p class="text-xs text-slate-500 mt-1" id="w4Desc">Up / Down / Delete / Copy All & Edit</p>
 <div id="l3List" class="mt-4 space-y-2"></div>
 <div class="flex gap-2 mt-5"><button onclick="gotoStep(3)" class="btn btn-ghost">← Back</button><button onclick="w4Next()" id="w4Next" class="btn btn-primary ml-auto" disabled>Next →</button></div></div>
 </div>
 
 <div id="w5" class="wizard-step">
-<div class="card"><h2 class="font-bold text-[19px]">Step 5 — Item තෝරන්න</h2><p class="text-xs text-slate-500 mt-1">Up / Down / Delete / Copy All & Edit</p>
+<div class="card"><h2 class="font-bold text-[19px]">Step 5 — Select Item</h2><p class="text-xs text-slate-500 mt-1">Up / Down / Delete / Copy All & Edit</p>
 <div id="itemList" class="mt-4 space-y-2"></div>
-<div class="flex gap-2 mt-5"><button onclick="gotoStep(4)" class="btn btn-ghost">← Back</button><button onclick="gotoStep(6)" class="btn btn-primary ml-auto">Next: ප්‍රශ්න →</button></div></div>
+<div class="flex gap-2 mt-5"><button onclick="gotoStep(4)" class="btn btn-ghost">← Back</button><button onclick="gotoStep(6)" class="btn btn-primary ml-auto">Next: Questions →</button></div></div>
 </div>
 
 <div id="w6" class="wizard-step">
-<div class="card"><h2 class="font-bold text-[19px]">Step 6 — Unit ප්‍රශ්න සාදන්න</h2>
+<div class="card"><h2 class="font-bold text-[19px]">Step 6 — Create Unit Questions</h2>
 <div class="flex flex-wrap gap-2 mt-3"><button onclick="loadDevTemplate()" class="btn btn-success text-xs px-3 py-2">Development Template (7 Questions)</button><button onclick="loadExtTemplate()" class="btn btn-ghost text-xs px-3 py-2">Extension Template</button></div>
 <div id="devMultiItemNote" class="hidden mt-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3 text-xs text-emerald-950">
-  <b>Multi-Item & Report Rule:</b> එක් Sub Program එකකට Items කිහිපයක් ලබා දී ඇත්නම්, Unit form හි Items තේරීමේ කොටුව / progress කොටුව යටතේ පොදු ප්‍රශ්න එක් වරක් පමණක් දිස්වේ. යම් Item එකකට පමණක් වෙනස් ප්‍රශ්නයක් ඇත්නම් මෙහිදී එක් කළ හැක; Save/Submit කරන විට එක් එක් Item සඳහා වෙනම පේළියක් (separate row) ලෙස වෙන් වී සුරැකේ.
+  <b>Multi-Item & Summary Rule:</b> Each item supports per-item farmer contribution radio selection and item-specific extra questions, while summary and data tables show one column per question and one row per item.
 </div>
 <div class="grid lg:grid-cols-[400px_1fr] gap-5 mt-4">
 <form id="qForm" class="space-y-3 border rounded-2xl p-4 h-fit bg-slate-50"><input type="hidden" id="qId">
-<div><label>ප්‍රශ්නය — Question *</label><textarea id="qText" rows="2" required class="mt-1"></textarea></div>
+<div><label>Question *</label><textarea id="qText" rows="2" required class="mt-1"></textarea></div>
 <div class="grid grid-cols-2 gap-3">
   <div>
-    <label>පිළිතුරු වර්ගය</label>
+    <label>Answer Type</label>
     <select id="qType" onchange="onQType()" class="mt-1">
       <option value="short_text">Short Answer</option>
       <option value="paragraph">Paragraph</option>
@@ -325,15 +361,15 @@
     </select>
   </div>
   <div>
-    <label>අනිවාර්යද?</label>
+    <label>Required?</label>
     <select id="qReq" class="mt-1"><option value="1">Yes *</option><option value="0">No</option></select>
   </div>
 </div>
 <div id="optWrap" class="hidden"><label>Options</label><div id="optList" class="space-y-2 mt-1"></div><div class="flex gap-2 mt-2"><input id="optInput" placeholder="Option value..."><button type="button" onclick="addOption()" class="btn btn-ghost px-3 shrink-0">+ Add</button></div></div>
-<button class="btn btn-primary w-full">Save ප්‍රශ්නය</button><button type="button" onclick="resetQ()" class="btn btn-ghost w-full">Reset</button></form>
-<div><div class="font-semibold">මෙම අංශයේ ප්‍රශ්න (<span id="qCount">0</span>)</div><div id="qList" class="mt-3 space-y-2"></div><div class="q-preview mt-4"><div class="font-semibold text-sm">👁️ Preview</div><div id="qPreview" class="mt-3 space-y-3"></div></div></div>
+<button class="btn btn-primary w-full">Save Question</button><button type="button" onclick="resetQ()" class="btn btn-ghost w-full">Reset</button></form>
+<div><div class="font-semibold">Questions in Selected Node (<span id="qCount">0</span>)</div><div id="qList" class="mt-3 space-y-2"></div><div class="q-preview mt-4"><div class="font-semibold text-sm">👁️ Preview</div><div id="qPreview" class="mt-3 space-y-3"></div></div></div>
 </div>
-<div class="flex gap-2 mt-5"><button onclick="backFromQ()" class="btn btn-ghost">← Back</button><button onclick="finishWizard()" class="btn btn-success ml-auto">✓ අවසන් — Dashboard</button></div></div>
+<div class="flex gap-2 mt-5"><button onclick="backFromQ()" class="btn btn-ghost">← Back</button><button onclick="finishWizard()" class="btn btn-success ml-auto">✓ Done — Dashboard</button></div></div>
 </div>
 </div>
 
@@ -354,7 +390,7 @@
           <div><label class="text-xs font-semibold">1. Year *</label><select id="plYear" onchange="onPlYearChange()" required class="mt-1 bg-white"></select></div>
           <div><label class="text-xs font-semibold">2. Program *</label><select id="plProgram" onchange="onPlProgChange()" required class="mt-1 bg-white"></select></div>
           <div><label class="text-xs font-semibold">3. Sub Program *</label><select id="plSubProgram" onchange="onPlSubProgChange()" required class="mt-1 bg-white"></select></div>
-          <div><label class="text-xs font-semibold">4. Item Name *</label><select id="plItemSelect" onchange="onPlItemSelectChange()" class="mt-1 bg-white"></select><input id="plItemCustom" placeholder="වෙනත් Item..." class="mt-2 bg-white hidden"></div>
+          <div><label class="text-xs font-semibold">4. Item Name *</label><select id="plItemSelect" onchange="onPlItemSelectChange()" class="mt-1 bg-white"></select><input id="plItemCustom" placeholder="Custom Item..." class="mt-2 bg-white hidden"></div>
           <hr>
           <div class="grid grid-cols-2 gap-3">
             <div><label class="text-xs font-semibold">5. Subsidy *</label><select id="plSubsidy" onchange="calcPlPrices()" class="mt-1 bg-white"><option value="75%">75%</option><option value="50%">50%</option><option value="25%">25%</option><option value="free">Free</option></select></div>
@@ -375,14 +411,14 @@
   </div>
 </div>
 
-<!-- ============ PIV APPROVAL (UNIT -> AD -> DD APPROVAL) ============ -->
+<!-- ============ PIV APPROVAL ============ -->
 <div id="page-pivapproval" class="page hidden space-y-5">
   <div class="card space-y-4">
     <div class="flex flex-wrap justify-between items-center gap-2">
       <div>
         <span class="px-2.5 py-0.5 rounded-full bg-violet-100 text-violet-800 text-[11px] font-bold uppercase">🧾 PIV APPROVAL (UNIT → AD OFFICE → DD OFFICE)</span>
         <h2 class="text-xl font-bold text-slate-900 mt-1">PIV Approval Management</h2>
-        <p class="text-xs text-slate-500">Unit submit PIV records. AD Office check & submit to DD Office -> AD Approved / DD Office Pending. DD Office check & Approve -> Date saved.</p>
+        <p class="text-xs text-slate-500">All PIV records are stored directly in Supabase. Approve and set DD Approval Date.</p>
       </div>
       <button onclick="sbSync()" class="btn btn-ghost text-xs px-3 py-2">↻ Refresh PIV</button>
     </div>
@@ -438,12 +474,12 @@
   </div>
 </div>
 
-<!-- ============ DATA ============ -->
+<!-- ============ DATA VIEW ============ -->
 <div id="page-data" class="page hidden space-y-6">
   <div class="card">
     <div class="flex flex-wrap justify-between items-center gap-2">
       <div>
-        <h2 class="font-bold text-[19px]">දත්ත — Extension & Development Tables</h2>
+        <h2 class="font-bold text-[19px]">Data View — Extension & Development Tables</h2>
         <p class="text-xs text-slate-500 mt-1" id="dataScopeNote"></p>
       </div>
       <div class="flex flex-wrap gap-2">
@@ -509,17 +545,7 @@
 
     <div class="table-wrap bg-white rounded-xl border">
       <table>
-        <thead id="extDataThead">
-          <tr class="bg-blue-50">
-            <th>Category / Program</th>
-            <th>Session</th>
-            <th>Sub Program</th>
-            <th>AD / AI Office</th>
-            <th>Answers</th>
-            <th>Date</th>
-            <th>Action</th>
-          </tr>
-        </thead>
+        <thead id="extDataThead"></thead>
         <tbody id="extDataTbody"></tbody>
       </table>
     </div>
@@ -575,18 +601,7 @@
 
     <div class="table-wrap bg-white rounded-xl border">
       <table>
-        <thead id="devDataThead">
-          <tr class="bg-emerald-50">
-            <th>Category / Program</th>
-            <th>Year</th>
-            <th>Sub Program</th>
-            <th>Item</th>
-            <th>AD / AI Office</th>
-            <th>Answers</th>
-            <th>Date</th>
-            <th>Action</th>
-          </tr>
-        </thead>
+        <thead id="devDataThead"></thead>
         <tbody id="devDataTbody"></tbody>
       </table>
     </div>
@@ -601,26 +616,26 @@
   </div>
 </div>
 
-<!-- ============ USERS (OFFICER NAME & PASSWORD UPDATE) ============ -->
+<!-- ============ USERS ============ -->
 <div id="page-users" class="page hidden">
 <div class="grid lg:grid-cols-[380px_1fr] gap-5">
   <div class="card h-fit">
     <h3 class="font-bold">User Add / Edit (Officer Name & Password)</h3>
-    <p class="text-xs text-slate-500 mt-1">AI Officer Name update</p>
+    <p class="text-xs text-slate-500 mt-1">Updates are saved directly to Supabase and synced to Unit</p>
     <form id="userForm" class="mt-4 space-y-3">
       <input type="hidden" id="uId">
-      <div><label>නම *</label><input id="uName" required class="mt-1"></div>
+      <div><label>Name *</label><input id="uName" required class="mt-1"></div>
       <div><label>Username *</label><input id="uUsername" required class="mt-1"></div>
       <div><label>Officer Name *</label><input id="uOfficer" required placeholder="AI Officer Name..." class="mt-1 bg-amber-50/60 border-amber-300 font-semibold"></div>
-      <div><label>Password *</label><input id="uPassword" type="password" required placeholder="New Password..." class="mt-1 bg-indigo-50/60 border-indigo-300 font-semibold"></div>
+      <div><label>Password *</label><input id="uPassword" type="password" required placeholder="Password..." class="mt-1 bg-indigo-50/60 border-indigo-300 font-semibold"></div>
       <div class="grid grid-cols-2 gap-3">
         <div><label>Role</label><select id="uRole" class="mt-1"><option value="unit_user">Unit</option><option value="sub_admin">Sub Admin</option><option value="main_admin">Main Admin</option></select></div>
         <div><label>Status</label><select id="uStatus" class="mt-1"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
       </div>
-      <div><label>Sub Office</label><select id="uSub" onchange="onUSub()" class="mt-1"></select></div>
-      <div><label>අංශය</label><select id="uDiv" onchange="onUDiv()" class="mt-1"></select></div>
-      <div><label>කාර්යාලය</label><select id="uOffice" class="mt-1"></select></div>
-      <button class="btn btn-primary w-full">Save Officer Name & Password</button>
+      <div><label>Sub Office (AD)</label><select id="uSub" onchange="onUSub()" class="mt-1"></select></div>
+      <div><label>Division (AI)</label><select id="uDiv" onchange="onUDiv()" class="mt-1"></select></div>
+      <div><label>Office</label><select id="uOffice" class="mt-1"></select></div>
+      <button type="submit" id="saveUserBtn" class="btn btn-primary w-full">Save Officer Name & User</button>
       <button type="button" onclick="resetUser()" class="btn btn-ghost w-full">Reset</button>
     </form>
   </div>
@@ -634,7 +649,7 @@
 
 <!-- ============ HIERARCHY ============ -->
 <div id="page-hierarchy" class="page hidden">
-<div class="card"><h3 class="font-bold">45 උප ප්‍රදේශ + කාර්යාල</h3><div class="grid md:grid-cols-[280px_1fr] gap-5 mt-5"><div class="space-y-2" id="hierList"></div><div><div class="rounded-2xl border p-4"><h4 class="font-bold" id="hierTitle"></h4><div id="hierDivs" class="mt-3 space-y-2"></div></div><div class="rounded-2xl border p-4 mt-4"><h4 class="font-bold" id="officeTitle"></h4><div id="officeList" class="mt-3 space-y-2"></div><div class="flex gap-2 mt-4"><input id="newOfficeName" placeholder="අලුත් කාර්යාලය..."><button onclick="addOffice()" class="btn btn-primary px-4 shrink-0">+ Add</button></div></div></div></div></div>
+<div class="card"><h3 class="font-bold">45 Sub-Divisions & Offices</h3><div class="grid md:grid-cols-[280px_1fr] gap-5 mt-5"><div class="space-y-2" id="hierList"></div><div><div class="rounded-2xl border p-4"><h4 class="font-bold" id="hierTitle"></h4><div id="hierDivs" class="mt-3 space-y-2"></div></div><div class="rounded-2xl border p-4 mt-4"><h4 class="font-bold" id="officeTitle"></h4><div id="officeList" class="mt-3 space-y-2"></div><div class="flex gap-2 mt-4"><input id="newOfficeName" placeholder="New office name..."><button onclick="addOffice()" class="btn btn-primary px-4 shrink-0">+ Add</button></div></div></div></div></div>
 </div>
 
 </div></div>
@@ -668,24 +683,25 @@ const sb=(typeof supabase!=='undefined')?supabase.createClient(SUPABASE_URL,SUPA
 })();
 
 window.addEventListener('pageshow', function(event) {
-    if (event.persisted || (typeof performance !== 'undefined' && performance.navigation.type === 2)) {
-        var sess = localStorage.getItem('fw_session');
-        if (!sess) { window.location.replace('index.html'); }
-    }
+  if (event.persisted || (typeof performance !== 'undefined' && performance.navigation.type === 2)) {
+    var sess = localStorage.getItem('fw_session');
+    if (!sess) { window.location.replace('index.html'); }
+  }
 });
 
 var __modalResolve=null;
 function showToast(msg,ok){var t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.className='toast show '+(ok===false?'err':ok===true?'ok':'');setTimeout(function(){t.className='toast';},2600);}
 function openModal(opt){return new Promise(function(res){__modalResolve=res;document.getElementById('modalIcon').textContent=opt.icon||'ℹ️';document.getElementById('modalTitle').textContent=opt.title||'';document.getElementById('modalMsg').textContent=opt.msg||'';var iw=document.getElementById('modalInputWrap');var sw=document.getElementById('modalSelectWrap');iw.classList.add('hidden');sw.classList.add('hidden');if(opt.input){iw.classList.remove('hidden');document.getElementById('modalInput').value=opt.value||'';document.getElementById('modalInput').placeholder=opt.placeholder||'';}if(opt.selectOptions){sw.classList.remove('hidden');document.getElementById('modalSelect').innerHTML=opt.selectOptions.map(o=>'<option value="'+o.v+'">'+o.l+'</option>').join('');}document.getElementById('modalCancel').style.display=opt.hideCancel?'none':'';document.getElementById('modalOk').textContent=opt.okText||'OK';document.getElementById('modalBack').classList.add('show');});}
 function closeModal(ok){var selEl=document.getElementById('modalSelect');var selVal=selEl?selEl.value:'';document.getElementById('modalBack').classList.remove('show');if(__modalResolve){var r=__modalResolve;__modalResolve=null;r({ok:ok,value:document.getElementById('modalInput').value,selectValue:selVal});}}
-function profAlert(msg,title){return openModal({title:title||'තොරතුරු',msg:msg,icon:'✅',hideCancel:true,okText:'OK'});}
-function profConfirm(msg,title){return openModal({title:title||'විශ්වාසද?',msg:msg,icon:'⚠️',okText:'ඔව්'}).then(r=>r.ok);}
-function profPrompt(msg,defVal,placeholder){return openModal({title:'නම / Edit',msg:msg,icon:'✏️',input:true,value:defVal||'',placeholder:placeholder||''}).then(r=>r.ok?r.value:null);}
+function profAlert(msg,title){return openModal({title:title||'Info',msg:msg,icon:'✅',hideCancel:true,okText:'OK'});}
+function profConfirm(msg,title){return openModal({title:title||'Confirm',msg:msg,icon:'⚠️',okText:'Yes'}).then(r=>r.ok);}
+function profPrompt(msg,defVal,placeholder){return openModal({title:'Edit / Name',msg:msg,icon:'✏️',input:true,value:defVal||'',placeholder:placeholder||''}).then(r=>r.ok?r.value:null);}
 
-var role=localStorage.getItem('role')||'main_admin'; var mySub=localStorage.getItem('user_subOfficeId')||'ALL';
+var role=localStorage.getItem('role')||'main_admin';
+var mySub=localStorage.getItem('user_subOfficeId')||'ALL';
 var roleEl=document.getElementById('roleLabel'); if(roleEl) roleEl.textContent=role==='main_admin'?'Main Admin':'Sub Admin';
 var userEl=document.getElementById('userLabel'); if(userEl) userEl.textContent=localStorage.getItem('user')||'';
-var scopeEl=document.getElementById('scopeLabel'); if(scopeEl) scopeEl.textContent=role==='main_admin'?'45 අංශ — සියල්ල':'Scope: '+(localStorage.getItem('user_subOfficeName')||mySub);
+var scopeEl=document.getElementById('scopeLabel'); if(scopeEl) scopeEl.textContent=role==='main_admin'?'45 Divisions — All':'Scope: '+(localStorage.getItem('user_subOfficeName')||mySub);
 
 var hierarchy=[];
 try{
@@ -695,7 +711,6 @@ try{
 
 var nodes=[], questions=[], users=[], responses=[], targetRecords=[], plItems=[], pivRecords=[];
 var curMain=null, curL1=null, curL2=null, curL3=null, curSub=null, curItem=null, curStep=1, selHierSub='sub1', selHierDiv=null, editingId=null;
-var PIV_STORAGE_KEY = 'fw_piv_submissions_v1';
 
 const DEV_DEFAULT_QUESTIONS = [
   { text: 'මුලකුරු සහිත නම', type: 'short_text', options: [], required: true },
@@ -705,6 +720,16 @@ const DEV_DEFAULT_QUESTIONS = [
   { text: 'ගොවි දායකත්වය', type: 'multiple_choice', options: ['නොමිලේ', 'ගොවි දායකත්වය - 25%', 'ගොවි දායකත්වය - 50%'], required: true },
   { text: 'වටිනාකම (රුපියල්)', type: 'short_text', options: [], required: false },
   { text: 'සටහන්', type: 'short_text', options: [], required: false }
+];
+
+const DEV_FIXED_ORDER_TITLES = [
+  'මුලකුරු සහිත නම',
+  'ලිපිනය',
+  'දුරකථන අංකය',
+  'ජාතික හැදුනුම්පත් අංකය',
+  'ගොවි දායකත්වය',
+  'වටිනාකම (රුපියල්)',
+  'සටහන්'
 ];
 
 function norm(s){ return String(s||'').trim().toLowerCase(); }
@@ -721,7 +746,7 @@ function goNav(p){
   if(pg) pg.classList.remove('hidden');
   document.querySelectorAll('.nav-btn').forEach(b=>b.className='nav-btn w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-white/10');
   var btn=document.querySelector('[data-nav="'+p+'"]'); if(btn)btn.className='nav-btn w-full text-left px-4 py-3 rounded-xl bg-white text-slate-900 font-semibold';
-  document.getElementById('pageTitle').textContent={'dashboard':'Dashboard','targets':'Target Setup','builder':'ප්‍රශ්න සකස් කිරීම','pricelist':'Item Price List','pivapproval':'PIV APPROVAL','data':'දත්ත','users':'පරිශීලකයින්','hierarchy':'කාර්යාල'}[p]||'Dashboard';
+  document.getElementById('pageTitle').textContent={'dashboard':'Dashboard','targets':'Target Setup','builder':'Form Builder','pricelist':'Item Price List','pivapproval':'PIV Approval','data':'Data View','users':'Users','hierarchy':'Offices'}[p]||'Dashboard';
   if(p==='targets')resetTargetWizard();
   if(p==='builder')resetWizard();
   if(p==='pricelist')initPriceList();
@@ -735,15 +760,6 @@ async function logout(){
   try{ if(sb) await sb.auth.signOut(); }catch(e){}
   ['role','user','fw_session','user_subOfficeId','user_subOfficeName'].forEach(k=>localStorage.removeItem(k));
   window.location.replace('index.html');
-}
-
-function downloadChart(canvasId, filename) {
-    var canvas = document.getElementById(canvasId);
-    if (!canvas) return;
-    var a = document.createElement('a');
-    a.href = canvas.toDataURL('image/png');
-    a.download = filename + '.png';
-    a.click();
 }
 
 function renderDashboard(){
@@ -777,14 +793,14 @@ function renderDashboard(){
   var html='';
   [['extension','🌾 Extension'],['development','🏗️ Development']].forEach(pair=>{
     var list=byMain[pair[0]]||[]; 
-    var inner=list.map(n=>'<div class="text-[13px] py-1 border-b flex justify-between"><span>'+n.title+'</span><span class="badge badge-green">Published</span></div>').join('')||'<div class="text-xs text-slate-400">Published නැත</div>';
+    var inner=list.map(n=>'<div class="text-[13px] py-1 border-b flex justify-between"><span>'+n.title+'</span><span class="badge badge-green">Published</span></div>').join('')||'<div class="text-xs text-slate-400">Not Published</div>';
     html+='<div class="rounded-xl border p-4 bg-white"><div class="font-semibold text-sm">'+pair[1]+'</div><div class="mt-2">'+inner+'</div></div>';
   });
   document.getElementById('publishedBox').innerHTML=html;
-  document.getElementById('recentBox').innerHTML=responses.slice(0,8).map(r=>'<div class="flex justify-between gap-3 rounded-xl border p-3 text-[13px]"><div><b>'+(r.node_path||'')+'</b><div class="text-xs text-slate-500">'+(r.division||'')+' • '+(r.office||'')+'</div></div><div class="text-xs text-slate-400">'+(r.created_at?new Date(r.created_at).toLocaleDateString():'')+'</div></div>').join('')||'<div class="text-xs text-slate-400">පිළිතුරු නැත</div>';
+  document.getElementById('recentBox').innerHTML=responses.slice(0,8).map(r=>'<div class="flex justify-between gap-3 rounded-xl border p-3 text-[13px]"><div><b>'+(r.node_path||'')+'</b><div class="text-xs text-slate-500">'+(r.division||'')+' • '+(r.office||'')+'</div></div><div class="text-xs text-slate-400">'+(r.created_at?new Date(r.created_at).toLocaleDateString():'')+'</div></div>').join('')||'<div class="text-xs text-slate-400">No responses</div>';
 }
 
-/* ================= Development Default Questions Auto-Populate & Save ================= */
+/* ================= Development Default Questions ================= */
 function ensureDefaultDevQuestionsForNode(nodeId, forcePersist){
   if(!nodeId) return [];
   questions = Array.isArray(questions) ? questions : [];
@@ -823,8 +839,7 @@ async function autoSaveDevQuestionsForCurrentSelection(){
   targetNodeIds.forEach(nid => {
     var existing = questions.filter(q => q && String(q.node_id) === String(nid));
     if(!existing.length){
-      var added = ensureDefaultDevQuestionsForNode(nid, false);
-      toUpsert = toUpsert.concat(added);
+      toUpsert = toUpsert.concat(ensureDefaultDevQuestionsForNode(nid, false));
     } else {
       toUpsert = toUpsert.concat(existing);
     }
@@ -834,7 +849,7 @@ async function autoSaveDevQuestionsForCurrentSelection(){
   }
 }
 
-/* ================= Shared Deep Copy Helper (All Sub-Levels, Questions & Targets) ================= */
+/* ================= Deep Copy Helper ================= */
 function executeDeepCopyForNode(srcNode, level, newTitle, contextNodes){
   newTitle = String(newTitle || '').trim();
   if(!srcNode || !newTitle) return null;
@@ -905,14 +920,12 @@ function executeDeepCopyForNode(srcNode, level, newTitle, contextNodes){
   cloneQuestionsForNode(srcNode.id, rootCloned.id);
 
   if(level === 1){
-    var l2Kids = nodes.filter(n => n && n.main_type === srcNode.main_type && n.level === 2 && n.parent_id === srcNode.id);
-    l2Kids.forEach((p2, i2) => {
+    nodes.filter(n => n && n.main_type === srcNode.main_type && n.level === 2 && n.parent_id === srcNode.id).forEach((p2, i2) => {
       var c2 = { id: 'n_' + stamp + '_2_' + i2, main_type: p2.main_type, level: 2, parent_id: rootCloned.id, title: p2.title, subtitle: p2.subtitle || '', is_published: p2.is_published !== false, sort_order: p2.sort_order || (i2 + 1) };
       nodes.push(c2); newNodesToSave.push(c2);
       cloneQuestionsForNode(p2.id, c2.id);
 
-      var l3Kids = nodes.filter(n => n && n.main_type === srcNode.main_type && n.level === 3 && n.parent_id === p2.id);
-      l3Kids.forEach((s3, i3) => {
+      nodes.filter(n => n && n.main_type === srcNode.main_type && n.level === 3 && n.parent_id === p2.id).forEach((s3, i3) => {
         var c3 = { id: 'n_' + stamp + '_3_' + i2 + '_' + i3, main_type: s3.main_type, level: 3, parent_id: c2.id, title: s3.title, subtitle: s3.subtitle || '', is_published: s3.is_published !== false, sort_order: s3.sort_order || (i3 + 1) };
         nodes.push(c3); newNodesToSave.push(c3);
         cloneQuestionsForNode(s3.id, c3.id);
@@ -932,8 +945,7 @@ function executeDeepCopyForNode(srcNode, level, newTitle, contextNodes){
     });
   } else if(level === 2){
     var l1Title = curL1Node ? curL1Node.title : '';
-    var l3Kids = nodes.filter(n => n && n.main_type === srcNode.main_type && n.level === 3 && n.parent_id === srcNode.id);
-    l3Kids.forEach((s3, i3) => {
+    nodes.filter(n => n && n.main_type === srcNode.main_type && n.level === 3 && n.parent_id === srcNode.id).forEach((s3, i3) => {
       var c3 = { id: 'n_' + stamp + '_3_' + i3, main_type: s3.main_type, level: 3, parent_id: rootCloned.id, title: s3.title, subtitle: s3.subtitle || '', is_published: s3.is_published !== false, sort_order: s3.sort_order || (i3 + 1) };
       nodes.push(c3); newNodesToSave.push(c3);
       cloneQuestionsForNode(s3.id, c3.id);
@@ -971,28 +983,17 @@ function executeDeepCopyForNode(srcNode, level, newTitle, contextNodes){
     cloneTargetsForPath(l1Title, l2Title, l3Title, srcNode.title, l1Title, l2Title, l3Title, newTitle);
   }
 
-  return {
-    clonedNode: rootCloned,
-    newNodesToSave: newNodesToSave,
-    newTargetsToSave: newTargetsToSave,
-    newQuestionsToSave: newQuestionsToSave
-  };
+  return { clonedNode: rootCloned, newNodesToSave, newTargetsToSave, newQuestionsToSave };
 }
 
 async function persistCopiedBundle(bundle){
   if(!bundle || !sb) return;
-  if(bundle.newNodesToSave.length){
-    await sb.from('nodes').upsert(bundle.newNodesToSave, { onConflict: 'id' });
-  }
-  if(bundle.newTargetsToSave.length){
-    await sb.from('targets').upsert(bundle.newTargetsToSave, { onConflict: 'id' });
-  }
-  if(bundle.newQuestionsToSave.length){
-    await sb.from('questions').upsert(bundle.newQuestionsToSave, { onConflict: 'id' });
-  }
+  if(bundle.newNodesToSave.length) await sb.from('nodes').upsert(bundle.newNodesToSave, { onConflict: 'id' });
+  if(bundle.newTargetsToSave.length) await sb.from('targets').upsert(bundle.newTargetsToSave, { onConflict: 'id' });
+  if(bundle.newQuestionsToSave.length) await sb.from('questions').upsert(bundle.newQuestionsToSave, { onConflict: 'id' });
 }
 
-/* ================= Target Setup Wizard + Excel Range Item Splitter ================= */
+/* ================= Target Setup Wizard ================= */
 var tMain = null, tL1 = null, tL2 = null, tL3 = null, tL4 = null, tStep = 1;
 
 function resetTargetWizard(){ tMain=null; tL1=null; tL2=null; tL3=null; tL4=null; tGoto(1); }
@@ -1003,7 +1004,7 @@ function tUpdateCrumb(){
   if(tL2){let n=nodes.find(x=>x.id===tL2);if(n)parts.push(n.title);}
   if(tL3){let n=nodes.find(x=>x.id===tL3);if(n)parts.push(n.title);}
   if(tL4){let n=nodes.find(x=>x.id===tL4);if(n)parts.push(n.title);}
-  document.getElementById('tCrumb').textContent=parts.length?parts.join(' → '):'Extension / Development තෝරන්න';
+  document.getElementById('tCrumb').textContent=parts.length?parts.join(' → '):'Select Extension / Development';
 }
 function tPickMain(m){ tMain=m; tL1=null; tL2=null; tL3=null; tL4=null; tGoto(2); }
 function tGoto(s){
@@ -1036,15 +1037,15 @@ function tNodeCardHtml(n, isSel, level){
 function tRenderLevel(level){
   if(level===1){
     document.getElementById('tw2Title').textContent=tMain==='extension'?'Step 2 — Season':'Step 2 — Year';
-    document.getElementById('tL1List').innerHTML=tChildrenOf(null,1).map(n=>tNodeCardHtml(n,tL1===n.id,1)).join('')||'<div class="text-xs text-slate-400">දත්ත නැත</div>';
+    document.getElementById('tL1List').innerHTML=tChildrenOf(null,1).map(n=>tNodeCardHtml(n,tL1===n.id,1)).join('')||'<div class="text-xs text-slate-400">No items</div>';
     document.getElementById('tw2Next').disabled=!tL1;
   } else if(level===2){
     document.getElementById('tw3Title').textContent='Step 3 — Program';
-    document.getElementById('tL2List').innerHTML=tChildrenOf(tL1,2).map(n=>tNodeCardHtml(n,tL2===n.id,2)).join('')||'<div class="text-xs text-slate-400">දත්ත නැත</div>';
+    document.getElementById('tL2List').innerHTML=tChildrenOf(tL1,2).map(n=>tNodeCardHtml(n,tL2===n.id,2)).join('')||'<div class="text-xs text-slate-400">No items</div>';
     document.getElementById('tw3Next').disabled=!tL2;
   } else if(level===3){
     document.getElementById('tw4Title').textContent='Step 4 — Sub Program';
-    document.getElementById('tL3List').innerHTML=tChildrenOf(tL2,3).map(n=>tNodeCardHtml(n,tL3===n.id,3)).join('')||'<div class="text-xs text-slate-400">දත්ත නැත</div>';
+    document.getElementById('tL3List').innerHTML=tChildrenOf(tL2,3).map(n=>tNodeCardHtml(n,tL3===n.id,3)).join('')||'<div class="text-xs text-slate-400">No items</div>';
     document.getElementById('tw4Next').textContent=tMain==='development'?'Next: Item →':'Next: AI Office Targets →';
   } else if(level===4){
     document.getElementById('tL4List').innerHTML=tL3?tChildrenOf(tL3,4).map(n=>tNodeCardHtml(n,tL4===n.id,4)).join(''):'';
@@ -1065,32 +1066,24 @@ function tAfterL3(){ if(tMain==='development')tGoto(5); else tGoto(6); }
 async function tCopyNodeDeep(nodeId, level){
   var srcNode = nodes.find(x => x.id === nodeId);
   if(!srcNode) return;
-
-  var newTitle = await profPrompt('"' + srcNode.title + '" සහ එහි සියලුම උප කොටස් Copy කිරීමට නව නම:', srcNode.title + ' (Copy)');
+  var newTitle = await profPrompt('New name to copy "' + srcNode.title + '" and sub-items:', srcNode.title + ' (Copy)');
   if(!newTitle || !newTitle.trim()) return;
-
   var bundle = executeDeepCopyForNode(srcNode, level, newTitle.trim(), { l1: tL1, l2: tL2, l3: tL3 });
   if(!bundle) return;
-
   if(level === 1){ tL1 = bundle.clonedNode.id; tL2 = null; tL3 = null; tL4 = null; }
   else if(level === 2){ tL2 = bundle.clonedNode.id; tL3 = null; tL4 = null; }
   else if(level === 3){ tL3 = bundle.clonedNode.id; tL4 = null; }
   else if(level === 4){ tL4 = bundle.clonedNode.id; }
-
   await persistCopiedBundle(bundle);
-  tRenderLevel(level);
-  tUpdateCrumb();
-  renderDashboard();
-  showToast('"' + newTitle.trim() + '" සහ උප කොටස් ' + (bundle.newNodesToSave.length - 1) + ' ක් Copy විය ✓', true);
+  tRenderLevel(level); tUpdateCrumb(); renderDashboard();
+  showToast('Copied "' + newTitle.trim() + '" ✓', true);
 }
 
 function colLetterToIndex(colStr){
   var s = String(colStr || '').trim().toUpperCase().replace(/[^A-Z]/g, '');
   if(!s) return 0;
   var n = 0;
-  for(var i = 0; i < s.length; i++){
-    n = n * 26 + (s.charCodeAt(i) - 64);
-  }
+  for(var i = 0; i < s.length; i++) n = n * 26 + (s.charCodeAt(i) - 64);
   return Math.max(0, n - 1);
 }
 
@@ -1102,7 +1095,6 @@ function parseExcelRangeString(rangeStr, sheetRef){
   if(!match1) return null;
   var c1 = colLetterToIndex(match1[1]);
   var r1 = Math.max(1, parseInt(match1[2], 10));
-
   var c2 = c1, r2 = r1;
   if(parts[1]){
     var match2 = parts[1].match(/^([A-Z]+)(\d+)$/);
@@ -1110,27 +1102,17 @@ function parseExcelRangeString(rangeStr, sheetRef){
     c2 = colLetterToIndex(match2[1]);
     r2 = Math.max(r1, parseInt(match2[2], 10));
   } else if(sheetRef){
-    try{
-      var dec = XLSX.utils.decode_range(sheetRef);
-      r2 = dec.e.r + 1;
-    }catch(e){}
+    try{ var dec = XLSX.utils.decode_range(sheetRef); r2 = dec.e.r + 1; }catch(e){}
   }
-
-  return {
-    startCol: Math.min(c1, c2),
-    endCol: Math.max(c1, c2),
-    startRow: r1,
-    endRow: r2
-  };
+  return { startCol: Math.min(c1, c2), endCol: Math.max(c1, c2), startRow: r1, endRow: r2 };
 }
 
 function askExcelSheetAndRange(sheetNames, defaultRange){
   return new Promise(function(resolve){
     __modalResolve = resolve;
     document.getElementById('modalIcon').textContent = '📊';
-    document.getElementById('modalTitle').textContent = 'Excel Range තෝරන්න (උදා: B5:B10)';
-    document.getElementById('modalMsg').textContent = 'Enter the Sheet and Range (e.g., B5:B10) — the contents of the selected range will be automatically added as individual items.';
-
+    document.getElementById('modalTitle').textContent = 'Select Excel Range (e.g. B5:B10)';
+    document.getElementById('modalMsg').textContent = 'Enter Sheet and Range (e.g. B5:B10) to add each cell as an Item.';
     var sw = document.getElementById('modalSelectWrap');
     var selEl = document.getElementById('modalSelect');
     if(sheetNames && sheetNames.length > 1){
@@ -1140,13 +1122,11 @@ function askExcelSheetAndRange(sheetNames, defaultRange){
       sw.classList.add('hidden');
       if(selEl) selEl.innerHTML = sheetNames && sheetNames[0] ? '<option value="' + sheetNames[0].replace(/"/g, '&quot;') + '">' + sheetNames[0] + '</option>' : '';
     }
-
     var iw = document.getElementById('modalInputWrap');
     var inpEl = document.getElementById('modalInput');
     iw.classList.remove('hidden');
     inpEl.value = defaultRange || 'B5:B10';
-    inpEl.placeholder = 'උදා: B5:B10';
-
+    inpEl.placeholder = 'e.g. B5:B10';
     document.getElementById('modalCancel').style.display = '';
     document.getElementById('modalOk').textContent = 'Add Items';
     document.getElementById('modalBack').classList.add('show');
@@ -1157,79 +1137,50 @@ function askExcelSheetAndRange(sheetNames, defaultRange){
 async function tImportItemsExcel(e){
   var file = e.target.files && e.target.files[0];
   if(!file) return;
-  if(!tL3){ showToast('කරුණාකර Sub Program එකක් තෝරන්න', false); e.target.value=''; return; }
-
+  if(!tL3){ showToast('Please select a Sub Program first', false); e.target.value=''; return; }
   var reader = new FileReader();
   reader.onload = async function(evt){
     try{
       var data = new Uint8Array(evt.target.result);
       var wb = XLSX.read(data, {type:'array'});
       var choice = await askExcelSheetAndRange(wb.SheetNames, 'B5:B10');
-      if(!choice || !choice.ok){
-        e.target.value = '';
-        return;
-      }
-
-      var chosenSheetName = choice.selectValue || wb.SheetNames[0];
-      var sheet = wb.Sheets[chosenSheetName];
-      if(!sheet){
-        showToast('Sheet හමු නොවීය', false);
-        e.target.value = '';
-        return;
-      }
-
+      if(!choice || !choice.ok){ e.target.value = ''; return; }
+      var sheet = wb.Sheets[choice.selectValue || wb.SheetNames[0]];
+      if(!sheet){ showToast('Sheet not found', false); e.target.value = ''; return; }
       var rangeParsed = parseExcelRangeString(choice.value, sheet['!ref']);
-      if(!rangeParsed){
-        showToast('Range சரியாக இல்லை (උදා: B5:B10)', false);
-        e.target.value = '';
-        return;
-      }
+      if(!rangeParsed){ showToast('Invalid range (e.g. B5:B10)', false); e.target.value = ''; return; }
 
       var existingTitles = new Set(tChildrenOf(tL3, 4).map(x => norm(x.title)));
-      var addedNodes = [];
-      var addedQs = [];
+      var addedNodes = [], addedQs = [];
       var baseSort = tChildrenOf(tL3, 4).length;
       var stamp = Date.now();
 
       for(var rIdx = rangeParsed.startRow; rIdx <= rangeParsed.endRow; rIdx++){
         for(var cIdx = rangeParsed.startCol; cIdx <= rangeParsed.endCol; cIdx++){
-          var cellRef = XLSX.utils.encode_cell({ r: rIdx - 1, c: cIdx });
-          var cell = sheet[cellRef];
-          var rawVal = cell ? (cell.v !== undefined && cell.v !== null ? cell.v : (cell.w || '')) : '';
-          var title = String(rawVal || '').trim();
+          var cell = sheet[XLSX.utils.encode_cell({ r: rIdx - 1, c: cIdx })];
+          var title = String((cell && (cell.v !== undefined && cell.v !== null ? cell.v : (cell.w || ''))) || '').trim();
           if(!title || existingTitles.has(norm(title))) continue;
           existingTitles.add(norm(title));
           baseSort++;
-          var newNode = {
-            id: 'n_' + stamp + '_' + rIdx + '_' + cIdx,
-            main_type: 'development',
-            level: 4,
-            parent_id: tL3,
-            title: title,
-            subtitle: '',
-            is_published: true,
-            sort_order: baseSort
-          };
-          nodes.push(newNode);
-          addedNodes.push(newNode);
-          var qs = ensureDefaultDevQuestionsForNode(newNode.id, false);
-          addedQs = addedQs.concat(qs);
+          var newNode = { id: 'n_' + stamp + '_' + rIdx + '_' + cIdx, main_type: 'development', level: 4, parent_id: tL3, title: title, subtitle: '', is_published: true, sort_order: baseSort };
+          nodes.push(newNode); addedNodes.push(newNode);
+          addedQs = addedQs.concat(ensureDefaultDevQuestionsForNode(newNode.id, false));
         }
       }
 
       if(addedNodes.length){
         tSelectNode(4, addedNodes[addedNodes.length - 1].id);
-        showToast(choice.value.trim().toUpperCase() + ' From Range ' + addedNodes.length + ' Items auto added ✓', true);
+        showToast('Added ' + addedNodes.length + ' items ✓', true);
         if(sb){
           await sb.from('nodes').upsert(addedNodes, {onConflict:'id'});
           if(addedQs.length) await sb.from('questions').upsert(addedQs, {onConflict:'id'});
         }
       } else {
-        showToast('There are no new items in the selected range.', false);
+        showToast('No new items found in range', false);
       }
     }catch(err){
       console.error(err);
-      showToast('Excel ගොනුව කියවීමේදී දෝෂයක් ඇතිවිය', false);
+      showToast('Error reading Excel file', false);
     }
     e.target.value = '';
   };
@@ -1242,26 +1193,23 @@ async function tAddNode(level){
   var pid=level===1?null:level===2?tL1:level===3?tL2:tL3;
   var newNode={id:'n_'+Date.now(),main_type:tMain,level:level,parent_id:pid,title:val,subtitle:'',is_published:true,sort_order:tChildrenOf(pid,level).length+1};
   nodes.push(newNode); document.getElementById(inpId).value='';
-  if(tMain==='development' && level===4){
-    ensureDefaultDevQuestionsForNode(newNode.id, false);
-  }
+  if(tMain==='development' && level===4) ensureDefaultDevQuestionsForNode(newNode.id, false);
   tSelectNode(level, newNode.id);
-  showToast('සාර්ථකයි ✓',true);
+  showToast('Saved ✓',true);
   if(sb){
-    sb.from('nodes').upsert(newNode).then(function(){
-      if(tMain==='development' && level===4){
-        var qs = questions.filter(q => q && String(q.node_id) === String(newNode.id));
-        if(qs.length) sb.from('questions').upsert(qs, { onConflict: 'id' });
-      }
-    }).catch(function(err){ console.error(err); });
+    await sb.from('nodes').upsert(newNode, { onConflict: 'id' });
+    if(tMain==='development' && level===4){
+      var qs = questions.filter(q => q && String(q.node_id) === String(newNode.id));
+      if(qs.length) await sb.from('questions').upsert(qs, { onConflict: 'id' });
+    }
   }
 }
 async function tEditNode(id, level){
   var n=nodes.find(x=>x.id===id); if(!n)return;
-  var newName=await profPrompt('නම වෙනස් කරන්න',n.title); if(!newName)return;
+  var newName=await profPrompt('Edit name',n.title); if(!newName)return;
   n.title=newName.trim();
   if(sb) await sb.from('nodes').update({title:n.title}).eq('id',id);
-  tRenderLevel(level); tUpdateCrumb(); showToast('යාවත්කාලීන විය ✓',true);
+  tRenderLevel(level); tUpdateCrumb(); showToast('Updated ✓',true);
 }
 async function tTogglePub(id, level){
   var n=nodes.find(x=>x.id===id); if(!n)return;
@@ -1285,7 +1233,7 @@ async function tMoveNode(id, dir, level){
   tRenderLevel(level);
 }
 async function tDeleteNode(id, level){
-  if(!await profConfirm('Delete කරන්නද?'))return;
+  if(!await profConfirm('Delete this item?'))return;
   nodes=nodes.filter(x=>x.id!==id);
   if(sb) await sb.from('nodes').delete().eq('id',id);
   tRenderLevel(level); tUpdateCrumb();
@@ -1310,7 +1258,6 @@ function initTargetUnitsView(){
 function findExistingTargetValue(recId, ctx, subId, divName, cleanOff){
   var exact = targetRecords.find(r => r.id === recId);
   if(exact && exact.target_value !== undefined && exact.target_value !== null) return Number(exact.target_value) || 0;
-
   var matched = targetRecords.find(r =>
     norm(r.main_type) === norm(tMain) &&
     norm(r.level1 || '') === norm(ctx.l1 || '') &&
@@ -1320,9 +1267,7 @@ function findExistingTargetValue(recId, ctx, subId, divName, cleanOff){
     (norm(cleanOffName(r.office)) === norm(cleanOff) || norm(r.division) === norm(divName)) &&
     (!subId || !r.sub_office_id || norm(r.sub_office_id) === norm(subId))
   );
-  if(matched && matched.target_value !== undefined && matched.target_value !== null) return Number(matched.target_value) || 0;
-
-  return 0;
+  return (matched && matched.target_value !== undefined && matched.target_value !== null) ? (Number(matched.target_value) || 0) : 0;
 }
 
 function renderTargetUnitsTable(){
@@ -1334,14 +1279,12 @@ function renderTargetUnitsTable(){
   hierarchy.forEach(h=>{
     if(role==='sub_admin'&&h.id!==mySub)return;
     if(adId!=='ALL'&&h.id!==adId)return;
-
     (h.divisions||[]).forEach(d=>{
       (d.offices||[]).forEach(off=>{
         var cleanOff = cleanOffName(off);
         var recId=[tMain,ctx.l1,ctx.l2,ctx.l3,ctx.l4,h.id,d.name,cleanOff].join('|');
         var val = findExistingTargetValue(recId, ctx, h.id, d.name, cleanOff);
         totalSum+=val;
-
         rowsHtml+='<tr>'+
           '<td class="text-xs text-slate-500">'+h.name+'</td>'+
           '<td class="text-xs font-bold text-indigo-900">'+cleanOff+'</td>'+
@@ -1351,7 +1294,7 @@ function renderTargetUnitsTable(){
     });
   });
 
-  tbody.innerHTML=rowsHtml||'<tr><td colspan="3" class="text-center py-6 text-slate-400 text-xs">AI Offices නොමැත</td></tr>';
+  tbody.innerHTML=rowsHtml||'<tr><td colspan="3" class="text-center py-6 text-slate-400 text-xs">No AI Offices</td></tr>';
   document.getElementById('tTotalSum').textContent=totalSum.toLocaleString();
 }
 
@@ -1372,18 +1315,14 @@ async function saveAllTargets(){
     if(idx>-1)targetRecords[idx]=rec; else targetRecords.push(rec);
     upserts.push(rec);
   });
-  if(sb && upserts.length){
-    await sb.from('targets').upsert(upserts,{onConflict:'id'});
-  }
-  if(tMain === 'development'){
-    await autoSaveDevQuestionsForCurrentSelection();
-  }
+  if(sb && upserts.length) await sb.from('targets').upsert(upserts,{onConflict:'id'});
+  if(tMain === 'development') await autoSaveDevQuestionsForCurrentSelection();
   renderDashboard();
-  showToast(tMain === 'development' ? 'Targets & Development Questions Auto-Saved ✓' : 'Targets updated ✓', true);
+  showToast(tMain === 'development' ? 'Targets & Development Questions Saved ✓' : 'Targets updated ✓', true);
 }
 function tBackFromUnits(){ if(tMain==='development')tGoto(5); else tGoto(4); }
 
-/* ================= Form Builder (Up, Down, Delete, Copy All Sub-Nodes & Edit) ================= */
+/* ================= Form Builder ================= */
 function resetWizard(){curMain=null;curL1=null;curL2=null;curL3=null;curSub=null;curItem=null;gotoStep(1);updateCrumb();}
 function updateCrumb(){
   var parts=[]; if(curMain)parts.push(curMain==='extension'?'🌾 Extension':'🏗️ Development');
@@ -1392,8 +1331,8 @@ function updateCrumb(){
   if(curL3){let n=nodes.find(x=>x.id===curL3);if(n)parts.push(n.title);}
   if(curSub){let ns=nodes.find(x=>x.id===curSub);if(ns)parts.push(ns.title);}
   if(curItem){let ni=nodes.find(x=>x.id===curItem);if(ni)parts.push(ni.title);}
-  if(curStep===6)parts.push('ප්‍රශ්න');
-  document.getElementById('crumb').textContent=parts.length?parts.join(' → '):'Extension / Development තෝරන්න';
+  if(curStep===6)parts.push('Questions');
+  document.getElementById('crumb').textContent=parts.length?parts.join(' → '):'Select Extension / Development';
 }
 function gotoStep(s){
   if(curMain==='extension'&&s===5)s=6;
@@ -1415,12 +1354,12 @@ function builderSelectCard(n, sel, pickFn, level){
     '<div class="flex flex-wrap justify-between items-center gap-2">' +
       '<div class="font-bold">'+n.title+'</div>' +
       '<div class="flex items-center gap-1.5" onclick="event.stopPropagation()">' +
-        '<button type="button" onclick="wMoveBuilderNode(\''+n.id+'\',-1,'+level+')" class="btn btn-ghost px-2 py-1 text-xs" title="Up">↑</button>' +
-        '<button type="button" onclick="wMoveBuilderNode(\''+n.id+'\',1,'+level+')" class="btn btn-ghost px-2 py-1 text-xs" title="Down">↓</button>' +
+        '<button type="button" onclick="wMoveBuilderNode(\''+n.id+'\',-1,'+level+')" class="btn btn-ghost px-2 py-1 text-xs">↑</button>' +
+        '<button type="button" onclick="wMoveBuilderNode(\''+n.id+'\',1,'+level+')" class="btn btn-ghost px-2 py-1 text-xs">↓</button>' +
         '<button type="button" onclick="'+copyFn+'(\''+n.id+'\')" class="btn btn-ghost px-2.5 py-1 text-xs font-bold text-indigo-700 border border-indigo-200 bg-indigo-50">📋 Copy All</button>' +
         '<button type="button" onclick="'+editFn+'(\''+n.id+'\')" class="btn btn-ghost px-2 py-1 text-xs font-semibold text-slate-700">✏️ Edit</button>' +
         '<button type="button" onclick="wDeleteBuilderNode(\''+n.id+'\','+level+')" class="btn btn-ghost px-2 py-1 text-xs font-semibold text-red-600">🗑 Delete</button>' +
-        '<span class="text-indigo-600 text-sm font-semibold ml-1">'+(sel?'✓':'තෝරන්න →')+'</span>' +
+        '<span class="text-indigo-600 text-sm font-semibold ml-1">'+(sel?'✓':'Select →')+'</span>' +
       '</div>' +
     '</div>' +
   '</div>';
@@ -1433,9 +1372,7 @@ async function wMoveBuilderNode(id, dir, level){
   var idx = siblings.findIndex(x => x.id === id);
   var nIdx = idx + dir;
   if(nIdx < 0 || nIdx >= siblings.length) return;
-  var temp = siblings[idx];
-  siblings[idx] = siblings[nIdx];
-  siblings[nIdx] = temp;
+  var temp = siblings[idx]; siblings[idx] = siblings[nIdx]; siblings[nIdx] = temp;
   for(var i = 0; i < siblings.length; i++){
     var orig = nodes.find(x => x.id === siblings[i].id);
     if(orig){
@@ -1443,66 +1380,48 @@ async function wMoveBuilderNode(id, dir, level){
       if(sb) await sb.from('nodes').update({ sort_order: orig.sort_order }).eq('id', orig.id);
     }
   }
-  if(level === 1) renderL1();
-  else if(level === 2) renderL2();
-  else if(level === 3) renderL4();
-  else if(level === 4) renderItem();
-  showToast('අනුපිළිවෙල වෙනස් කරන ලදී ✓', true);
+  if(level === 1) renderL1(); else if(level === 2) renderL2(); else if(level === 3) renderL4(); else if(level === 4) renderItem();
+  showToast('Order updated ✓', true);
 }
 
 function collectDescendantNodeIds(rootId){
-  var ids = [rootId];
-  var queue = [rootId];
+  var ids = [rootId], queue = [rootId];
   while(queue.length){
     var pid = queue.shift();
-    nodes.filter(n => n && String(n.parent_id) === String(pid)).forEach(ch => {
-      ids.push(ch.id);
-      queue.push(ch.id);
-    });
+    nodes.filter(n => n && String(n.parent_id) === String(pid)).forEach(ch => { ids.push(ch.id); queue.push(ch.id); });
   }
   return ids;
 }
 
 async function wDeleteBuilderNode(id, level){
-  var n = nodes.find(x => x.id === id);
-  if(!n) return;
-  if(!(await profConfirm('"' + n.title + '" සහ එහි ඇති සියලුම උප කොටස් Delete කරන්නද?'))) return;
-
+  var n = nodes.find(x => x.id === id); if(!n) return;
+  if(!(await profConfirm('Delete "' + n.title + '" and all child nodes?'))) return;
   var delIds = collectDescendantNodeIds(id);
   nodes = nodes.filter(x => !delIds.includes(x.id));
   questions = questions.filter(q => !delIds.includes(q.node_id));
-
   if(sb){
     for(var i = 0; i < delIds.length; i++){
       await sb.from('nodes').delete().eq('id', delIds[i]);
       await sb.from('questions').delete().eq('node_id', delIds[i]);
     }
   }
-
   if(level === 1 && curL1 === id){ curL1=null; curL2=null; curL3=null; curSub=null; curItem=null; }
   if(level === 2 && curL2 === id){ curL2=null; curL3=null; curSub=null; curItem=null; }
   if(level === 3){ if(curSub === id) curSub=null; if(curL3 === id){ curL3=null; curItem=null; } }
   if(level === 4 && curItem === id){ curItem=null; }
-
-  if(level === 1) renderL1();
-  else if(level === 2) renderL2();
-  else if(level === 3) renderL4();
-  else if(level === 4) renderItem();
-  updateCrumb();
-  renderDashboard();
-  showToast('Delete කරන ලදී ✓', true);
+  if(level === 1) renderL1(); else if(level === 2) renderL2(); else if(level === 3) renderL4(); else if(level === 4) renderItem();
+  updateCrumb(); renderDashboard();
+  showToast('Deleted ✓', true);
 }
 
 async function wEditBuilderNode(id, level){
-  var n = nodes.find(x => x.id === id);
-  if(!n) return;
+  var n = nodes.find(x => x.id === id); if(!n) return;
   var oldTitle = n.title;
-  var newName = await profPrompt('නම වෙනස් කරන්න (Target Setup හිද වෙනස් වේ)', n.title);
+  var newName = await profPrompt('Edit name', n.title);
   if(!newName || !newName.trim()) return;
   newName = newName.trim();
   n.title = newName;
   if(sb) await sb.from('nodes').update({ title: newName }).eq('id', id);
-
   targetRecords.forEach(tr => {
     if(norm(tr.main_type) === norm(n.main_type)){
       if(level === 1 && norm(tr.level1) === norm(oldTitle)) tr.level1 = newName;
@@ -1511,38 +1430,24 @@ async function wEditBuilderNode(id, level){
       if(level === 4 && norm(tr.item_name) === norm(oldTitle)) tr.item_name = newName;
     }
   });
-
-  if(level === 1) renderL1();
-  else if(level === 2) renderL2();
-  else if(level === 3) renderL4();
-  else if(level === 4) renderItem();
-  updateCrumb();
-  renderDashboard();
-  showToast('Edit & Target Sync Save විය ✓', true);
+  if(level === 1) renderL1(); else if(level === 2) renderL2(); else if(level === 3) renderL4(); else if(level === 4) renderItem();
+  updateCrumb(); renderDashboard();
+  showToast('Updated ✓', true);
 }
 
 async function wCopyBuilderNode(id, level){
-  var srcNode = nodes.find(x => x.id === id);
-  if(!srcNode) return;
-  var newTitle = await profPrompt('"' + srcNode.title + '" සහ එහි සියලුම උප කොටස් Copy කිරීමට නව නම:', srcNode.title + ' (Copy)');
+  var srcNode = nodes.find(x => x.id === id); if(!srcNode) return;
+  var newTitle = await profPrompt('New name to copy "' + srcNode.title + '" and sub-items:', srcNode.title + ' (Copy)');
   if(!newTitle || !newTitle.trim()) return;
-
   var bundle = executeDeepCopyForNode(srcNode, level, newTitle.trim(), { l1: curL1, l2: curL2, l3: (curMain === 'extension' ? curSub : curL3) });
   if(!bundle) return;
-
   if(level === 1){ curL1 = bundle.clonedNode.id; curL2 = null; curL3 = null; curSub = null; curItem = null; renderL1(); }
   else if(level === 2){ curL2 = bundle.clonedNode.id; curL3 = null; curSub = null; curItem = null; renderL2(); }
-  else if(level === 3){
-    if(curMain === 'extension'){ curSub = bundle.clonedNode.id; }
-    else { curL3 = bundle.clonedNode.id; curItem = null; }
-    renderL4();
-  }
+  else if(level === 3){ if(curMain === 'extension') curSub = bundle.clonedNode.id; else { curL3 = bundle.clonedNode.id; curItem = null; } renderL4(); }
   else if(level === 4){ curItem = bundle.clonedNode.id; renderItem(); }
-
   await persistCopiedBundle(bundle);
-  updateCrumb();
-  renderDashboard();
-  showToast('"' + newTitle.trim() + '" සහ සියලුම උප කොටස් (' + (bundle.newNodesToSave.length - 1) + ') Copy විය ✓', true);
+  updateCrumb(); renderDashboard();
+  showToast('Copied "' + newTitle.trim() + '" ✓', true);
 }
 
 function wCopyL1(id){ return wCopyBuilderNode(id, 1); }
@@ -1556,13 +1461,13 @@ function wEditL4(id){ return wEditBuilderNode(id, 4); }
 
 function renderL1(){
   document.getElementById('w2Title').textContent=curMain==='extension'?'Step 2 — Season':'Step 2 — Year';
-  document.getElementById('l1List').innerHTML=childrenOf(null,1).map(n=>builderSelectCard(n,curL1===n.id,'pickL1',1)).join('')||'<div class="text-xs text-slate-400">Target Setup හි දත්ත ඇතුළත් කරන්න</div>';
+  document.getElementById('l1List').innerHTML=childrenOf(null,1).map(n=>builderSelectCard(n,curL1===n.id,'pickL1',1)).join('')||'<div class="text-xs text-slate-400">Add items in Target Setup</div>';
   document.getElementById('w2Next').disabled=!curL1;
 }
 function pickL1(id){curL1=id;curL2=null;curL3=null;curSub=null;curItem=null;renderL1();}
 function renderL2(){
   document.getElementById('w3Title').textContent='Step 3 — Program';
-  document.getElementById('l2List').innerHTML=childrenOf(curL1,2).map(n=>builderSelectCard(n,curL2===n.id,'pickL2',2)).join('')||'<div class="text-xs text-slate-400">දත්ත නැත</div>';
+  document.getElementById('l2List').innerHTML=childrenOf(curL1,2).map(n=>builderSelectCard(n,curL2===n.id,'pickL2',2)).join('')||'<div class="text-xs text-slate-400">No items</div>';
   document.getElementById('w3Next').disabled=!curL2;
 }
 function pickL2(id){curL2=id;curL3=null;curSub=null;curItem=null;renderL2();}
@@ -1571,14 +1476,14 @@ function w4Next(){if(curMain==='development')gotoStep(5);else gotoStep(6);}
 function backFromQ(){if(curMain==='development')gotoStep(5);else gotoStep(4);}
 function renderL4(){
   let isExt=curMain==='extension';
-  document.getElementById('l3List').innerHTML=childrenOf(curL2,3).map(n=>builderSelectCard(n,(isExt?curSub:curL3)===n.id,isExt?'pickSub':'pickL3',3)).join('')||'<div class="text-xs text-slate-400">දත්ත නැත</div>';
+  document.getElementById('l3List').innerHTML=childrenOf(curL2,3).map(n=>builderSelectCard(n,(isExt?curSub:curL3)===n.id,isExt?'pickSub':'pickL3',3)).join('')||'<div class="text-xs text-slate-400">No items</div>';
   document.getElementById('w4Next').disabled=isExt?false:!curL3;
 }
 function pickL3(id){curL3=id;curItem=null;renderL4();}
 function pickSub(id){curSub=id;renderL4();}
 function renderItem(){
   let list=curL3?nodes.filter(n=>n && n.main_type==='development'&&n.level===4&&n.parent_id===curL3):[];
-  document.getElementById('itemList').innerHTML=list.map(n=>builderSelectCard(n,curItem===n.id,'pickItem',4)).join('')||'<div class="text-xs text-slate-400">Items නැත</div>';
+  document.getElementById('itemList').innerHTML=list.map(n=>builderSelectCard(n,curItem===n.id,'pickItem',4)).join('')||'<div class="text-xs text-slate-400">No items</div>';
 }
 function pickItem(id){
   curItem=id;
@@ -1599,7 +1504,7 @@ function resetQ(){document.getElementById('qForm').reset();document.getElementBy
 function renderQuestionPreviewControl(q){
   var opts = Array.isArray(q.options) ? q.options : [];
   if(q.question_type === 'multiple_choice'){
-    return '<div class="space-y-1.5 mt-1">' + (opts.length ? opts.map(o => '<label class="flex items-center gap-2 text-xs text-slate-700"><input type="radio" name="prev_'+q.id+'" class="w-auto"><span>'+o+'</span></label>').join('') : '<div class="text-xs text-slate-400">No Options </div>') + '</div>';
+    return '<div class="space-y-1.5 mt-1">' + (opts.length ? opts.map(o => '<label class="flex items-center gap-2 text-xs text-slate-700"><input type="radio" name="prev_'+q.id+'" class="w-auto"><span>'+o+'</span></label>').join('') : '<div class="text-xs text-slate-400">No Options</div>') + '</div>';
   }
   if(q.question_type === 'checkbox'){
     return '<div class="space-y-1.5 mt-1">' + (opts.length ? opts.map(o => '<label class="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" class="w-auto"><span>'+o+'</span></label>').join('') : '<div class="text-xs text-slate-400">No Options</div>') + '</div>';
@@ -1620,9 +1525,8 @@ function renderQuestionPreviewControl(q){
 }
 
 async function copyQuestionItem(id){
-  var q = questions.find(x => x.id === id);
-  if(!q) return;
-  var newText = await profPrompt('ප්‍රශ්නය Copy කර Edit කරන්න:', q.question_text + ' (Copy)');
+  var q = questions.find(x => x.id === id); if(!q) return;
+  var newText = await profPrompt('Copy and edit question:', q.question_text + ' (Copy)');
   if(!newText || !newText.trim()) return;
   var cq = Object.assign({}, q, {
     id: 'q' + Date.now(),
@@ -1631,45 +1535,30 @@ async function copyQuestionItem(id){
     order_index: questions.filter(x => x.node_id === q.node_id).length + 1
   });
   questions.push(cq);
-  if(sb) await sb.from('questions').upsert(cq);
+  if(sb) await sb.from('questions').upsert(cq, { onConflict: 'id' });
   renderQuestions();
-  showToast('ප්‍රශ්නය Copy විය ✓', true);
+  showToast('Question copied ✓', true);
 }
 
 function renderQuestions(){
   var lid=leafId(); if(!lid)return;
   questions = Array.isArray(questions) ? questions : [];
-  if(curMain === 'development'){
-    ensureDefaultDevQuestionsForNode(lid, true);
-  }
+  if(curMain === 'development') ensureDefaultDevQuestionsForNode(lid, true);
   var noteEl = document.getElementById('devMultiItemNote');
   if(noteEl) noteEl.classList.toggle('hidden', curMain !== 'development');
 
   var qs=questions.filter(q=>q && q.node_id===lid).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
   document.getElementById('qCount').textContent=qs.length;
-  document.getElementById('qList').innerHTML=qs.map((q,i)=>'<div class="rounded-xl border p-3 bg-white flex flex-wrap justify-between gap-2"><div><b>'+(i+1)+'. '+q.question_text+'</b><div class="text-xs text-slate-400">'+q.question_type+'</div></div><div class="flex flex-wrap gap-1"><button type="button" onclick="moveQ(\''+q.id+'\',-1)" class="btn btn-ghost px-2 py-1 text-xs">↑</button><button type="button" onclick="moveQ(\''+q.id+'\',1)" class="btn btn-ghost px-2 py-1 text-xs">↓</button><button type="button" onclick="copyQuestionItem(\''+q.id+'\')" class="btn btn-ghost px-2 py-1 text-xs text-indigo-700">Copy</button><button type="button" onclick="editQ(\''+q.id+'\')" class="btn btn-ghost px-2 py-1 text-xs">Edit</button><button type="button" onclick="delQ(\''+q.id+'\')" class="text-red-500 text-xs px-2">Delete</button></div></div>').join('')||'<div class="text-xs text-slate-400">ප්‍රශ්න නැත</div>';
+  document.getElementById('qList').innerHTML=qs.map((q,i)=>'<div class="rounded-xl border p-3 bg-white flex flex-wrap justify-between gap-2"><div><b>'+(i+1)+'. '+q.question_text+'</b><div class="text-xs text-slate-400">'+q.question_type+'</div></div><div class="flex flex-wrap gap-1"><button type="button" onclick="moveQ(\''+q.id+'\',-1)" class="btn btn-ghost px-2 py-1 text-xs">↑</button><button type="button" onclick="moveQ(\''+q.id+'\',1)" class="btn btn-ghost px-2 py-1 text-xs">↓</button><button type="button" onclick="copyQuestionItem(\''+q.id+'\')" class="btn btn-ghost px-2 py-1 text-xs text-indigo-700">Copy</button><button type="button" onclick="editQ(\''+q.id+'\')" class="btn btn-ghost px-2 py-1 text-xs">Edit</button><button type="button" onclick="delQ(\''+q.id+'\')" class="text-red-500 text-xs px-2">Delete</button></div></div>').join('')||'<div class="text-xs text-slate-400">No questions</div>';
 
   var prevEl = document.getElementById('qPreview');
   if(prevEl){
-    var siblingItems = (curMain === 'development' && curL3)
-      ? nodes.filter(n => n && n.main_type === 'development' && n.level === 4 && n.parent_id === curL3)
-      : [];
-    var multiBoxHtml = '';
-    if(curMain === 'development' && siblingItems.length > 1){
-      multiBoxHtml = '<div class="rounded-xl border-2 border-emerald-300 bg-emerald-50/60 p-3 mb-3">' +
-        '<div class="text-xs font-bold text-emerald-950">Select Items (Sub Program) + Progress Box</div>' +
-        '<div class="flex flex-wrap gap-2 mt-2">' +
-          siblingItems.map(it => '<label class="inline-flex items-center gap-1.5 bg-white border rounded-lg px-2.5 py-1 text-xs font-semibold"><input type="checkbox" '+(it.id===curItem?'checked':'')+' class="w-auto"><span>'+it.title+'</span></label>').join('') +
-        '</div>' +
-        '<div class="mt-2"><input type="number" disabled placeholder="Progress Quantity (Box)" class="bg-white text-xs"></div>' +
-      '</div>';
-    }
-    prevEl.innerHTML = multiBoxHtml + (qs.length ? qs.map((q, i) =>
+    prevEl.innerHTML = qs.length ? qs.map((q, i) =>
       '<div class="rounded-xl border bg-white p-3">' +
         '<div class="text-xs font-bold text-slate-800">' + (i+1) + '. ' + q.question_text + (q.is_required ? ' <span class="text-red-500">*</span>' : '') + '</div>' +
         renderQuestionPreviewControl(q) +
       '</div>'
-    ).join('') : '<div class="text-xs text-slate-400">No questions to display</div>');
+    ).join('') : '<div class="text-xs text-slate-400">No questions to display</div>';
   }
 }
 async function moveQ(id, dir){
@@ -1686,11 +1575,11 @@ document.getElementById('qForm').addEventListener('submit', async function(e){
   var existingQ = id ? questions.find(q=>q.id===id) : null;
   var payload={id:id||'q'+Date.now(),node_id:lid,question_text:document.getElementById('qText').value.trim(),question_type:document.getElementById('qType').value,options:curOptions.slice(),is_required:document.getElementById('qReq').value==='1',order_index:existingQ?existingQ.order_index:questions.filter(q=>q.node_id===lid).length+1};
   if(id){let idx=questions.findIndex(q=>q.id===id);if(idx>-1)questions[idx]=payload;}else questions.push(payload);
-  if(sb) await sb.from('questions').upsert(payload);
-  resetQ(); renderQuestions(); showToast('Save විය ✓',true);
+  if(sb) await sb.from('questions').upsert(payload, { onConflict: 'id' });
+  resetQ(); renderQuestions(); showToast('Saved ✓',true);
 });
 function editQ(id){var q=questions.find(x=>x.id===id);if(!q)return;document.getElementById('qId').value=q.id;document.getElementById('qText').value=q.question_text;document.getElementById('qType').value=q.question_type;document.getElementById('qReq').value=q.is_required?'1':'0';curOptions=(q.options||[]).slice();renderOpts();onQType();}
-async function delQ(id){if(!await profConfirm('Delete කරන්නද?'))return;questions=questions.filter(x=>x.id!==id);if(sb) await sb.from('questions').delete().eq('id',id);renderQuestions();}
+async function delQ(id){if(!await profConfirm('Delete this question?'))return;questions=questions.filter(x=>x.id!==id);if(sb) await sb.from('questions').delete().eq('id',id);renderQuestions();}
 function loadDevTemplate(){
   var lid=leafId(); if(!lid)return;
   questions = questions.filter(q => !(q && q.node_id === lid));
@@ -1705,12 +1594,12 @@ function loadDevTemplate(){
       order_index:i+1
     };
     questions.push(q);
-    if(sb) sb.from('questions').upsert(q);
+    if(sb) sb.from('questions').upsert(q, { onConflict: 'id' });
   });
   renderQuestions();
   showToast('Development 7 Questions Loaded ✓', true);
 }
-function loadExtTemplate(){var lid=leafId();if(!lid)return;[['වගා ප්‍රමාණය','number',[]]].forEach((t,i)=>{let q={id:'q'+Date.now()+i,node_id:lid,question_text:t[0],question_type:t[1],options:t[2],is_required:true,order_index:questions.filter(x=>x.node_id===lid).length+1};questions.push(q);if(sb)sb.from('questions').upsert(q);});renderQuestions();}
+function loadExtTemplate(){var lid=leafId();if(!lid)return;[['Cultivated Extent','number',[]]].forEach((t,i)=>{let q={id:'q'+Date.now()+i,node_id:lid,question_text:t[0],question_type:t[1],options:t[2],is_required:true,order_index:questions.filter(x=>x.node_id===lid).length+1};questions.push(q);if(sb)sb.from('questions').upsert(q, { onConflict: 'id' });});renderQuestions();}
 async function finishWizard(){ renderDashboard(); goNav('dashboard'); }
 
 /* ================= Item Price List ================= */
@@ -1733,7 +1622,7 @@ function onPlProgChange(){
 function onPlSubProgChange(){
   let spId=document.getElementById('plSubProgram').value;
   let items=(nodes||[]).filter(n=>n && n.main_type==='development'&&n.level===4&&n.parent_id===spId);
-  document.getElementById('plItemSelect').innerHTML=items.map(it=>'<option value="'+it.title+'">'+it.title+'</option>').join('')+'<option value="__CUSTOM__">+ වෙනත්...</option>';
+  document.getElementById('plItemSelect').innerHTML=items.map(it=>'<option value="'+it.title+'">'+it.title+'</option>').join('')+'<option value="__CUSTOM__">+ Custom Item...</option>';
   onPlItemSelectChange(); renderPlTableAndChart();
 }
 function onPlItemSelectChange(){
@@ -1762,17 +1651,17 @@ document.getElementById('plForm').addEventListener('submit', async function(e){
   let rec={id:editId||('pl_'+Date.now()),year:yTitle,program:pTitle,sub_program:spTitle,item_name:itemName,subsidy:sub,unit_price:unitPrice,farmer_price:parseFloat((unitPrice*f).toFixed(2)),gov_price:parseFloat((unitPrice-(unitPrice*f)).toFixed(2))};
   if(editId){let idx=plItems.findIndex(x=>x.id===editId);if(idx>-1)plItems[idx]=rec;}else plItems.push(rec);
   if(sb) await sb.from('item_prices').upsert(rec,{onConflict:'id'});
-  resetPlForm(); renderPlTableAndChart(); showToast('Save විය ✓',true);
+  resetPlForm(); renderPlTableAndChart(); showToast('Saved ✓',true);
 });
 async function delPlItem(id){
-  if(!await profConfirm('Delete කරන්නද?'))return;
+  if(!await profConfirm('Delete this price item?'))return;
   plItems=plItems.filter(x=>x.id!==id);
   if(sb) await sb.from('item_prices').delete().eq('id',id);
   renderPlTableAndChart();
 }
 function renderPlTableAndChart(){
   plItems = Array.isArray(plItems) ? plItems : [];
-  document.getElementById('plTableBody').innerHTML=plItems.map(x=>'<tr><td class="text-xs"><b>'+x.year+'</b><br>'+x.program+'</td><td class="text-xs"><b>'+x.item_name+'</b></td><td class="text-xs">'+x.subsidy+'</td><td class="text-xs">Rs.'+x.unit_price+'</td><td class="text-xs font-bold text-emerald-600">Rs.'+x.gov_price+'</td><td class="text-xs font-bold text-indigo-600">Rs.'+x.farmer_price+'</td><td><button onclick="delPlItem(\''+x.id+'\')" class="text-red-500 text-xs">Del</button></td></tr>').join('')||'<tr><td colspan="7" class="text-center text-xs text-slate-400">දත්ත නැත</td></tr>';
+  document.getElementById('plTableBody').innerHTML=plItems.map(x=>'<tr><td class="text-xs"><b>'+x.year+'</b><br>'+x.program+'</td><td class="text-xs"><b>'+x.item_name+'</b></td><td class="text-xs">'+x.subsidy+'</td><td class="text-xs">Rs.'+x.unit_price+'</td><td class="text-xs font-bold text-emerald-600">Rs.'+x.gov_price+'</td><td class="text-xs font-bold text-indigo-600">Rs.'+x.farmer_price+'</td><td><button onclick="delPlItem(\''+x.id+'\')" class="text-red-500 text-xs">Del</button></td></tr>').join('')||'<tr><td colspan="7" class="text-center text-xs text-slate-400">No data</td></tr>';
   let ctx=document.getElementById('plChartCanvas');
   if(!ctx||typeof Chart==='undefined')return;
   if(plChartInst)plChartInst.destroy();
@@ -1795,37 +1684,16 @@ function importPriceExcel(e){
       let f=rec.subsidy==='75%'?0.75:rec.subsidy==='50%'?0.50:rec.subsidy==='25%'?0.25:0;
       rec.farmer_price=rec.unit_price*f; rec.gov_price=rec.unit_price-rec.farmer_price;
       plItems.push(rec);
-      if(sb) await sb.from('item_prices').upsert(rec);
+      if(sb) await sb.from('item_prices').upsert(rec, { onConflict: 'id' });
     }
-    renderPlTableAndChart(); showToast('Import විය ✓',true);
+    renderPlTableAndChart(); showToast('Imported ✓',true);
   };
   reader.readAsArrayBuffer(file);
 }
 
-/* ================= PIV APPROVAL (UNIT -> AD -> DD APPROVAL) ================= */
-function loadLocalPivRecords(){
-  try{
-    var raw = localStorage.getItem(PIV_STORAGE_KEY);
-    if(raw){
-      var parsed = JSON.parse(raw);
-      if(Array.isArray(parsed)) return parsed;
-    }
-  }catch(e){}
-  return [];
-}
-
-function saveLocalPivRecords(arr){
-  try{ localStorage.setItem(PIV_STORAGE_KEY, JSON.stringify(arr)); }catch(e){}
-}
-
+/* ================= PIV APPROVAL (SUPABASE ONLY) ================= */
 function getAllPivRecords(){
-  var localList = loadLocalPivRecords();
-  var map = new Map();
-  (pivRecords||[]).forEach(r => { if(r && r.id) map.set(String(r.id), r); });
-  localList.forEach(r => { if(r && r.id && !map.has(String(r.id))) map.set(String(r.id), r); });
-  pivRecords = Array.from(map.values()).sort((a,b) => String(b.created_at||'').localeCompare(String(a.created_at||'')));
-  saveLocalPivRecords(pivRecords);
-  return pivRecords;
+  return (Array.isArray(pivRecords) ? pivRecords : []).slice().sort((a,b) => String(b.created_at||'').localeCompare(String(a.created_at||'')));
 }
 
 function isAdApprovedForDd(r){
@@ -1834,7 +1702,7 @@ function isAdApprovedForDd(r){
 }
 
 function isDdApproved(r){
-  return norm(r.dd_approval_status) === 'approved';
+  return norm(r.dd_approval_status) === 'approved' || norm(r.main_admin_status) === 'approved';
 }
 
 function setSelectKeep(selId, arr, defLbl){
@@ -1874,7 +1742,7 @@ function renderAdminPivTable(){
   var tbody = document.getElementById('adminPivTbody');
   if(!tbody) return;
   if(!filtered.length){
-    tbody.innerHTML = '<tr><td colspan="10" class="text-center py-6 text-slate-400 text-xs">PIV දත්ත නොමැත</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" class="text-center py-6 text-slate-400 text-xs">No PIV records in Supabase</td></tr>';
     return;
   }
 
@@ -1895,7 +1763,7 @@ function renderAdminPivTable(){
           ? '<span class="px-2 py-1 rounded-full text-[11px] font-bold bg-amber-500 text-white whitespace-nowrap">DD Office Pending</span>'
           : '<span class="px-2 py-1 rounded-full text-[11px] font-bold bg-red-600 text-white whitespace-nowrap">Waiting AD</span>');
 
-    var dateVal = r.dd_approval_date || (ddDone ? todayStr : todayStr);
+    var dateVal = r.dd_approval_date || todayStr;
 
     return '<tr>' +
       '<td class="font-bold text-indigo-950 whitespace-nowrap">' + (r.auto_unit_no || '-') + '</td>' +
@@ -1918,28 +1786,33 @@ async function ddApprovePivRecord(id){
 
   var dateEl = document.getElementById('ddAppDate_' + id);
   var appDate = dateEl ? dateEl.value : '';
-  if(!appDate) return showToast('DD Approval Date ඇතුළත් කරන්න', false);
+  if(!appDate) return showToast('Please select DD Approval Date', false);
 
-  rec.dd_approval_status = 'Approved';
-  rec.dd_approval_date = appDate;
-  rec.dd_approved_by = localStorage.getItem('user') || 'DD Office';
-  rec.dd_approved_at = new Date().toISOString();
+  var approvedBy = localStorage.getItem('user') || 'DD Office';
+  var approvedAt = new Date().toISOString();
+
+  var updatePayload = {
+    dd_approval_status: 'Approved',
+    main_admin_status: 'Approved',
+    dd_approval_date: appDate,
+    dd_approved_by: approvedBy,
+    dd_approved_at: approvedAt,
+    updated_at: approvedAt
+  };
 
   if(sb){
-    await sb.from('piv_submissions').update({
-      dd_approval_status: 'Approved',
-      dd_approval_date: appDate,
-      dd_approved_by: rec.dd_approved_by,
-      dd_approved_at: rec.dd_approved_at
-    }).eq('id', rec.id);
+    var res = await sb.from('piv_submissions').update(updatePayload).eq('id', rec.id);
+    if(res.error){
+      return showToast('Supabase Update Error: ' + res.error.message, false);
+    }
   }
 
-  saveLocalPivRecords(pivRecords);
+  Object.assign(rec, updatePayload);
   renderAdminPivTable();
-  showToast('DD Office Approved & Date (' + appDate + ') Saved ✓', true);
+  showToast('DD Office Approved & Date (' + appDate + ') Saved to Supabase ✓', true);
 }
 
-/* ================= Data View (Proper Question Headers + No Empty Columns + Single Row Per Item Split) ================= */
+/* ================= Data View (Ordered Columns + Proper Question Titles + Per-Item Row) ================= */
 const CAT_PALETTE = [
   'bg-indigo-100 text-indigo-900 border-indigo-300',
   'bg-amber-100 text-amber-900 border-amber-300',
@@ -1954,9 +1827,7 @@ const CAT_PALETTE = [
 function getCategoryColorClass(catName){
   var k = norm(catName || 'other');
   var hash = 0;
-  for(var i = 0; i < k.length; i++){
-    hash = (hash * 31 + k.charCodeAt(i)) >>> 0;
-  }
+  for(var i = 0; i < k.length; i++) hash = (hash * 31 + k.charCodeAt(i)) >>> 0;
   return CAT_PALETTE[hash % CAT_PALETTE.length];
 }
 
@@ -1997,6 +1868,70 @@ function setSelectPreserve(selId, vals, defLabel){
   else el.value = '';
 }
 
+function isNonEmptyCellValue(v){
+  if(v === undefined || v === null) return false;
+  if(Array.isArray(v)) return v.some(x => x !== undefined && x !== null && String(x).trim() !== '' && String(x).trim() !== '-');
+  var s = String(v).trim();
+  return s !== '' && s !== '-';
+}
+
+function formatCellVal(v){
+  if(v === undefined || v === null || v === '') return '-';
+  if(Array.isArray(v)){
+    var cleanArr = v.filter(x => x !== undefined && x !== null && String(x).trim() !== '');
+    return cleanArr.length ? cleanArr.join(', ') : '-';
+  }
+  return String(v);
+}
+
+var qTextByIdMap = null;
+var qTextByOrderMap = null;
+
+function buildQuestionLookupMaps(){
+  var byId = new Map();
+  var byOrder = new Map();
+  (questions || []).forEach(q => {
+    if(!q) return;
+    var label = String(q.question_text || '').trim();
+    if(!label) return;
+    if(q.id !== undefined && q.id !== null) byId.set(String(q.id), label);
+    if(q.order_index !== undefined && q.order_index !== null){
+      var ordKey = String(q.order_index);
+      if(!byOrder.has(ordKey)) byOrder.set(ordKey, label);
+    }
+  });
+  DEV_DEFAULT_QUESTIONS.forEach((tpl, idx) => {
+    var ordKey = String(idx + 1);
+    if(!byOrder.has(ordKey) && tpl && tpl.text) byOrder.set(ordKey, tpl.text);
+  });
+  qTextByIdMap = byId;
+  qTextByOrderMap = byOrder;
+}
+
+function resolveQuestionColumnTitle(rawKey, isDev){
+  if(!qTextByIdMap || !qTextByOrderMap) buildQuestionLookupMaps();
+  var k = String(rawKey || '').trim();
+  if(!k) return '';
+  if(qTextByIdMap.has(k)) return qTextByIdMap.get(k);
+
+  var tplMatch = k.match(/^tpl_def_(\d+)$/i);
+  if(tplMatch){
+    var tIdx = parseInt(tplMatch[1], 10);
+    if(DEV_DEFAULT_QUESTIONS[tIdx]) return DEV_DEFAULT_QUESTIONS[tIdx].text;
+  }
+
+  if(/^q(_[a-zA-Z0-9]+)+$/i.test(k)){
+    var tailMatch = k.match(/_(\d+)$/);
+    if(tailMatch){
+      var numVal = parseInt(tailMatch[1], 10);
+      if(isDev && DEV_DEFAULT_QUESTIONS[numVal - 1]) return DEV_DEFAULT_QUESTIONS[numVal - 1].text;
+      if(qTextByOrderMap.has(String(numVal))) return qTextByOrderMap.get(String(numVal));
+    }
+    return '';
+  }
+  return k;
+}
+
 function expandDevelopmentResponseRows(r){
   var ans = (r && r.answers && typeof r.answers === 'object') ? r.answers : {};
   var selectedItems = Array.isArray(ans.__selected_items) ? ans.__selected_items.filter(Boolean) : [];
@@ -2005,11 +1940,14 @@ function expandDevelopmentResponseRows(r){
   }
   if(selectedItems.length <= 1){
     var singleItem = selectedItems[0] || ans.__item_name || '-';
+    var mergedSingle = Object.assign({}, ans, { __item_name: singleItem });
+    if(ans.__item_specific && ans.__item_specific[singleItem]){
+      Object.keys(ans.__item_specific[singleItem]).forEach(sk => { mergedSingle[sk] = ans.__item_specific[singleItem][sk]; });
+    }
     return [{
       rawRecord: r,
       itemName: singleItem,
-      answers: ans,
-      answersText: formatAnswersText(ans, singleItem)
+      answers: mergedSingle
     }];
   }
   return selectedItems.map(itName => {
@@ -2025,10 +1963,124 @@ function expandDevelopmentResponseRows(r){
     return {
       rawRecord: r,
       itemName: itName,
-      answers: mergedAns,
-      answersText: formatAnswersText(mergedAns, itName)
+      answers: mergedAns
     };
   });
+}
+
+function getOrderedDevQuestionColumns(devExpandedRows){
+  qTextByIdMap = null;
+  qTextByOrderMap = null;
+  buildQuestionLookupMaps();
+
+  var skip = new Set(['__item_name','__selected_items','__item_specific','__item_quantities','__progress_qty','__officer_name','__user','__per_item_qty','__per_item_answers']);
+  var titleToKeys = new Map();
+  var extraTitlesOrder = [];
+
+  function registerKeyForTitle(title, rawKey){
+    var normT = norm(title);
+    if(!normT) return;
+    if(!titleToKeys.has(normT)){
+      titleToKeys.set(normT, { title: title, keys: [] });
+      if(!DEV_FIXED_ORDER_TITLES.some(ft => norm(ft) === normT)){
+        extraTitlesOrder.push(normT);
+      }
+    }
+    var entry = titleToKeys.get(normT);
+    if(rawKey && !entry.keys.includes(rawKey)) entry.keys.push(rawKey);
+  }
+
+  devExpandedRows.forEach(er => {
+    var ans = (er && er.answers && typeof er.answers === 'object') ? er.answers : {};
+    Object.keys(ans).forEach(rawKey => {
+      if(skip.has(rawKey)) return;
+      var title = resolveQuestionColumnTitle(rawKey, true);
+      if(title) registerKeyForTitle(title, rawKey);
+    });
+  });
+
+  (questions || []).forEach(q => {
+    if(!q || !q.question_text) return;
+    var normT = norm(q.question_text);
+    if(DEV_FIXED_ORDER_TITLES.some(ft => norm(ft) === normT)){
+      registerKeyForTitle(q.question_text, String(q.id));
+    }
+  });
+
+  var orderedCols = [];
+  DEV_FIXED_ORDER_TITLES.forEach(fixedTitle => {
+    var normT = norm(fixedTitle);
+    var found = titleToKeys.get(normT);
+    orderedCols.push({
+      title: fixedTitle,
+      keys: found ? found.keys : []
+    });
+  });
+
+  extraTitlesOrder.forEach(extraNorm => {
+    var extraCol = titleToKeys.get(extraNorm);
+    if(extraCol && extraCol.keys.length){
+      var hasVal = devExpandedRows.some(er => {
+        var ans = (er && er.answers && typeof er.answers === 'object') ? er.answers : {};
+        return extraCol.keys.some(k => isNonEmptyCellValue(ans[k]));
+      });
+      if(hasVal) orderedCols.push(extraCol);
+    }
+  });
+
+  return orderedCols;
+}
+
+function getDynamicAnswerColumns(recordsList, isDev){
+  if(isDev) return getOrderedDevQuestionColumns(recordsList);
+
+  qTextByIdMap = null;
+  qTextByOrderMap = null;
+  buildQuestionLookupMaps();
+
+  var skip = new Set(['__item_name','__selected_items','__item_specific','__item_quantities','__progress_qty','__officer_name','__user','__per_item_qty','__per_item_answers']);
+  var colMap = new Map();
+  var colOrder = [];
+
+  recordsList.forEach(entry => {
+    var r = (entry && entry.rawRecord) ? entry.rawRecord : entry;
+    var ans = (entry && entry.answers) ? entry.answers : (r && r.answers ? r.answers : {});
+    if(!ans || typeof ans !== 'object') return;
+    Object.keys(ans).forEach(rawKey => {
+      if(skip.has(rawKey)) return;
+      if(!isNonEmptyCellValue(ans[rawKey])) return;
+      var title = resolveQuestionColumnTitle(rawKey, false);
+      if(!title) return;
+      var normTitle = norm(title);
+      if(!colMap.has(normTitle)){
+        colMap.set(normTitle, { title: title, keys: [rawKey] });
+        colOrder.push(normTitle);
+      } else if(!colMap.get(normTitle).keys.includes(rawKey)){
+        colMap.get(normTitle).keys.push(rawKey);
+      }
+    });
+  });
+
+  return colOrder.map(nk => colMap.get(nk));
+}
+
+function getColumnValueFromAnswers(ans, col){
+  if(!ans || typeof ans !== 'object' || !col) return '-';
+  if(Array.isArray(col.keys)){
+    for(var i = 0; i < col.keys.length; i++){
+      var v = ans[col.keys[i]];
+      if(isNonEmptyCellValue(v)) return formatCellVal(v);
+    }
+  }
+  var matchingQs = (questions || []).filter(q => norm(q.question_text) === norm(col.title));
+  for(var j = 0; j < matchingQs.length; j++){
+    var v2 = ans[String(matchingQs[j].id)];
+    if(isNonEmptyCellValue(v2)) return formatCellVal(v2);
+  }
+  for(var k in ans){
+    if(norm(k) === norm(col.title) && isNonEmptyCellValue(ans[k])) return formatCellVal(ans[k]);
+  }
+  return '-';
 }
 
 function initDataFilters(){
@@ -2062,154 +2114,20 @@ function initDataFilters(){
 function onExtDataFilterChange(kind){
   if(kind === 'prog') document.getElementById('extF_SubProg').value = '';
   if(kind === 'ad') document.getElementById('extF_AiOffice').value = '';
-  initDataFilters();
-  renderData();
+  initDataFilters(); renderData();
 }
 
 function onDevDataFilterChange(kind){
   if(kind === 'prog'){ document.getElementById('devF_SubProg').value = ''; document.getElementById('devF_Item').value = ''; }
   if(kind === 'sub') document.getElementById('devF_Item').value = '';
   if(kind === 'ad') document.getElementById('devF_AiOffice').value = '';
-  initDataFilters();
-  renderData();
+  initDataFilters(); renderData();
 }
 
 function fillDataFilters(){
   var fSub = document.getElementById('fSub');
-  if(fSub) fSub.innerHTML='<option value="">සියලු Sub Office</option>'+hierarchy.map(h=>'<option value="'+h.id+'">'+h.name+'</option>').join('');
+  if(fSub) fSub.innerHTML='<option value="">All Sub Offices</option>'+hierarchy.map(h=>'<option value="'+h.id+'">'+h.name+'</option>').join('');
   initDataFilters();
-}
-
-function formatAnswersText(ans, activeItem){
-  if(!ans || typeof ans !== 'object') return '';
-  var parts = [];
-  if(ans.__officer_name) parts.push('Officer: ' + ans.__officer_name);
-  Object.keys(ans).forEach(k => {
-    if(k === '__item_name' || k === '__selected_items' || k === '__item_specific' || k === '__item_quantities' || k === '__progress_qty' || k === '__officer_name' || k === '__user') return;
-    var v = ans[k];
-    if(v !== undefined && v !== null && v !== ''){
-      parts.push(Array.isArray(v) ? v.join(', ') : String(v));
-    }
-  });
-  if(activeItem && ans.__item_specific && ans.__item_specific[activeItem]){
-    var sp = ans.__item_specific[activeItem];
-    Object.keys(sp).forEach(sk => {
-      if(sp[sk] !== undefined && sp[sk] !== null && sp[sk] !== ''){
-        parts.push(sk + ': ' + (Array.isArray(sp[sk]) ? sp[sk].join(', ') : String(sp[sk])));
-      }
-    });
-  }
-  if(ans.__progress_qty !== undefined && ans.__progress_qty !== null && ans.__progress_qty !== ''){
-    parts.unshift('Qty: ' + ans.__progress_qty);
-  }
-  return parts.join(' | ') || JSON.stringify(ans).substring(0, 120);
-}
-
-var qTextByIdMap = null;
-var qTextByOrderMap = null;
-function buildQuestionLookupMaps(){
-  var byId = new Map();
-  var byOrder = new Map();
-  (questions || []).forEach(q => {
-    if(!q) return;
-    var label = String(q.question_text || '').trim();
-    if(!label) return;
-    if(q.id !== undefined && q.id !== null) byId.set(String(q.id), label);
-    if(q.order_index !== undefined && q.order_index !== null){
-      var ordKey = String(q.order_index);
-      if(!byOrder.has(ordKey)) byOrder.set(ordKey, label);
-    }
-  });
-  DEV_DEFAULT_QUESTIONS.forEach((tpl, idx) => {
-    var ordKey = String(idx + 1);
-    if(!byOrder.has(ordKey) && tpl && tpl.text) byOrder.set(ordKey, tpl.text);
-  });
-  qTextByIdMap = byId;
-  qTextByOrderMap = byOrder;
-}
-
-function resolveQuestionColumnTitle(rawKey, isDev){
-  if(!qTextByIdMap || !qTextByOrderMap) buildQuestionLookupMaps();
-  var k = String(rawKey || '').trim();
-  if(!k) return '';
-  if(qTextByIdMap.has(k)) return qTextByIdMap.get(k);
-  if(/^q(_[a-zA-Z0-9]+)+$/i.test(k)){
-    var tailMatch = k.match(/_(\d+)$/);
-    if(tailMatch){
-      var numVal = parseInt(tailMatch[1], 10);
-      if(isDev && DEV_DEFAULT_QUESTIONS[numVal - 1]) return DEV_DEFAULT_QUESTIONS[numVal - 1].text;
-      if(isDev && DEV_DEFAULT_QUESTIONS[numVal]) return DEV_DEFAULT_QUESTIONS[numVal].text;
-      if(qTextByOrderMap.has(String(numVal))) return qTextByOrderMap.get(String(numVal));
-      if(qTextByOrderMap.has(String(numVal + 1))) return qTextByOrderMap.get(String(numVal + 1));
-    }
-    return '';
-  }
-  return k;
-}
-
-function isNonEmptyCellValue(v){
-  if(v === undefined || v === null) return false;
-  if(Array.isArray(v)) return v.some(x => x !== undefined && x !== null && String(x).trim() !== '' && String(x).trim() !== '-');
-  var s = String(v).trim();
-  return s !== '' && s !== '-';
-}
-
-function getDynamicAnswerColumns(recordsList, isDev){
-  qTextByIdMap = null;
-  qTextByOrderMap = null;
-  buildQuestionLookupMaps();
-
-  var skip = new Set(['__item_name','__selected_items','__item_specific','__item_quantities','__progress_qty','__officer_name','__user']);
-  var colMap = new Map();
-  var colOrder = [];
-
-  recordsList.forEach(entry => {
-    var r = (isDev && entry && entry.rawRecord) ? entry.rawRecord : entry;
-    var ans = (isDev && entry && entry.answers) ? entry.answers : (r && r.answers ? r.answers : {});
-    if(!ans || typeof ans !== 'object') return;
-    Object.keys(ans).forEach(rawKey => {
-      if(skip.has(rawKey)) return;
-      var val = ans[rawKey];
-      if(!isNonEmptyCellValue(val)) return;
-      var title = resolveQuestionColumnTitle(rawKey, isDev);
-      if(!title) return;
-      var normTitle = norm(title);
-      if(!colMap.has(normTitle)){
-        colMap.set(normTitle, { title: title, keys: [rawKey] });
-        colOrder.push(normTitle);
-      } else {
-        var existingCol = colMap.get(normTitle);
-        if(!existingCol.keys.includes(rawKey)) existingCol.keys.push(rawKey);
-      }
-    });
-  });
-
-  return colOrder.map(nk => colMap.get(nk)).filter(col => {
-    return recordsList.some(entry => {
-      var r = (isDev && entry && entry.rawRecord) ? entry.rawRecord : entry;
-      var ans = (isDev && entry && entry.answers) ? entry.answers : (r && r.answers ? r.answers : {});
-      if(!ans || typeof ans !== 'object') return false;
-      return col.keys.some(k => isNonEmptyCellValue(ans[k]));
-    });
-  });
-}
-
-function getColumnValueFromAnswers(ans, col){
-  if(!ans || typeof ans !== 'object' || !col || !Array.isArray(col.keys)) return '-';
-  for(var i = 0; i < col.keys.length; i++){
-    var v = ans[col.keys[i]];
-    if(isNonEmptyCellValue(v)) return formatCellVal(v);
-  }
-  return '-';
-}
-
-function formatCellVal(v){
-  if(v === undefined || v === null || v === '') return '-';
-  if(Array.isArray(v)){
-    var cleanArr = v.filter(x => x !== undefined && x !== null && String(x).trim() !== '');
-    return cleanArr.length ? cleanArr.join(', ') : '-';
-  }
-  return String(v);
 }
 
 function renderData(){
@@ -2263,7 +2181,7 @@ function renderData(){
 
   document.getElementById('extDataCount').textContent = extFiltered.length;
   document.getElementById('devDataCount').textContent = devExpandedRows.length;
-  document.getElementById('dataScopeNote').textContent = 'මුළු දත්ත: ' + responses.length + ' • Extension: ' + extFiltered.length + ' • Development (Item Rows): ' + devExpandedRows.length;
+  document.getElementById('dataScopeNote').textContent = 'Total Responses: ' + responses.length + ' • Extension: ' + extFiltered.length + ' • Development (Item Rows): ' + devExpandedRows.length;
 
   var extCols = getDynamicAnswerColumns(extFiltered, false);
   var extThead = document.getElementById('extDataThead');
@@ -2290,36 +2208,50 @@ function renderData(){
       '<td class="text-xs whitespace-nowrap">' + (r.created_at ? new Date(r.created_at).toLocaleDateString() : '') + '</td>' +
       '<td class="whitespace-nowrap space-x-2"><button onclick="openEditData(\'' + r.id + '\')" class="text-indigo-600 font-semibold text-xs">Edit</button><button onclick="delData(\'' + r.id + '\')" class="text-red-500 text-xs">Del</button></td>' +
     '</tr>';
-  }).join('') : '<tr><td colspan="' + extColSpan + '" class="text-center text-xs text-slate-400 py-5">Extension දත්ත නැත</td></tr>';
+  }).join('') : '<tr><td colspan="' + extColSpan + '" class="text-center text-xs text-slate-400 py-5">No Extension data</td></tr>';
 
-  var devCols = getDynamicAnswerColumns(devExpandedRows, true);
+  var devCols = getOrderedDevQuestionColumns(devExpandedRows);
   var devThead = document.getElementById('devDataThead');
   if(devThead){
     devThead.innerHTML = '<tr class="bg-emerald-50">' +
-      '<th>Category / Program</th><th>Year</th><th>Sub Program</th><th>Item</th><th>AD / AI Office</th><th>AI Officer</th><th>Progress Qty</th>' +
+      '<th>Program</th>' +
+      '<th>Year</th>' +
+      '<th>Sub Program</th>' +
+      '<th>Item</th>' +
+      '<th>AD / AI Office</th>' +
+      '<th>AI Officer</th>' +
       devCols.map(col => '<th class="whitespace-nowrap">' + col.title + '</th>').join('') +
-      '<th>Date</th><th>Action</th></tr>';
+      '<th>Date</th>' +
+      '<th>Action</th>' +
+      '</tr>';
   }
-  var devColSpan = 9 + devCols.length;
+  var devColSpan = 8 + devCols.length;
   document.getElementById('devDataTbody').innerHTML = devExpandedRows.length ? devExpandedRows.map(er => {
     var r = er.rawRecord;
-    var catName = r.level2 || 'Development';
-    var badgeCls = getCategoryColorClass(catName);
+    var progName = r.level2 || 'Development';
+    var badgeCls = getCategoryColorClass(progName);
     var adName = resolveAdOfficeForDivision(r.division || r.office);
+    var aiName = cleanOffName(r.division || r.office);
     var ans = er.answers || {};
+    var officerName = ans.__officer_name || getOfficerNameByDivision(aiName) || '-';
     return '<tr>' +
-      '<td class="text-xs"><span class="px-2.5 py-1 rounded-full border font-bold text-[11px] ' + badgeCls + '">' + catName + '</span></td>' +
+      '<td class="text-xs"><span class="px-2.5 py-1 rounded-full border font-bold text-[11px] ' + badgeCls + '">' + progName + '</span></td>' +
       '<td class="text-xs">' + (r.level1 || '-') + '</td>' +
       '<td class="text-xs font-semibold">' + (r.level3 || '-') + '</td>' +
       '<td class="text-xs font-bold text-emerald-900">' + (er.itemName || '-') + '</td>' +
-      '<td class="text-xs"><b>' + cleanOffName(r.division || r.office) + '</b><div class="text-[11px] text-slate-400">' + adName + '</div></td>' +
-      '<td class="text-xs">' + (ans.__officer_name || '-') + '</td>' +
-      '<td class="text-xs font-bold">' + (ans.__progress_qty !== undefined && ans.__progress_qty !== '' ? ans.__progress_qty : '-') + '</td>' +
+      '<td class="text-xs"><b>' + adName + '</b>' + (aiName ? '<div class="text-[11px] text-slate-500">' + aiName + '</div>' : '') + '</td>' +
+      '<td class="text-xs font-semibold text-indigo-900">' + officerName + '</td>' +
       devCols.map(col => '<td class="text-xs">' + getColumnValueFromAnswers(ans, col) + '</td>').join('') +
       '<td class="text-xs whitespace-nowrap">' + (r.created_at ? new Date(r.created_at).toLocaleDateString() : '') + '</td>' +
       '<td class="whitespace-nowrap space-x-2"><button onclick="openEditData(\'' + r.id + '\')" class="text-indigo-600 font-semibold text-xs">Edit</button><button onclick="delData(\'' + r.id + '\')" class="text-red-500 text-xs">Del</button></td>' +
     '</tr>';
-  }).join('') : '<tr><td colspan="' + devColSpan + '" class="text-center text-xs text-slate-400 py-5">Development දත්ත නැත</td></tr>';
+  }).join('') : '<tr><td colspan="' + devColSpan + '" class="text-center text-xs text-slate-400 py-5">No Development data</td></tr>';
+}
+
+function getOfficerNameByDivision(divName){
+  if(!divName || !Array.isArray(users)) return '';
+  var u = users.find(x => x && (norm(x.division) === norm(divName) || norm(x.office) === norm(divName)));
+  return u ? (u.officer_name || u.name || '') : '';
 }
 
 function openEditData(id){
@@ -2331,7 +2263,7 @@ function openEditData(id){
   if(!keys.length) keys = ['__progress_qty', 'note'];
 
   document.getElementById('editRecordMeta').textContent = (rec.main_type || '').toUpperCase() + ' • ' + (rec.division || rec.office || '');
-  document.getElementById('editFields').innerHTML = keys.map((k, idx) => {
+  document.getElementById('editFields').innerHTML = keys.map(k => {
     var val = ans[k];
     var displayVal = Array.isArray(val) ? val.join(', ') : (val !== undefined && val !== null ? String(val) : '');
     var label = k === '__progress_qty' ? 'Progress Qty' : (k === '__item_name' ? 'Item Name' : (k === '__officer_name' ? 'AI Officer Name' : (resolveQuestionColumnTitle(k, norm(rec.main_type) === 'development') || k)));
@@ -2376,9 +2308,7 @@ async function saveEdit(){
   if(sb){
     await sb.from('responses').update({ answers: updatedAns }).eq('id', editingId);
   }
-  closeEdit();
-  renderData();
-  renderDashboard();
+  closeEdit(); renderData(); renderDashboard();
   showToast('Data Updated ✓', true);
 }
 
@@ -2393,23 +2323,27 @@ function downloadCategoryExcel(type){
     var r = (isDev && entry && entry.rawRecord) ? entry.rawRecord : entry;
     var ans = (isDev && entry && entry.answers) ? entry.answers : (r.answers || {});
     var adName = resolveAdOfficeForDivision(r.division || r.office);
-    var base = {
-      'Date': r.created_at ? new Date(r.created_at).toLocaleString() : '',
-      'AD Office': adName,
-      'AI Office': cleanOffName(r.division || r.office),
-      'AI Officer': ans.__officer_name || '',
-      [isDev ? 'Year' : 'Session']: r.level1 || '',
-      'Main Program': r.level2 || '',
-      'Sub Program': r.level3 || ''
+    var aiName = cleanOffName(r.division || r.office);
+    var base = isDev ? {
+      'Program': r.level2 || '',
+      'Year': r.level1 || '',
+      'Sub Program': r.level3 || '',
+      'Item': (entry && entry.itemName) || ans.__item_name || '',
+      'AD / AI Office': [adName, aiName].filter(Boolean).join(' / '),
+      'AI Officer': ans.__officer_name || getOfficerNameByDivision(aiName) || ''
+    } : {
+      'Program': r.level2 || '',
+      'Session': r.level1 || '',
+      'Sub Program': r.level3 || '',
+      'AD / AI Office': [adName, aiName].filter(Boolean).join(' / '),
+      'AI Officer': ans.__officer_name || getOfficerNameByDivision(aiName) || '',
+      'Progress Qty': (ans.__progress_qty !== undefined && ans.__progress_qty !== '') ? ans.__progress_qty : ''
     };
-    if(isDev){
-      base['Item'] = (entry && entry.itemName) || ans.__item_name || '';
-    }
-    base['Progress Qty'] = (ans.__progress_qty !== undefined && ans.__progress_qty !== '') ? ans.__progress_qty : '';
     dynCols.forEach(col => {
       var valStr = getColumnValueFromAnswers(ans, col);
       base[col.title] = valStr === '-' ? '' : valStr;
     });
+    base['Date'] = r.created_at ? new Date(r.created_at).toLocaleString() : '';
     return base;
   });
 
@@ -2420,18 +2354,19 @@ function downloadCategoryExcel(type){
   XLSX.writeFile(wb, 'Admin_' + label + '_Filtered_Data.xlsx');
 }
 
-async function delData(id){responses=responses.filter(x=>x.id!==id);if(sb)await sb.from('responses').delete().eq('id',id);renderData();}
-function downloadCSV(){
-  let csv='Path,Division,Office,Answers\n'+responses.map(r=>'"'+(r.node_path||'')+'","'+(r.division||'')+'","'+(r.office||'')+'","'+JSON.stringify(r.answers||{}).replace(/"/g,'""')+'"').join('\n');
-  let blob=new Blob([csv],{type:'text/csv'}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='data.csv'; a.click();
+async function delData(id){
+  responses=responses.filter(x=>x.id!==id);
+  if(sb) await sb.from('responses').delete().eq('id',id);
+  renderData();
 }
 
-/* ================= Users (Officer Name Update -> Unit Sync) ================= */
+/* ================= Users (Supabase Save & Refresh Sync) ================= */
 function resetUser(){
   document.getElementById('userForm').reset();
   document.getElementById('uId').value='';
   onUSub();
 }
+
 function editUserForCredentials(id){
   var u = users.find(x => String(x.id) === String(id));
   if(!u) return;
@@ -2453,48 +2388,87 @@ function editUserForCredentials(id){
   if(u.office){
     document.getElementById('uOffice').value = u.office;
   }
-  showToast((u.username || u.name) + ' — Officer Name / Password Edit Mode', true);
+  showToast('Editing ' + (u.username || u.name), true);
 }
+
 function renderUsers(){
   users = Array.isArray(users) ? users : [];
   var q = norm(document.getElementById('userSearch') ? document.getElementById('userSearch').value : '');
   var list = q ? users.filter(u => (JSON.stringify(u)).toLowerCase().includes(q)) : users;
-  document.getElementById('userList').innerHTML=list.map(u=>'<div onclick="editUserForCredentials(\''+u.id+'\')" class="cursor-pointer rounded-xl border p-3 flex justify-between items-center bg-white hover:bg-indigo-50/40 transition"><div><b>'+(u.name||'')+'</b><div class="text-xs text-slate-500">'+(u.username||'')+' | '+(u.role||'')+' | '+(u.division||'')+'</div><div class="text-[11px] text-indigo-700 font-semibold mt-0.5">Officer: '+(u.officer_name||'-')+'</div></div><div class="flex items-center gap-2" onclick="event.stopPropagation()"><button onclick="editUserForCredentials(\''+u.id+'\')" class="btn btn-ghost px-2.5 py-1 text-xs">Edit</button><button onclick="delUser(\''+u.id+'\')" class="text-red-500 text-xs">Del</button></div></div>').join('')||'<div class="text-xs text-slate-400">Users නැත</div>';
+  document.getElementById('userList').innerHTML=list.map(u=>'<div onclick="editUserForCredentials(\''+u.id+'\')" class="cursor-pointer rounded-xl border p-3 flex justify-between items-center bg-white hover:bg-indigo-50/40 transition"><div><b>'+(u.name||'')+'</b><div class="text-xs text-slate-500">'+(u.username||'')+' | '+(u.role||'')+' | '+(u.division||'')+'</div><div class="text-[11px] text-indigo-700 font-semibold mt-0.5">Officer: '+(u.officer_name||'-')+'</div></div><div class="flex items-center gap-2" onclick="event.stopPropagation()"><button onclick="editUserForCredentials(\''+u.id+'\')" class="btn btn-ghost px-2.5 py-1 text-xs">Edit</button><button onclick="delUser(\''+u.id+'\')" class="text-red-500 text-xs">Del</button></div></div>').join('')||'<div class="text-xs text-slate-400">No users</div>';
 }
-document.getElementById('userForm').addEventListener('submit',async function(e){
+
+document.getElementById('userForm').addEventListener('submit', async function(e){
   e.preventDefault();
-  var existingId = document.getElementById('uId').value;
-  var existingUser = existingId ? users.find(x => String(x.id) === String(existingId)) : null;
-  var officerVal = document.getElementById('uOfficer').value.trim();
-  var passVal = document.getElementById('uPassword').value;
-  var p={
-    id: existingId || ('u'+Date.now()),
-    name: document.getElementById('uName').value.trim() || (existingUser ? existingUser.name : ''),
-    username: document.getElementById('uUsername').value.trim() || (existingUser ? existingUser.username : ''),
-    officer_name: officerVal,
-    password: passVal,
-    role: document.getElementById('uRole').value,
-    sub_office_id: document.getElementById('uSub').value,
-    division: document.getElementById('uDiv').value,
-    office: document.getElementById('uOffice').value,
-    status: document.getElementById('uStatus').value
-  };
-  var idx = users.findIndex(x => String(x.id) === String(p.id) || norm(x.username) === norm(p.username));
-  if(idx > -1){
-    p.id = users[idx].id;
-    users[idx] = Object.assign({}, users[idx], p);
-  } else {
-    users.push(p);
-  }
+  var btn = document.getElementById('saveUserBtn');
+  if(btn) btn.disabled = true;
 
-  if(norm(localStorage.getItem('user')) === norm(p.username)){
-    localStorage.setItem('user_officer_name', officerVal);
-  }
+  try{
+    var existingId = document.getElementById('uId').value;
+    var unameVal = document.getElementById('uUsername').value.trim();
+    var existingUser = existingId
+      ? users.find(x => String(x.id) === String(existingId))
+      : users.find(x => norm(x.username) === norm(unameVal));
 
-  if(sb) await sb.from('profiles').upsert(p,{onConflict:'username'});
-  renderUsers(); showToast('Officer Name Update Save විය (Unit හි දිස්වනු ඇත) ✓',true);
+    var officerVal = document.getElementById('uOfficer').value.trim();
+    var passVal = document.getElementById('uPassword').value;
+
+    var p = {
+      id: (existingUser && existingUser.id) ? existingUser.id : (existingId || ('u_' + Date.now())),
+      name: document.getElementById('uName').value.trim() || (existingUser ? existingUser.name : ''),
+      username: unameVal || (existingUser ? existingUser.username : ''),
+      officer_name: officerVal,
+      password: passVal,
+      role: document.getElementById('uRole').value,
+      sub_office_id: document.getElementById('uSub').value,
+      division: document.getElementById('uDiv').value,
+      office: document.getElementById('uOffice').value,
+      status: document.getElementById('uStatus').value
+    };
+
+    if(sb){
+      var res = await sb.from('profiles').upsert(p, { onConflict: 'username' }).select();
+      if(res.error){
+        showToast('Supabase Save Failed: ' + res.error.message, false);
+        if(btn) btn.disabled = false;
+        return;
+      }
+      if(Array.isArray(res.data) && res.data[0]){
+        p = Object.assign({}, p, res.data[0]);
+      }
+    }
+
+    var idx = users.findIndex(x => String(x.id) === String(p.id) || norm(x.username) === norm(p.username));
+    if(idx > -1) users[idx] = Object.assign({}, users[idx], p);
+    else users.push(p);
+
+    if(norm(localStorage.getItem('user')) === norm(p.username)){
+      localStorage.setItem('user_officer_name', officerVal);
+    }
+
+    document.getElementById('uId').value = p.id;
+    renderUsers();
+    showToast('Officer Name Saved to Supabase ✓', true);
+  } catch(err){
+    console.error(err);
+    showToast('Error saving user', false);
+  } finally {
+    if(btn) btn.disabled = false;
+  }
 });
-async function delUser(id){users=users.filter(x=>x.id!==id);renderUsers();}
+
+async function delUser(id){
+  if(!await profConfirm('Delete this user?'))return;
+  var u = users.find(x => String(x.id) === String(id));
+  users=users.filter(x=>String(x.id)!==String(id));
+  if(sb && u){
+    if(u.id) await sb.from('profiles').delete().eq('id', u.id);
+    else if(u.username) await sb.from('profiles').delete().eq('username', u.username);
+  }
+  renderUsers();
+  showToast('User Deleted ✓', true);
+}
+
 function onUSub(){let h=hierarchy.find(x=>x.id===document.getElementById('uSub').value);document.getElementById('uDiv').innerHTML=h?h.divisions.map(d=>'<option>'+d.name+'</option>').join(''):'';onUDiv();}
 function onUDiv(){let divs=getOffices(document.getElementById('uDiv').value);document.getElementById('uOffice').innerHTML=divs.map(o=>'<option>'+o+'</option>').join('');}
 function getOffices(div){for(let h of hierarchy)for(let d of (h.divisions||[]))if(d.name===div)return d.offices||[];return [];}
@@ -2513,7 +2487,6 @@ function selDiv(d){selHierDiv=d;renderHierarchy();}
 async function sbSync(){
   if(!sb){
     document.getElementById('sbStatus').textContent='Offline';
-    pivRecords = loadLocalPivRecords();
     renderDashboard(); renderData(); renderUsers(); renderAdminPivTable();
     return;
   }
@@ -2527,19 +2500,20 @@ async function sbSync(){
     let piv=await sb.from('piv_submissions').select('*').order('created_at',{ascending:false});
     if(piv && Array.isArray(piv.data) && !piv.error){
       pivRecords = piv.data;
-      saveLocalPivRecords(pivRecords);
     } else {
-      pivRecords = loadLocalPivRecords();
+      pivRecords = [];
     }
     document.getElementById('sbStatus').textContent='Data: Connected ✓';
   }catch(e){
-    pivRecords = loadLocalPivRecords();
+    console.error(e);
     document.getElementById('sbStatus').textContent='Error';
   }
   renderDashboard(); renderData(); renderUsers(); renderAdminPivTable();
 }
 
-fillDataFilters(); document.getElementById('uSub').innerHTML=hierarchy.map(h=>'<option value="'+h.id+'">'+h.name+'</option>').join(''); onUSub();
+fillDataFilters();
+document.getElementById('uSub').innerHTML=hierarchy.map(h=>'<option value="'+h.id+'">'+h.name+'</option>').join('');
+onUSub();
 renderDashboard(); gotoStep(1); sbSync();
 </script>
 </body></html>
