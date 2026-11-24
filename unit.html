@@ -375,7 +375,7 @@ select, input, textarea { -webkit-appearance: none; appearance: none; }
   </div>
 
   <div id="myEditBox" class="hidden mt-4 border-2 border-indigo-200 rounded-2xl p-4 bg-indigo-50/50 card">
-    <h4 class="font-bold">Edit Entry</h4>
+    <h4 class="font-bold">Edit Selected Row <span id="myEditRowBadge" class="text-xs font-semibold text-indigo-700 ml-2"></span></h4>
     <div class="mt-2">
       <label class="text-xs font-semibold">Progress Quantity</label>
       <input type="number" step="any" id="myEditQty" class="mt-1 bg-white">
@@ -627,7 +627,7 @@ function refreshOfficerProfileDisplay(){
 refreshOfficerProfileDisplay();
 
 var nodes=[], questions=[], responses=[], itemPrices=[], targetRecords=[], pivRecords=[];
-var curMain='extension', curL1=null, curL2=null, curL3=null, curSub=null, curItem=null, curSelectedItems=[], editingId=null, editingPivId=null;
+var curMain='extension', curL1=null, curL2=null, curL3=null, curSub=null, curItem=null, curSelectedItems=[], editingId=null, editingItemName=null, editingPivId=null;
 var showAllExtBoxes=false, showAllDevBoxes=false;
 
 const COLOR_THEMES = [
@@ -1093,7 +1093,7 @@ function openFormFromTarget(mainType, l1Enc, l2Enc, l3Enc, itemEnc){
   }
 }
 
-/* ================= DATA ENTRY FORM (Multi-Item + Per-Item Radio & Extra Questions) ================= */
+/* ================= DATA ENTRY FORM (Extension Sub Program + Multi-Item Separate Rows) ================= */
 function uSelectMain(m){
   curMain=m; curL1=null; curL2=null; curL3=null; curSub=null; curItem=null; curSelectedItems=[];
   document.getElementById('uExt').className='py-3 rounded-xl font-semibold '+(m==='extension'?'bg-indigo-600 text-white':'bg-slate-100');
@@ -1108,7 +1108,9 @@ function uSelectMain(m){
 }
 
 function renderUSelects(){
-  var l1s=(nodes||[]).filter(n=>n.main_type===curMain&&n.level===1&&n.is_published).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  document.getElementById('uL3Wrap').classList.toggle('hidden',curMain!=='development');
+  document.getElementById('uSubWrap').classList.toggle('hidden',curMain!=='extension');
+  var l1s=(nodes||[]).filter(n=>n.main_type===curMain&&n.level===1&&n.is_published!==false).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
   document.getElementById('uL1').innerHTML='<option value="">-- Select --</option>'+l1s.map(n=>'<option value="'+n.id+'">'+n.title+'</option>').join('');
   if(curL1) document.getElementById('uL1').value=curL1;
   uPickL1(true);
@@ -1117,7 +1119,7 @@ function renderUSelects(){
 function uPickL1(keepChild){
   curL1=document.getElementById('uL1').value||null;
   if(!keepChild){ curL2=null; curL3=null; curSub=null; curItem=null; curSelectedItems=[]; }
-  var l2s=curL1?(nodes||[]).filter(n=>n.main_type===curMain&&n.level===2&&n.parent_id===curL1&&n.is_published).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)):[];
+  var l2s=curL1?(nodes||[]).filter(n=>n.main_type===curMain&&n.level===2&&String(n.parent_id)===String(curL1)&&n.is_published!==false).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)):[];
   document.getElementById('uL2').innerHTML='<option value="">-- Select --</option>'+l2s.map(n=>'<option value="'+n.id+'">'+n.title+'</option>').join('');
   if(curL2) document.getElementById('uL2').value=curL2;
   uPickL2(keepChild);
@@ -1127,12 +1129,16 @@ function uPickL2(keepChild){
   curL2=document.getElementById('uL2').value||null;
   if(!keepChild){ curL3=null; curSub=null; curItem=null; curSelectedItems=[]; }
   if(curMain==='development'){
-    var l3s=curL2?(nodes||[]).filter(n=>n.main_type==='development'&&n.level===3&&n.parent_id===curL2&&n.is_published).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)):[];
+    document.getElementById('uL3Wrap').classList.remove('hidden');
+    document.getElementById('uSubWrap').classList.add('hidden');
+    var l3s=curL2?(nodes||[]).filter(n=>n.main_type==='development'&&n.level===3&&String(n.parent_id)===String(curL2)&&n.is_published!==false).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)):[];
     document.getElementById('uL3').innerHTML='<option value="">-- Select Sub Program --</option>'+l3s.map(n=>'<option value="'+n.id+'">'+n.title+'</option>').join('');
     if(curL3) document.getElementById('uL3').value=curL3;
     uPickL3(keepChild ? curSelectedItems : []);
   } else {
-    var subs=curL2?(nodes||[]).filter(n=>n.main_type==='extension'&&n.level===3&&n.parent_id===curL2&&n.is_published).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)):[];
+    document.getElementById('uSubWrap').classList.remove('hidden');
+    document.getElementById('uL3Wrap').classList.add('hidden');
+    var subs=curL2?(nodes||[]).filter(n=>n.main_type==='extension'&&n.level===3&&String(n.parent_id)===String(curL2)&&n.is_published!==false).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)):[];
     document.getElementById('uSub').innerHTML='<option value="">-- Select Sub Program --</option>'+subs.map(n=>'<option value="'+n.id+'">'+n.title+'</option>').join('');
     if(curSub) document.getElementById('uSub').value=curSub;
     uPickSub();
@@ -1141,9 +1147,9 @@ function uPickL2(keepChild){
 
 function getDevelopmentItemsForSub(subId){
   if(!subId) return [];
-  var itemNodes = (nodes||[]).filter(n => n.main_type==='development' && n.level===4 && n.parent_id===subId && n.is_published).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  var itemNodes = (nodes||[]).filter(n => n.main_type==='development' && n.level===4 && String(n.parent_id)===String(subId) && n.is_published!==false).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
   if(itemNodes.length) return itemNodes.map(n => n.title);
-  var n1 = (nodes||[]).find(x=>x.id===curL1), n2 = (nodes||[]).find(x=>x.id===curL2), n3 = (nodes||[]).find(x=>x.id===subId);
+  var n1 = (nodes||[]).find(x=>String(x.id)===String(curL1)), n2 = (nodes||[]).find(x=>String(x.id)===String(curL2)), n3 = (nodes||[]).find(x=>String(x.id)===String(subId));
   var fromTargets = (targetRecords||[]).filter(t =>
     norm(t.main_type)==='development' &&
     (!n1 || norm(t.level1)===norm(n1.title)) &&
@@ -1268,10 +1274,10 @@ function updateTargetProgressBox(){
   var pathEl = document.getElementById('uTargetPathLabel');
   if(!box || !cardsEl) return;
 
-  var n1 = (nodes||[]).find(n=>n.id===curL1);
-  var n2 = (nodes||[]).find(n=>n.id===curL2);
-  var n3 = (nodes||[]).find(n=>n.id===curL3);
-  var ns = (nodes||[]).find(n=>n.id===curSub);
+  var n1 = (nodes||[]).find(n=>String(n.id)===String(curL1));
+  var n2 = (nodes||[]).find(n=>String(n.id)===String(curL2));
+  var n3 = (nodes||[]).find(n=>String(n.id)===String(curL3));
+  var ns = (nodes||[]).find(n=>String(n.id)===String(curSub));
 
   if(curMain === 'development'){
     if(!curL3 || !curSelectedItems.length){
@@ -1326,9 +1332,10 @@ function updateTargetProgressBox(){
 }
 
 function getEffectiveQuestionsForNode(nid, isDev){
+  if(!nid) return [];
   var qs = (questions||[]).filter(q => String(q.node_id) === String(nid)).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
   if(qs.length) return qs;
-  if(isDev && nid){
+  if(isDev){
     return DEV_DEFAULT_QUESTIONS.map((tpl, idx) => ({
       id: 'tpl_def_' + idx,
       node_id: nid,
@@ -1362,19 +1369,19 @@ function renderQuestionInputHtml(q, inputNameOrId, isRequiredOverride){
   } else if(q.question_type==='multiple_choice') {
     ctrl = '<div class="space-y-2 mt-2">' + opts.map((o, idx) =>
       '<label class="option-label flex items-center gap-2.5 p-2.5 rounded-xl border bg-white cursor-pointer text-sm">' +
-        '<input type="radio" name="' + inputNameOrId + '" value="' + o.replace(/"/g, '&quot;') + '" ' + (idx===0 && reqAttr ? 'required' : '') + ' class="!w-4 !h-4">' +
+        '<input type="radio" name="' + inputNameOrId + '" value="' + String(o).replace(/"/g, '&quot;') + '" ' + (idx===0 && reqAttr ? 'required' : '') + ' class="!w-4 !h-4">' +
         '<span>' + o + '</span>' +
       '</label>'
     ).join('') + '</div>';
   } else if(q.question_type==='checkbox') {
     ctrl = '<div class="space-y-2 mt-2">' + opts.map(o =>
       '<label class="flex items-center gap-2.5 p-2 rounded-xl border bg-white cursor-pointer text-sm">' +
-        '<input type="checkbox" name="' + inputNameOrId + '" value="' + o.replace(/"/g, '&quot;') + '" class="!w-4 !h-4 rounded">' +
+        '<input type="checkbox" name="' + inputNameOrId + '" value="' + String(o).replace(/"/g, '&quot;') + '" class="!w-4 !h-4 rounded">' +
         '<span>' + o + '</span>' +
       '</label>'
     ).join('') + '</div>';
   } else if(q.question_type==='dropdown') {
-    ctrl = '<select name="' + inputNameOrId + '" ' + reqAttr + ' class="mt-1 bg-white"><option value="">-- Select --</option>' + opts.map(o => '<option value="' + o.replace(/"/g, '&quot;') + '">' + o + '</option>').join('') + '</select>';
+    ctrl = '<select name="' + inputNameOrId + '" ' + reqAttr + ' class="mt-1 bg-white"><option value="">-- Select --</option>' + opts.map(o => '<option value="' + String(o).replace(/"/g, '&quot;') + '">' + o + '</option>').join('') + '</select>';
   } else if(q.question_type==='yes_no') {
     ctrl = '<div class="flex gap-3 mt-2">' +
       '<label class="option-label flex-1 flex items-center justify-center gap-2 p-2.5 rounded-xl border bg-white cursor-pointer text-sm font-semibold"><input type="radio" name="' + inputNameOrId + '" value="Yes" ' + (reqAttr?'required':'') + ' class="!w-4 !h-4"><span>Yes</span></label>' +
@@ -1449,7 +1456,7 @@ function renderUForm(){
     });
     html += '</div>';
 
-    // 2) Common 6 questions shown ONCE
+    // 2) Common questions shown ONCE
     var commonQs = qs.filter(q => !isContributionQuestion(q));
     commonQs.forEach(q => {
       html += renderQuestionInputHtml(q, q.id, q.is_required);
@@ -1500,42 +1507,48 @@ function collectFieldValueByName(form, fieldName){
 async function submitForm(e){
   e.preventDefault();
   var form = e.target;
-  var n1=(nodes||[]).find(n=>n.id===curL1), n2=(nodes||[]).find(n=>n.id===curL2), n3=(nodes||[]).find(n=>n.id===curL3), ns=(nodes||[]).find(n=>n.id===curSub);
+  var n1=(nodes||[]).find(n=>String(n.id)===String(curL1)), n2=(nodes||[]).find(n=>String(n.id)===String(curL2)), n3=(nodes||[]).find(n=>String(n.id)===String(curL3)), ns=(nodes||[]).find(n=>String(n.id)===String(curSub));
   var lid = curMain==='development' ? curL3 : (curSub||curL2);
   var qs = getEffectiveQuestionsForNode(lid, curMain==='development');
   var activeOfficerName = getActiveOfficerName();
-  var ans = { __user: myUser, __officer_name: activeOfficerName };
-  var totalQty = 0;
+  var nowBase = Date.now();
+  var nowIso = new Date().toISOString();
 
   if(curMain==='development'){
     var activeItems = curSelectedItems.slice();
     if(!activeItems.length) return showToast('Please select at least one item', false);
 
-    ans.__selected_items = activeItems;
-    ans.__item_name = activeItems.join(', ');
-    ans.__item_quantities = {};
-    ans.__per_item_qty = {};
-    ans.__item_specific = {};
-
-    // Common 6 questions
+    // Collect shared common answers once
+    var commonAns = {};
     qs.filter(q => !isContributionQuestion(q)).forEach(q => {
       var val = collectFieldValueByName(form, q.id);
-      if(val !== undefined) ans[q.id] = val;
+      if(val !== undefined) commonAns[q.id] = val;
     });
 
     var contribTemplate = qs.find(q => isContributionQuestion(q)) || { id: 'tpl_contrib' };
+    var recordsToInsert = [];
+    var grandTotalQty = 0;
 
-    activeItems.forEach(itName => {
+    // Save EACH selected item as its OWN separate row in responses
+    activeItems.forEach((itName, idx) => {
       var qVal = parseFloat(collectFieldValueByName(form, '__item_qty_' + encodeURIComponent(itName)) || 0) || 0;
-      totalQty += qVal;
-      ans.__item_quantities[itName] = qVal;
-      ans.__per_item_qty[itName] = qVal;
+      grandTotalQty += qVal;
+
+      var itemAns = Object.assign({
+        __user: myUser,
+        __officer_name: activeOfficerName,
+        __selected_items: [itName],
+        __item_name: itName,
+        __progress_qty: qVal,
+        __per_item_qty: { [itName]: qVal },
+        __item_specific: {}
+      }, commonAns);
 
       var perItemMap = {};
       var cVal = collectFieldValueByName(form, '__item_contrib_' + encodeURIComponent(itName));
       if(cVal !== undefined){
         perItemMap[contribTemplate.id] = cVal;
-        if(!ans[contribTemplate.id]) ans[contribTemplate.id] = cVal;
+        itemAns[contribTemplate.id] = cVal;
       }
 
       var extraItemQs = getExtraQuestionsForItemNode(itName, lid);
@@ -1543,48 +1556,76 @@ async function submitForm(e){
         var eVal = collectFieldValueByName(form, '__item_extra_' + encodeURIComponent(itName) + '__' + eq.id);
         if(eVal !== undefined){
           perItemMap[eq.id] = eVal;
-          if(!ans[eq.id]) ans[eq.id] = eVal;
+          itemAns[eq.id] = eVal;
         }
       });
 
-      ans.__item_specific[itName] = perItemMap;
+      itemAns.__item_specific[itName] = perItemMap;
+
+      var pathParts = [
+        'Development',
+        n1 && n1.title,
+        n2 && n2.title,
+        n3 && n3.title,
+        itName
+      ].filter(Boolean);
+
+      recordsToInsert.push({
+        id: 'r' + nowBase + '_' + (idx + 1) + '_' + Math.floor(Math.random() * 1000),
+        main_type: 'development',
+        level1: n1 ? n1.title : '',
+        level2: n2 ? n2.title : '',
+        level3: n3 ? n3.title : '',
+        node_path: pathParts.join(' → '),
+        sub_office_id: mySubId,
+        division: myDiv,
+        office: myOffice,
+        answers: itemAns,
+        created_at: new Date(nowBase + idx).toISOString()
+      });
     });
 
-    ans.__progress_qty = totalQty;
+    recordsToInsert.forEach(rec => responses.unshift(rec));
+    if(sb){
+      var insRes = await sb.from('responses').insert(recordsToInsert);
+      if(insRes && insRes.error) return showToast('Supabase Save Error: ' + insRes.error.message, false);
+    }
+    showToast('Submitted ' + recordsToInsert.length + ' item row(s) ✓ (Total: ' + grandTotalQty + ')', true);
   } else {
-    totalQty = parseFloat(collectFieldValueByName(form, '__progress_qty') || 0) || 0;
-    ans.__progress_qty = totalQty;
+    var totalQty = parseFloat(collectFieldValueByName(form, '__progress_qty') || 0) || 0;
+    var ans = {
+      __user: myUser,
+      __officer_name: activeOfficerName,
+      __progress_qty: totalQty
+    };
     qs.forEach(q => {
       var val = collectFieldValueByName(form, q.id);
       if(val !== undefined) ans[q.id] = val;
     });
+
+    var pathParts = ['Extension', n1 && n1.title, n2 && n2.title, ns && ns.title].filter(Boolean);
+    var rec = {
+      id: 'r' + nowBase + '_' + Math.floor(Math.random() * 1000),
+      main_type: 'extension',
+      level1: n1 ? n1.title : '',
+      level2: n2 ? n2.title : '',
+      level3: ns ? ns.title : '',
+      node_path: pathParts.join(' → '),
+      sub_office_id: mySubId,
+      division: myDiv,
+      office: myOffice,
+      answers: ans,
+      created_at: nowIso
+    };
+
+    responses.unshift(rec);
+    if(sb){
+      var insExt = await sb.from('responses').insert(rec);
+      if(insExt && insExt.error) return showToast('Supabase Save Error: ' + insExt.error.message, false);
+    }
+    showToast('Submitted ✓ (' + totalQty + ')', true);
   }
 
-  var pathParts = [curMain==='extension'?'Extension':'Development', n1&&n1.title, n2&&n2.title];
-  if(curMain==='development'){
-    if(n3) pathParts.push(n3.title);
-    if(curSelectedItems.length) pathParts.push(curSelectedItems.join(', '));
-  } else {
-    if(ns) pathParts.push(ns.title);
-  }
-
-  var rec={
-    id:'r'+Date.now(),
-    main_type:curMain,
-    level1:n1?n1.title:'',
-    level2:n2?n2.title:'',
-    level3:curMain==='development'?(n3?n3.title:''):(ns?ns.title:''),
-    node_path:pathParts.filter(Boolean).join(' → '),
-    sub_office_id:mySubId,
-    division:myDiv,
-    office:myOffice,
-    answers:ans,
-    created_at:new Date().toISOString()
-  };
-
-  responses.unshift(rec);
-  if(sb) await sb.from('responses').insert(rec);
-  showToast('Submitted ✓ (' + totalQty + ')', true);
   resetFormInputsOnly();
   updateTargetProgressBox();
   renderUnitTargets();
@@ -1798,7 +1839,7 @@ function renderMy(){
     return '<tr><td class="text-xs font-bold">' + (r.level2||'-') + '</td><td class="text-xs">' + (r.level1||'-') + '</td><td class="text-xs">' + (r.level3||'-') + '</td><td class="text-xs">' + getOfficerForEntry(r) + '</td><td class="text-xs font-extrabold text-indigo-700">' + qty + '</td>' +
       extKeySet.map(x => '<td class="text-xs">' + formatAnswerDisplay((r.answers||{})[x.key]) + '</td>').join('') +
       '<td class="text-xs">' + (r.created_at?new Date(r.created_at).toLocaleDateString():'') + '</td>' +
-      '<td class="whitespace-nowrap space-x-2"><button onclick="openMyEdit(\'' + r.id + '\')" class="text-indigo-600 font-semibold text-xs">Edit</button><button onclick="delMy(\'' + r.id + '\')" class="text-red-500 text-xs">Delete</button></td></tr>';
+      '<td class="whitespace-nowrap space-x-2"><button onclick="openMyEdit(\'' + r.id + '\',\'\')" class="text-indigo-600 font-semibold text-xs">Edit</button><button onclick="delMy(\'' + r.id + '\')" class="text-red-500 text-xs">Delete</button></td></tr>';
   }).join('') : '<tr><td colspan="' + (7 + extKeySet.length) + '" class="text-center text-xs text-slate-400 py-5">No Extension data</td></tr>';
 
   // Development Table: one row per item, ordered 7 default questions + extra questions
@@ -1826,7 +1867,7 @@ function renderMy(){
       '<td class="text-xs font-extrabold text-emerald-700">' + er.qty + '</td>' +
       devCols.map(c => '<td class="text-xs">' + getValFromCol(er.answers, c) + '</td>').join('') +
       '<td class="text-xs">' + (r.created_at?new Date(r.created_at).toLocaleDateString():'') + '</td>' +
-      '<td class="whitespace-nowrap space-x-2"><button onclick="openMyEdit(\'' + r.id + '\')" class="text-indigo-600 font-semibold text-xs">Edit</button><button onclick="delMy(\'' + r.id + '\')" class="text-red-500 text-xs">Delete</button></td>' +
+      '<td class="whitespace-nowrap space-x-2"><button onclick="openMyEdit(\'' + r.id + '\',\'' + encodeURIComponent(er.itemName||'') + '\')" class="text-indigo-600 font-semibold text-xs">Edit</button><button onclick="delMy(\'' + r.id + '\')" class="text-red-500 text-xs">Delete</button></td>' +
       '</tr>';
   }).join('') : '<tr><td colspan="' + (8 + devCols.length) + '" class="text-center text-xs text-slate-400 py-5">No Development data</td></tr>';
 
@@ -1857,34 +1898,99 @@ function downloadFilteredMyExcel(){
   XLSX.writeFile(wb, 'Unit_My_Data.xlsx');
 }
 
-function openMyEdit(id){
+function openMyEdit(id, encItemName){
   var r=(responses||[]).find(x=>String(x.id)===String(id)); if(!r)return;
   editingId=id;
-  document.getElementById('myEditQty').value = getProgressedQtyForEntry(r);
-  var ans=r.answers||{};
-  var keys = Object.keys(ans).filter(k => !['__item_name','__selected_items','__item_specific','__item_quantities','__progress_qty','__officer_name','__user','__per_item_qty','__per_item_answers'].includes(k) && getQuestionLabelByKey(k));
+  var targetItem = decodeURIComponent(encItemName || '');
+  if(!targetItem) targetItem = getItemNameForEntry(r);
+  editingItemName = (targetItem && targetItem !== '-') ? targetItem : '';
+
+  var badgeEl = document.getElementById('myEditRowBadge');
+  if(badgeEl){
+    var parts = [r.level2, r.level3, editingItemName].filter(Boolean);
+    badgeEl.textContent = parts.length ? '(' + parts.join(' • ') + ')' : '';
+  }
+
+  var ans = Object.assign({}, r.answers || {});
+  if(editingItemName && ans.__item_specific && ans.__item_specific[editingItemName]){
+    Object.keys(ans.__item_specific[editingItemName]).forEach(k => {
+      ans[k] = ans.__item_specific[editingItemName][k];
+    });
+  }
+
+  var rowQty = editingItemName ? getProgressedQtyForEntry(r, editingItemName) : getProgressedQtyForEntry(r);
+  document.getElementById('myEditQty').value = rowQty;
+
+  var skipKeys = new Set(['__item_name','__selected_items','__item_specific','__item_quantities','__progress_qty','__officer_name','__user','__per_item_qty','__per_item_answers']);
+  var keys = Object.keys(ans).filter(k => !skipKeys.has(k) && getQuestionLabelByKey(k));
+
   document.getElementById('myEditFields').innerHTML = keys.map(k => {
     var val = ans[k];
     var strVal = Array.isArray(val) ? val.join(', ') : (val || '');
     return '<div><label class="text-xs font-semibold">' + getQuestionLabelByKey(k) + '</label><input type="text" data-k="' + k + '" data-arr="' + (Array.isArray(val)?'1':'0') + '" value="' + String(strVal).replace(/"/g,'&quot;') + '" class="mt-1 bg-white"></div>';
   }).join('');
+
   document.getElementById('myEditBox').classList.remove('hidden');
   document.getElementById('myEditBox').scrollIntoView({behavior:'smooth'});
 }
-function closeMyEdit(){ editingId=null; document.getElementById('myEditBox').classList.add('hidden'); }
+
+function closeMyEdit(){
+  editingId=null;
+  editingItemName=null;
+  var badgeEl = document.getElementById('myEditRowBadge');
+  if(badgeEl) badgeEl.textContent = '';
+  document.getElementById('myEditBox').classList.add('hidden');
+}
 
 async function saveMyEdit(){
   if(!editingId)return;
   var r=(responses||[]).find(x=>String(x.id)===String(editingId)); if(!r)return;
   var newAns = Object.assign({}, r.answers || {});
   var newQty = parseFloat(document.getElementById('myEditQty').value);
-  if(!isNaN(newQty)) newAns.__progress_qty = newQty;
+
+  var itemSpecMap = (newAns.__item_specific && typeof newAns.__item_specific === 'object')
+    ? Object.assign({}, newAns.__item_specific)
+    : {};
+  var perItemQtyMap = (newAns.__per_item_qty && typeof newAns.__per_item_qty === 'object')
+    ? Object.assign({}, newAns.__per_item_qty)
+    : {};
+
+  var curItemSpec = (editingItemName && itemSpecMap[editingItemName] && typeof itemSpecMap[editingItemName] === 'object')
+    ? Object.assign({}, itemSpecMap[editingItemName])
+    : {};
+
   document.querySelectorAll('#myEditFields [data-k]').forEach(inp => {
     var k = inp.dataset.k;
-    newAns[k] = inp.dataset.arr === '1' ? inp.value.split(',').map(s=>s.trim()).filter(Boolean) : inp.value;
+    var parsedVal = inp.dataset.arr === '1' ? inp.value.split(',').map(s=>s.trim()).filter(Boolean) : inp.value;
+    if(editingItemName){
+      curItemSpec[k] = parsedVal;
+      if(!Array.isArray(newAns.__selected_items) || newAns.__selected_items.length <= 1){
+        newAns[k] = parsedVal;
+      }
+    } else {
+      newAns[k] = parsedVal;
+    }
   });
+
+  if(editingItemName){
+    itemSpecMap[editingItemName] = curItemSpec;
+    newAns.__item_specific = itemSpecMap;
+    if(!isNaN(newQty)){
+      perItemQtyMap[editingItemName] = newQty;
+      newAns.__per_item_qty = perItemQtyMap;
+      if(!Array.isArray(newAns.__selected_items) || newAns.__selected_items.length <= 1){
+        newAns.__progress_qty = newQty;
+      }
+    }
+  } else {
+    if(!isNaN(newQty)) newAns.__progress_qty = newQty;
+  }
+
   r.answers = newAns;
-  if(sb) await sb.from('responses').update({answers:newAns}).eq('id',editingId);
+  if(sb){
+    var updRes = await sb.from('responses').update({answers:newAns}).eq('id',editingId);
+    if(updRes && updRes.error) return showToast('Supabase Update Error: ' + updRes.error.message, false);
+  }
   closeMyEdit(); renderMy(); renderUnitTargets(); showToast('Updated ✓',true);
 }
 
@@ -2135,6 +2241,7 @@ async function sbSyncAll(){
     document.getElementById('sbSyncStatus').textContent='Sync Error';
   }
   renderUnitTargets();
+  if(!document.getElementById('panel-form').classList.contains('hidden')) renderUSelects();
   if(!document.getElementById('panel-mydata').classList.contains('hidden')) renderMy();
   if(!document.getElementById('panel-pricelist').classList.contains('hidden')) renderPriceListSection();
   if(!document.getElementById('panel-piv').classList.contains('hidden')) renderPivSection();

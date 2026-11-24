@@ -240,7 +240,7 @@ window.addEventListener('error',function(e){
 
   <div id="tw5" class="card hidden">
     <h2 class="font-bold text-[19px]">Step 5 — Select / Add Item (Development)</h2>
-    <p class="text-xs text-slate-500 mt-1">Copy All (Item & AI Office Targets) • Select Excel Range (e.g. B5:B10) to auto-add each row as an Item</p>
+    <p class="text-xs text-slate-500 mt-1">Copy All (Item & AI Office Targets) • Default Development questions are auto-generated for each Item • Select Excel Range (e.g. B5:B10) to auto-add each row as an Item</p>
     <div class="flex flex-wrap gap-2 mt-4">
       <input id="tNewL4" placeholder="e.g. Paddy Seed / Urea / Water Pump" class="flex-1 min-w-[200px]">
       <button onclick="tAddNode(4)" class="btn btn-primary px-4 shrink-0">+ Add Item</button>
@@ -297,9 +297,9 @@ window.addEventListener('error',function(e){
 <div class="flex items-center gap-2 md:gap-3 text-[11px] md:text-xs font-semibold overflow-x-auto pb-1">
 <div class="flex items-center gap-2"><span class="step-dot now" id="dot1">1</span><span>Category</span></div><span class="text-slate-300">→</span>
 <div class="flex items-center gap-2"><span class="step-dot" id="dot2">2</span><span id="lbl2">Season / Year</span></div><span class="text-slate-300">→</span>
-<div class="flex items-center gap-2"><span class="step-dot" id="dot3">3</span><span id="lbl3">Program</span></div><span class="text-slate-300">→</span>
-<div class="flex items-center gap-2" id="step4Wrap"><span class="step-dot" id="dot4">4</span><span id="lbl4">Sub Program</span></div><span class="text-slate-300" id="arrow4">→</span>
-<div class="flex items-center gap-2" id="step5Wrap"><span class="step-dot" id="dot5">5</span><span id="lbl5">Item</span></div><span class="text-slate-300" id="arrow5">→</span>
+<div class="flex items-center gap-2"><span class="step-dot" id="dot3">3</span><span id="lbl3">Program</span></div><span class="text-slate-300" id="arrow4">→</span>
+<div class="flex items-center gap-2" id="step4Wrap"><span class="step-dot" id="dot4">4</span><span id="lbl4">Sub Program</span></div><span class="text-slate-300" id="arrow5">→</span>
+<div class="flex items-center gap-2" id="step5Wrap"><span class="step-dot" id="dot5">5</span><span id="lbl5">Item</span></div><span class="text-slate-300" id="arrow6">→</span>
 <div class="flex items-center gap-2" id="step6Wrap"><span class="step-dot" id="dot6">6</span><span>Questions</span></div>
 </div>
 
@@ -331,16 +331,16 @@ window.addEventListener('error',function(e){
 </div>
 
 <div id="w5" class="wizard-step">
-<div class="card"><h2 class="font-bold text-[19px]">Step 5 — Select Item</h2><p class="text-xs text-slate-500 mt-1">Up / Down / Delete / Copy All & Edit</p>
+<div class="card"><h2 class="font-bold text-[19px]">Step 5 — Select Item</h2><p class="text-xs text-slate-500 mt-1">Up / Down / Delete / Copy All & Edit • Selecting an item auto-prepares its questions</p>
 <div id="itemList" class="mt-4 space-y-2"></div>
 <div class="flex gap-2 mt-5"><button onclick="gotoStep(4)" class="btn btn-ghost">← Back</button><button onclick="gotoStep(6)" class="btn btn-primary ml-auto">Next: Questions →</button></div></div>
 </div>
 
 <div id="w6" class="wizard-step">
-<div class="card"><h2 class="font-bold text-[19px]">Step 6 — Create Unit Questions</h2>
-<div class="flex flex-wrap gap-2 mt-3"><button onclick="loadDevTemplate()" class="btn btn-success text-xs px-3 py-2">Development Template (7 Questions)</button><button onclick="loadExtTemplate()" class="btn btn-ghost text-xs px-3 py-2">Extension Template</button></div>
+<div class="card"><h2 class="font-bold text-[19px]">Step 6 — Create / Edit Unit Questions</h2>
+<div class="flex flex-wrap gap-2 mt-3"><button onclick="loadDevTemplate()" class="btn btn-success text-xs px-3 py-2">Development Template (6 Questions)</button><button onclick="loadExtTemplate()" class="btn btn-ghost text-xs px-3 py-2">Extension Template</button></div>
 <div id="devMultiItemNote" class="hidden mt-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3 text-xs text-emerald-950">
-  <b>Multi-Item & Summary Rule:</b> Each item supports per-item farmer contribution radio selection and item-specific extra questions, while summary and data tables show one column per question and one row per item.
+  <b>Multi-Item & Summary Rule:</b> When multiple items are selected under a sub program, each item supports per-item farmer contribution radio selection and item-specific extra questions, while common questions appear once in unit data entry and summary/data tables show one column per question and one row per item (with item-specific answers placed only on that item's row).
 </div>
 <div class="grid lg:grid-cols-[400px_1fr] gap-5 mt-4">
 <form id="qForm" class="space-y-3 border rounded-2xl p-4 h-fit bg-slate-50"><input type="hidden" id="qId">
@@ -717,9 +717,8 @@ const DEV_DEFAULT_QUESTIONS = [
   { text: 'ලිපිනය', type: 'short_text', options: [], required: true },
   { text: 'දුරකථන අංකය', type: 'number', options: [], required: true },
   { text: 'ජාතික හැදුනුම්පත් අංකය', type: 'short_text', options: [], required: true },
-  { text: 'ගොවි දායකත්වය', type: 'multiple_choice', options: ['නොමිලේ', 'ගොවි දායකත්වය - 25%', 'ගොවි දායකත්වය - 50%'], required: true },
-  { text: 'වටිනාකම (රුපියල්)', type: 'short_text', options: [], required: false },
-  { text: 'සටහන්', type: 'short_text', options: [], required: false }
+  { text: 'සටහන්', type: 'short_text', options: [], required: false },
+  { text: 'ගොවි දායකත්වය', type: 'multiple_choice', options: ['නොමිලේ', 'ගොවි දායකත්වය - 25%', 'ගොවි දායකත්වය - 50%'], required: true }
 ];
 
 const DEV_FIXED_ORDER_TITLES = [
@@ -727,9 +726,8 @@ const DEV_FIXED_ORDER_TITLES = [
   'ලිපිනය',
   'දුරකථන අංකය',
   'ජාතික හැදුනුම්පත් අංකය',
-  'ගොවි දායකත්වය',
-  'වටිනාකම (රුපියල්)',
-  'සටහන්'
+  'සටහන්',
+  'ගොවි දායකත්වය'
 ];
 
 function norm(s){ return String(s||'').trim().toLowerCase(); }
@@ -1170,7 +1168,7 @@ async function tImportItemsExcel(e){
 
       if(addedNodes.length){
         tSelectNode(4, addedNodes[addedNodes.length - 1].id);
-        showToast('Added ' + addedNodes.length + ' items ✓', true);
+        showToast('Added ' + addedNodes.length + ' items & auto-generated questions ✓', true);
         if(sb){
           await sb.from('nodes').upsert(addedNodes, {onConflict:'id'});
           if(addedQs.length) await sb.from('questions').upsert(addedQs, {onConflict:'id'});
@@ -1195,7 +1193,7 @@ async function tAddNode(level){
   nodes.push(newNode); document.getElementById(inpId).value='';
   if(tMain==='development' && level===4) ensureDefaultDevQuestionsForNode(newNode.id, false);
   tSelectNode(level, newNode.id);
-  showToast('Saved ✓',true);
+  showToast(tMain==='development' && level===4 ? 'Item & Default Questions Created ✓' : 'Saved ✓', true);
   if(sb){
     await sb.from('nodes').upsert(newNode, { onConflict: 'id' });
     if(tMain==='development' && level===4){
@@ -1318,7 +1316,7 @@ async function saveAllTargets(){
   if(sb && upserts.length) await sb.from('targets').upsert(upserts,{onConflict:'id'});
   if(tMain === 'development') await autoSaveDevQuestionsForCurrentSelection();
   renderDashboard();
-  showToast(tMain === 'development' ? 'Targets & Development Questions Saved ✓' : 'Targets updated ✓', true);
+  showToast(tMain === 'development' ? 'Targets & Development Questions Auto-Saved ✓' : 'Targets updated ✓', true);
 }
 function tBackFromUnits(){ if(tMain==='development')tGoto(5); else tGoto(4); }
 
@@ -1597,7 +1595,7 @@ function loadDevTemplate(){
     if(sb) sb.from('questions').upsert(q, { onConflict: 'id' });
   });
   renderQuestions();
-  showToast('Development 7 Questions Loaded ✓', true);
+  showToast('Development Default Questions Loaded ✓', true);
 }
 function loadExtTemplate(){var lid=leafId();if(!lid)return;[['Cultivated Extent','number',[]]].forEach((t,i)=>{let q={id:'q'+Date.now()+i,node_id:lid,question_text:t[0],question_type:t[1],options:t[2],is_required:true,order_index:questions.filter(x=>x.node_id===lid).length+1};questions.push(q);if(sb)sb.from('questions').upsert(q, { onConflict: 'id' });});renderQuestions();}
 async function finishWizard(){ renderDashboard(); goNav('dashboard'); }
@@ -1953,7 +1951,15 @@ function expandDevelopmentResponseRows(r){
   return selectedItems.map(itName => {
     var itemSpecificMap = (ans.__item_specific && typeof ans.__item_specific === 'object') ? ans.__item_specific[itName] : null;
     var itemQtyMap = (ans.__item_quantities && typeof ans.__item_quantities === 'object') ? ans.__item_quantities[itName] : null;
-    var mergedAns = Object.assign({}, ans, { __item_name: itName });
+    var mergedAns = {};
+    var skipCommon = new Set(['ගොවි දායකත්වය']);
+    Object.keys(ans).forEach(k => {
+      if(k === '__item_specific') return;
+      var qTitle = resolveQuestionColumnTitle(k, true);
+      if(qTitle && skipCommon.has(qTitle)) return;
+      mergedAns[k] = ans[k];
+    });
+    mergedAns.__item_name = itName;
     if(itemQtyMap !== undefined && itemQtyMap !== null && itemQtyMap !== ''){
       mergedAns.__progress_qty = itemQtyMap;
     }
