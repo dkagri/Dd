@@ -1476,12 +1476,12 @@ function renderL2(){
 }
 function pickL2(id){curL2=id;curL3=null;curSub=null;curItem=null;renderL2();}
 function w3Next(){gotoStep(4);}
-function w4Next(){if(curMain==='development')gotoStep(5);else gotoStep(6);}
+function w4Next(){if(curMain==='development')gotoStep(5);else {if(!curSub){showToast('Please select a Sub Program first',false);return;}gotoStep(6);}}
 function backFromQ(){if(curMain==='development')gotoStep(5);else gotoStep(4);}
 function renderL4(){
   let isExt=curMain==='extension';
   document.getElementById('l3List').innerHTML=childrenOf(curL2,3).map(n=>builderSelectCard(n,(isExt?curSub:curL3)===n.id,isExt?'pickSub':'pickL3',3)).join('')||'<div class="text-xs text-slate-400">No items</div>';
-  document.getElementById('w4Next').disabled=isExt?false:!curL3;
+  document.getElementById('w4Next').disabled=isExt?!curSub:!curL3;
 }
 function pickL3(id){curL3=id;curItem=null;renderL4();}
 function pickSub(id){curSub=id;renderL4();}
@@ -1497,7 +1497,7 @@ function pickItem(id){
 
 function leafId(){
   if(curMain==='development')return curItem||curL3;
-  return curSub||curL2;
+  return curSub;
 }
 var curOptions=[];
 function onQType(){document.getElementById('optWrap').classList.toggle('hidden',['multiple_choice','checkbox','dropdown'].indexOf(document.getElementById('qType').value)===-1);}

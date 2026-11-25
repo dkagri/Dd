@@ -1287,7 +1287,7 @@ function renderTargetProgressBox(){
 
 function getEffectiveQuestionsForNode(nodeId, isDev){
   var qs = (questions||[]).filter(q => String(q.node_id) === String(nodeId));
-
+  // Recover questions when older builder records used another node with the same title.
   if(!qs.length && nodeId){
     var targetNode = (nodes||[]).find(n => String(n.id) === String(nodeId));
     if(targetNode){
@@ -1297,7 +1297,7 @@ function getEffectiveQuestionsForNode(nodeId, isDev){
       qs = (questions||[]).filter(q => sameTitleIds.includes(String(q.node_id)));
     }
   }
-
+  // Extension questions are scoped to the selected Sub Program, then safely fall back to parents.
   if(!isDev && !qs.length){
     var fallbackIds = [curSub, curL2, curL1].filter(Boolean).map(String);
     for(var i = 0; i < fallbackIds.length; i++){
@@ -1305,41 +1305,37 @@ function getEffectiveQuestionsForNode(nodeId, isDev){
       if(found.length){ qs = found; break; }
     }
   }
-
   qs = qs.slice().sort((a,b)=>(a.order_index||0)-(b.order_index||0)).map(q => ({
-    id: q.id,
-    node_id: q.node_id,
+    id: q.id, node_id: q.node_id,
     question_text: q.question_text || q.text || q.title || q.label || '',
     question_type: q.question_type || q.type || 'short_text',
     options: Array.isArray(q.options) ? q.options : [],
     is_required: q.is_required !== false && q.required !== false,
     order_index: q.order_index || 0
   }));
-
   if(isDev){
     var merged = qs.slice();
     DEV_DEFAULT_QUESTIONS.forEach((t, i) => {
       var exists = merged.some(m => norm(m.question_text) === norm(t.text));
-      if(!exists){
-        merged.push({
-          id: 'tpl_def_' + i,
-          node_id: nodeId,
-          question_text: t.text,
-          question_type: t.type,
-          options: t.options || [],
-          is_required: t.required !== false,
-          order_index: i + 1
-        });
-      }
+      if(!exists) merged.push({id:'tpl_def_'+i,node_id:nodeId,question_text:t.text,question_type:t.type,options:t.options||[],is_required:t.required!==false,order_index:i+1});
     });
     return merged;
   }
   return qs;
 }
 
-
-
-
+function getDevelopmentItemNode(itemTitle){
+  return (nodes||[]).find(n => norm(n.main_type)==='development' && Number(n.level)===4 && String(n.parent_id)===String(curL3) && norm(n.title)===norm(itemTitle)) || null;
+}
+function getDevelopmentItemExtraQuestions(itemTitle){
+  var itemNode = getDevelopmentItemNode(itemTitle);
+  if(!itemNode) return [];
+  return (questions||[]).filter(q => String(q.node_id)===String(itemNode.id) && !DEV_DEFAULT_QUESTIONS.some(d => norm(d.text)===norm(q.question_text || q.text || q.title || q.label))).slice().sort((a,b)=>(a.order_index||0)-(b.order_index||0)).map(q => ({
+    id:q.id,node_id:q.node_id,question_text:q.question_text || q.text || q.title || q.label || '',
+    question_type:q.question_type || q.type || 'short_text',options:Array.isArray(q.options)?q.options:[],
+    is_required:q.is_required!==false && q.required!==false,order_index:q.order_index||0
+  }));
+}
 
 
 
@@ -1389,7 +1385,13 @@ function renderUForm(){
     is_required: true
   };
 
-  var commonQs = isDev ? qs.filter(q => norm(q.question_text) !== norm('ගොවි දායකත්වය')) : qs;
+  var selectedItemExtraIds = new Set();
+  if(isDev){
+    curSelectedItems.forEach(function(itemTitle){
+      getDevelopmentItemExtraQuestions(itemTitle).forEach(function(q){ selectedItemExtraIds.add(String(q.id)); });
+    });
+  }
+  var commonQs = isDev ? qs.filter(q => norm(q.question_text) !== norm('ගොවි දායකත්වය') && !selectedItemExtraIds.has(String(q.id))) : qs;
 
   var html='<form id="uRespForm" class="space-y-4">';
 
@@ -1399,10 +1401,7 @@ function renderUForm(){
 
     curSelectedItems.forEach((itName, idx) => {
       var safeItKey = encodeURIComponent(itName);
-      var itemExtraQs = (questions||[]).filter(q => {
-        var itNode = (nodes||[]).find(n => n.main_type==='development' && n.level===4 && String(n.parent_id)===String(curL3) && norm(n.title)===norm(itName));
-        return itNode && String(q.node_id) === String(itNode.id) && !DEV_DEFAULT_QUESTIONS.some(d => norm(d.text) === norm(q.question_text));
-      });
+      var itemExtraQs = getDevelopmentItemExtraQuestions(itName);
 
       html += '<div class="rounded-xl border bg-white p-3.5 space-y-3">' +
         '<div class="flex flex-wrap items-center justify-between gap-2 border-b pb-2">' +
@@ -1445,9 +1444,18 @@ function renderUForm(){
   });
 
   if(isDev && curSelectedItems.length === 1){
+    var singleItemName = curSelectedItems[0];
+    var singleItemExtraQs = getDevelopmentItemExtraQuestions(singleItemName);
     html += '<div class="rounded-xl border p-3.5 bg-white"><label class="text-xs font-semibold">' + contribTemplate.question_text + ' <span class="text-red-500">*</span></label>' +
       renderSingleQuestionControl(contribTemplate, 'singleItemContrib_0', true) +
     '</div>';
+    if(singleItemExtraQs.length){
+      html += '<div class="rounded-xl border border-emerald-200 bg-emerald-50/30 p-3.5 space-y-3"><div class="text-xs font-bold text-emerald-800">Item-Specific Questions (' + singleItemName + ')</div>';
+      singleItemExtraQs.forEach(function(eq, eIdx){
+        html += '<div><label class="text-xs font-semibold">' + eq.question_text + (eq.is_required?' <span class="text-red-500">*</span>':'') + '</label>' + renderSingleQuestionControl(eq, 'singleItemExtra_0_' + eIdx, !!eq.is_required) + '</div>';
+      });
+      html += '</div>';
+    }
   }
 
   var isMultiDev = isDev && curSelectedItems.length > 1;
@@ -1505,8 +1513,7 @@ function renderUForm(){
         var spObj = {};
         if(cVal) spObj[contribTemplate.id] = cVal;
 
-        var itNode = (nodes||[]).find(n => n.main_type==='development' && n.level===4 && String(n.parent_id)===String(curL3) && norm(n.title)===norm(itName));
-        var itemExtraQs = itNode ? (questions||[]).filter(q => String(q.node_id) === String(itNode.id) && !DEV_DEFAULT_QUESTIONS.some(d => norm(d.text) === norm(q.question_text))) : [];
+        var itemExtraQs = getDevelopmentItemExtraQuestions(itName);
         itemExtraQs.forEach((eq, eIdx) => {
           var eName = 'itemExtra_' + idx + '_' + eIdx;
           if(eq.question_type==='multiple_choice'||eq.question_type==='yes_no'||eq.question_type==='scale'){
@@ -1524,11 +1531,19 @@ function renderUForm(){
       });
     } else if(isDev && curSelectedItems.length === 1){
       activeItems = [curSelectedItems[0]];
+      var singleItemAnswers = {};
       var sChecked = document.querySelector('input[name="singleItemContrib_0"]:checked');
-      if(sChecked){
-        ans[contribTemplate.id] = sChecked.value;
-        itemSpecificMap[curSelectedItems[0]] = { [contribTemplate.id]: sChecked.value };
-      }
+      if(sChecked){ ans[contribTemplate.id] = sChecked.value; singleItemAnswers[contribTemplate.id] = sChecked.value; }
+      var singleExtraQs = getDevelopmentItemExtraQuestions(curSelectedItems[0]);
+      singleExtraQs.forEach(function(eq, eIdx){
+        var eName = 'singleItemExtra_0_' + eIdx;
+        if(eq.question_type==='multiple_choice'||eq.question_type==='yes_no'||eq.question_type==='scale'){
+          var re = document.querySelector('input[name="'+eName+'"]:checked'); singleItemAnswers[eq.id] = re ? re.value : '';
+        } else if(eq.question_type==='checkbox'){
+          var chArr = []; document.querySelectorAll('input[name="'+eName+'"]:checked').forEach(function(c){ chArr.push(c.value); }); singleItemAnswers[eq.id] = chArr;
+        } else { var ie = document.getElementById(eName); singleItemAnswers[eq.id] = ie ? ie.value : ''; }
+      });
+      itemSpecificMap[curSelectedItems[0]] = singleItemAnswers;
     }
 
     var progQty = parseFloat(document.getElementById('uProgQty').value) || 0;
