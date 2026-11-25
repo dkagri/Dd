@@ -21,6 +21,10 @@
 @media(min-width:640px){.modal-back{align-items:center}.modal-card{border-radius:20px}}
 .option-label { transition: all 0.15s ease; }
 .option-label:has(input[type="radio"]:checked) { background-color: #4f46e5; color: white; border-color: #4f46e5; }
+.option-label:has(input[type="checkbox"]:checked) { background-color: #0f172a !important; color: #ffffff !important; border-color: #0f172a !important; }
+.dev-item-card.is-selected { background-color: #0f172a !important; color: #ffffff !important; border-color: #0f172a !important; }
+.dev-item-card.is-selected span { color: #ffffff !important; }
+.dev-item-card input[type="checkbox"] { appearance: checkbox !important; -webkit-appearance: checkbox !important; border-radius: 4px !important; }
 .matrix-table th, .matrix-table td { border: 1px solid #cbd5e1; padding: 9px 11px; font-size: 12.5px; }
 .matrix-table th { background-color: #e2e8f0; color: #0f172a; font-weight: 700; text-align: center; }
 .matrix-main-cell { background-color: #fff7ed; font-weight: 700; color: #1e293b; vertical-align: middle; }
@@ -1170,9 +1174,15 @@ function renderMultiItemSelector(){
   box.innerHTML = items.map(itTitle => {
     var checked = curSelectedItems.some(s => norm(s) === norm(itTitle));
     var safeVal = encodeURIComponent(itTitle);
-    return '<label class="flex items-center gap-2 rounded-xl border bg-white px-3 py-2 text-xs font-bold text-slate-800 cursor-pointer hover:border-emerald-500">' +
-      '<input type="checkbox" value="' + safeVal + '" ' + (checked ? 'checked' : '') + ' onchange="onToggleMultiItem(\'' + safeVal + '\', this.checked)" class="w-4 h-4 accent-emerald-600">' +
-      '<span>' + itTitle + '</span>' +
+    var activeCls = checked
+      ? 'is-selected bg-slate-900 text-white border-slate-900 shadow-sm'
+      : 'bg-white text-slate-800 border-slate-200 hover:border-emerald-500';
+    var inlineStyle = checked
+      ? 'style="background-color:#0f172a;color:#ffffff;border-color:#0f172a;"'
+      : 'style="background-color:#ffffff;color:#1e293b;"';
+    return '<label ' + inlineStyle + ' class="dev-item-card flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold cursor-pointer transition ' + activeCls + '">' +
+      '<input type="checkbox" value="' + safeVal + '" ' + (checked ? 'checked' : '') + ' onchange="onToggleMultiItem(\'' + safeVal + '\', this.checked)" class="w-4 h-4 shrink-0 accent-emerald-400">' +
+      '<span class="leading-snug">' + itTitle + '</span>' +
     '</label>';
   }).join('');
   updateSelectedItemsSummary(); uPickItem();
@@ -1276,7 +1286,36 @@ function renderTargetProgressBox(){
 }
 
 function getEffectiveQuestionsForNode(nodeId, isDev){
-  var qs = (questions||[]).filter(q => String(q.node_id) === String(nodeId)).sort((a,b)=>(a.order_index||0)-(b.order_index||0));
+  var qs = (questions||[]).filter(q => String(q.node_id) === String(nodeId));
+
+  if(!qs.length && nodeId){
+    var targetNode = (nodes||[]).find(n => String(n.id) === String(nodeId));
+    if(targetNode){
+      var sameTitleIds = (nodes||[])
+        .filter(n => norm(n.main_type) === norm(targetNode.main_type) && Number(n.level) === Number(targetNode.level) && norm(n.title) === norm(targetNode.title))
+        .map(n => String(n.id));
+      qs = (questions||[]).filter(q => sameTitleIds.includes(String(q.node_id)));
+    }
+  }
+
+  if(!isDev && !qs.length){
+    var fallbackIds = [curSub, curL2, curL1].filter(Boolean).map(String);
+    for(var i = 0; i < fallbackIds.length; i++){
+      var found = (questions||[]).filter(q => String(q.node_id) === fallbackIds[i]);
+      if(found.length){ qs = found; break; }
+    }
+  }
+
+  qs = qs.slice().sort((a,b)=>(a.order_index||0)-(b.order_index||0)).map(q => ({
+    id: q.id,
+    node_id: q.node_id,
+    question_text: q.question_text || q.text || q.title || q.label || '',
+    question_type: q.question_type || q.type || 'short_text',
+    options: Array.isArray(q.options) ? q.options : [],
+    is_required: q.is_required !== false && q.required !== false,
+    order_index: q.order_index || 0
+  }));
+
   if(isDev){
     var merged = qs.slice();
     DEV_DEFAULT_QUESTIONS.forEach((t, i) => {
@@ -1297,6 +1336,14 @@ function getEffectiveQuestionsForNode(nodeId, isDev){
   }
   return qs;
 }
+
+
+
+
+
+
+
+
 
 function renderSingleQuestionControl(q, inputName, isRequired){
   var opts = Array.isArray(q.options) ? q.options : [];
@@ -1403,12 +1450,21 @@ function renderUForm(){
     '</div>';
   }
 
-  var progLabel = isDev
-    ? (curSelectedItems.length > 1 ? 'Total Progress Quantity (Across Selected Items)' : 'Progress Quantity (Completed Units for Selected Item)')
-    : 'Progress Quantity (Completed Units)';
-  var defProgVal = isDev && curSelectedItems.length > 1 ? curSelectedItems.length : 1;
+  var isMultiDev = isDev && curSelectedItems.length > 1;
+  var defProgVal = isMultiDev ? curSelectedItems.length : 1;
 
-  html+='<div class="rounded-xl border-2 border-emerald-200 bg-emerald-50/50 p-3.5"><label class="text-xs font-bold text-emerald-950">'+progLabel+' *</label><input type="number" step="any" min="0" id="uProgQty" value="'+defProgVal+'" required class="mt-1 bg-white font-bold"></div>';
+  if (isMultiDev) {
+    html += '<input type="hidden" id="uProgQty" value="' + defProgVal + '">';
+  } else {
+    var progLabel = isDev
+      ? 'Progress Quantity (Completed Units for Selected Item)'
+      : 'Progress Quantity (Completed Units)';
+    html += '<div class="rounded-xl border-2 border-emerald-200 bg-emerald-50/50 p-3.5">' +
+      '<label class="text-xs font-bold text-emerald-950">' + progLabel + ' *</label>' +
+      '<input type="number" step="any" min="0" id="uProgQty" value="' + defProgVal + '" required class="mt-1 bg-white font-bold">' +
+    '</div>';
+  }
+
   html+='<button type="submit" id="uSubmitBtn" class="btn btn-primary w-full py-3">✓ Submit Data & Update Progress</button></form>';
   wrap.innerHTML=html;
 
@@ -1696,7 +1752,6 @@ function renderMy(){
   document.getElementById('extDataCount').textContent = extRows.length;
   document.getElementById('devDataCount').textContent = devRows.length;
 
-  // Render Extension Table
   var extQKeys = [];
   extRows.forEach(r => {
     Object.keys(r.answers||{}).forEach(k => {
@@ -1714,7 +1769,6 @@ function renderMy(){
       '<td class="whitespace-nowrap"><button onclick="openMyEdit(\'' + r.id + '\',\'\')" class="text-indigo-600 font-bold text-xs mr-2">Edit</button><button onclick="deleteMyRow(\'' + r.id + '\')" class="text-red-600 font-bold text-xs">Del</button></td></tr>';
   }).join('') : '<tr><td colspan="' + (6 + extQKeys.length) + '" class="text-center py-6 text-slate-400">No Extension records found</td></tr>';
 
-  // Render Development Table
   var devCols = getOrderedDevColumnsForMyData(devRows);
   document.getElementById('devMyThead').innerHTML = '<tr><th>Year</th><th>Main Program</th><th>Sub Program</th><th>Item</th><th>Qty</th>' +
     devCols.map(c => '<th>' + c.title + '</th>').join('') + '<th>Date</th><th>Action</th></tr>';
